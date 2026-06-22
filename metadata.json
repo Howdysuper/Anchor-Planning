@@ -1,0 +1,6 @@
+{
+  "name": "Anchor",
+  "description": "Smart daily routine and habit companion targeting teens. Built with a dark OLED Pro Max UI layer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

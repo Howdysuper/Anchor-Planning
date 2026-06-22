@@ -1,0 +1,43 @@
+{
+  "collections": {
+    "users": {
+      "path": "users/{userId}",
+      "description": "User profiles storing gamification and settings.",
+      "fields": {
+        "displayName": { "type": "string" },
+        "xp": { "type": "number" },
+        "level": { "type": "number" },
+        "streakDays": { "type": "number" }
+      },
+      "roles": {
+        "owner": "document == request.auth.uid"
+      }
+    },
+    "anchors": {
+      "path": "anchors/{anchorId}",
+      "description": "Fixed schedule events for the user.",
+      "fields": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" }
+      },
+      "roles": {
+        "owner": "resource.data.userId == request.auth.uid"
+      }
+    },
+    "tasks": {
+      "path": "tasks/{taskId}",
+      "description": "Fluid gaps tasks.",
+      "fields": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "durationMinutes": { "type": "number" },
+        "status": { "type": "string" }
+      },
+      "roles": {
+        "owner": "resource.data.userId == request.auth.uid"
+      }
+    }
+  }
+}
