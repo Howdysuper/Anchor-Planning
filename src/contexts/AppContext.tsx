@@ -103,6 +103,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<AppState>(() => {
+    let parsedState = initialState;
     try {
       const saved = localStorage.getItem('anchor_app_state');
       if (saved) {
@@ -115,7 +116,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             parsed.user.streak_v3_resetted = true;
           }
         }
-        return { 
+        parsedState = { 
           ...initialState, 
           ...parsed,
           user: { ...initialState.user, ...(parsed.user || {}) },
@@ -124,7 +125,32 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         };
       }
     } catch(e) {}
-    return initialState;
+
+    // Pull initial sleep values from onboarding personalization
+    try {
+      const onboardInfo = localStorage.getItem('anchor_personalization');
+      if (onboardInfo) {
+        const p = JSON.parse(onboardInfo);
+        if (p.wakeHour !== undefined && p.sleepHour !== undefined) {
+          const formatHour = (v: number) => {
+            const normalized = ((v % 24) + 24) % 24;
+            let h = normalized;
+            const ampm = normalized >= 12 ? 'PM' : 'AM';
+            if (h === 0) h = 12;
+            else if (h > 12) h -= 12;
+            return `${h}:00 ${ampm}`;
+          };
+          
+          parsedState.sleep = {
+            ...parsedState.sleep,
+            wakeTime: formatHour(p.wakeHour),
+            bedtime: formatHour(p.sleepHour),
+          };
+        }
+      }
+    } catch (e) {}
+
+    return parsedState;
   });
 
   useEffect(() => {
