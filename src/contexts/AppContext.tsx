@@ -115,7 +115,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             parsed.user.streak_v3_resetted = true;
           }
         }
-        return { ...initialState, ...parsed };
+        return { 
+          ...initialState, 
+          ...parsed,
+          user: { ...initialState.user, ...(parsed.user || {}) },
+          sleep: { ...initialState.sleep, ...(parsed.sleep || {}) },
+          loadout: { ...initialState.loadout, ...(parsed.loadout || {}) }
+        };
       }
     } catch(e) {}
     return initialState;

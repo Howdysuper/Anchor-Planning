@@ -43,8 +43,9 @@ export default function SleepIntel() {
   const getAIRecommendation = () => {
     let message = `Based on your ${state.anchors.length} scheduled anchors and a sleep score of ${state.sleep.score}%, we recommend starting your routine at `;
     
-    const match = state.sleep.bedtime.match(/(\d+):(\d+)\s*(AM|PM)/i);
-    if (!match) return { text: "Based on your schedule, maintain your current wind-down.", time: state.sleep.bedtime };
+    const bedtimeStr = state.sleep?.bedtime || "10:00 PM";
+    const match = bedtimeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!match) return { text: "Based on your schedule, maintain your current wind-down.", time: bedtimeStr };
 
     let hours = parseInt(match[1]);
     let mins = parseInt(match[2]);
