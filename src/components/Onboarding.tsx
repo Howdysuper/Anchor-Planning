@@ -232,6 +232,18 @@ const AuthStage = ({ onNext, setToast }: { onNext: () => void, setToast: (v: str
 
   const handleSocialClick = async (providerName: string) => {
     setLoading(true);
+    if (providerName === 'Google') {
+      import('../lib/firebase').then(async ({ loginWithGoogle }) => {
+        try {
+          await loginWithGoogle();
+          onNext(); // Move to next step
+        } catch (error) {
+          setToast("Google login failed");
+        }
+        setLoading(false);
+      });
+      return;
+    }
     setTimeout(() => {
       onNext();
       setLoading(false);

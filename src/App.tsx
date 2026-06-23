@@ -21,11 +21,23 @@ import Leaderboard from './components/Leaderboard';
 import Settings from './components/Settings';
 import { useApp } from './contexts/AppContext';
 
+import Login from './components/Login';
+
 function AppContent() {
   const { state } = useApp();
+  const { user, loading } = useAuth();
+  
   const [isOnboarded, setIsOnboarded] = useState<boolean>(() => {
     return localStorage.getItem('anchor_onboarded') === 'true';
   });
+
+  if (loading) {
+    return <div className="h-screen w-screen flex items-center justify-center bg-[#0A0A0A] text-[#F0F0F0]">Loading...</div>;
+  }
+
+  if (!user) {
+    return <Login />;
+  }
 
   if (!isOnboarded) {
     return <Onboarding onComplete={() => setIsOnboarded(true)} />;

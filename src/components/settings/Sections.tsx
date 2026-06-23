@@ -386,6 +386,25 @@ export function ProfileSettings() {
         </SettingsRow>
       </SettingsCard>
 
+      <SettingsCard title="Actions">
+        <SettingsRow icon={<AlertTriangle size={18} className="text-[#F76F6F]" />} title="System Departure" description="Log out of your current session on this device.">
+          <button 
+            onClick={() => {
+              import('../../lib/firebase').then(({ logout }) => {
+                logout().then(() => {
+                  addToast("Successfully logged out.", "success");
+                }).catch(() => {
+                  addToast("Failed to log out.", "error");
+                });
+              });
+            }}
+            className="h-[36px] px-4 bg-transparent border border-[#F76F6F]/40 hover:bg-[#F76F6F]/10 text-[#F76F6F] font-bold text-xs rounded-[8px] transition-all cursor-pointer"
+          >
+            Log Out
+          </button>
+        </SettingsRow>
+      </SettingsCard>
+
       {/* PHOTO SELECTION MODAL */}
       <Modal isOpen={isPhotoModalOpen} onClose={() => setIsPhotoModalOpen(false)} title="Modify Profile Illustration">
         <div className="flex flex-col gap-5">

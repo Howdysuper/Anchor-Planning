@@ -207,11 +207,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           );
         })}
         <button
-           onClick={handleLogout}
-           className="flex flex-col items-center justify-center gap-1 min-w-[64px] h-[56px] p-2 text-[#888888] hover:text-[#F76F6F]"
+           onClick={() => navigate('settings')}
+           className={`flex flex-col items-center justify-center gap-1 min-w-[64px] h-[56px] rounded-[16px] transition-colors ${
+             activeTab === 'settings' ? 'text-[#7C6FF7] bg-[rgba(124,111,247,0.1)]' : 'text-[#888888]'
+           }`}
         >
-           <LogOut size={24} className="opacity-60" />
-           <span className="text-[10px] font-bold">Logout</span>
+           <div className="w-[26px] h-[26px] rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border border-[rgba(255,255,255,0.1)] flex items-center justify-center font-bold text-[12px] shadow-sm text-[#F0F0F0]">
+             {state.user.avatar}
+           </div>
+           <span className="text-[10px] font-bold">Profile</span>
         </button>
       </nav>
     </div>

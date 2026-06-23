@@ -448,7 +448,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     addToast("XP and Routine Streak reset accomplished! 🎯", "success");
   };
 
-  const clearAllData = () => {
+  const clearAllData = async () => {
+    try {
+      const { auth, db } = await import('../lib/firebase');
+      const { doc, deleteDoc } = await import('firebase/firestore');
+      if (auth.currentUser) {
+        await deleteDoc(doc(db, 'users', auth.currentUser.uid));
+        await auth.signOut();
+      }
+    } catch (e) {
+      console.error(e);
+    }
     localStorage.clear();
     // Re-init with defaults
     localStorage.setItem('anchor_onboarded', 'false');

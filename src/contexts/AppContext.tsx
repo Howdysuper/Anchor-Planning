@@ -1,4 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
+import { db } from '../lib/firebase';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 
 export type AppState = {
   user: {
@@ -33,12 +36,12 @@ export type AppState = {
 
 const initialState: AppState = {
   user: {
-    name: "Shaurya",
-    level: 4,
-    xp: 840,
-    xpToNextLevel: 1000,
+    name: "User",
+    level: 1,
+    xp: 0,
+    xpToNextLevel: 100,
     streakDays: 1,
-    avatar: "S",
+    avatar: "U",
     proUntil: null,
     lastStreakClaimDate: "",
     lastVisitDate: "",
@@ -48,38 +51,17 @@ const initialState: AppState = {
     streak_v3_resetted: true
   },
   sleep: {
-    score: 72,
-    debtHours: -1.4,
-    bedtime: "10:45 PM",
-    wakeTime: "5:15 AM",
-    history: [68, 74, 71, 80, 72, 65, 72],
+    score: 100,
+    debtHours: 0,
+    bedtime: "10:00 PM",
+    wakeTime: "6:00 AM",
+    history: [],
     windDownReminder: true,
   },
-  anchors: [
-    { id: 1, time: "5:00 AM", title: "Optimized Wake", subtitle: "Morning loadout completed", xp: 15, status: "done", type: "auto", category: "Health", note: "Woke up at 5:05 AM, drank 400ml water and checked morning task logs." },
-    { id: 2, time: "8:00 AM", title: "School", subtitle: "Device in focus mode", status: "active", type: "fixed", category: "School", note: "Need to hand in English essay draft before block 3." },
-    { id: 3, time: "3:00 PM", title: "Free Buffer", subtitle: "", status: "upcoming", type: "buffer", category: "Creativity", note: "Plan to work on design layout project." },
-    { id: 4, time: "10:45 PM", title: "Phone Down", subtitle: "Wind-down sequence", status: "upcoming", type: "bedtime", category: "Routine", note: "Charge phone across the room to avoid scrolling." }
-  ],
-  quests: [
-    { id: 1, title: "Buy protein powder", due: "Today", xp: 10, done: false, category: "errand", streak: 3 },
-    { id: 2, title: "Finish English essay", due: "Tomorrow", xp: 20, done: false, category: "school", streak: 5 },
-    { id: 3, title: "Call Mom", due: "In 3 days", xp: 30, done: false, category: "personal", streak: 2 },
-    { id: 4, title: "Calculus Study Session", due: "Today", xp: 40, done: false, category: "school", active: true, minutesLeft: 18, youtubeBlocked: true, streak: 8 }
-  ],
-  brainDumps: [
-    { id: 1, text: "Look up that new productivity framework", time: "2h ago", category: "idea", color: "orange" },
-    { id: 2, text: "Sign permission slip", time: "5h ago", category: "task", color: "blue" }
-  ],
-  loadout: {
-    items: [
-      { id: 1, label: "Phone", checked: true },
-      { id: 2, label: "Wallet", checked: true },
-      { id: 3, label: "Keys", checked: false },
-      { id: 4, label: "Water bottle", checked: false },
-      { id: 5, label: "Headphones", checked: true }
-    ]
-  },
+  anchors: [],
+  quests: [],
+  brainDumps: [],
+  loadout: { items: [] },
   currentPage: "dashboard"
 };
 
@@ -102,10 +84,13 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
+  
   const [state, setState] = useState<AppState>(() => {
     let parsedState = initialState;
     try {
       const saved = localStorage.getItem('anchor_app_state');
+      // ... we will let useEffect fetch from firestore if missing locally, but for now try local
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed?.user) {
@@ -126,7 +111,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch(e) {}
 
-    // Pull initial sleep values from onboarding personalization
     try {
       const onboardInfo = localStorage.getItem('anchor_personalization');
       if (onboardInfo) {
@@ -153,9 +137,36 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return parsedState;
   });
 
+  // Check Firestore once on user loaded
+  useEffect(() => {
+    if (user) {
+      getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
+        if (docSnap.exists()) {
+          const dbState = docSnap.data() as AppState;
+          setState(prev => ({
+             ...prev, 
+             ...dbState,
+             user: { ...prev.user, ...(dbState.user || {}) },
+             sleep: { ...prev.sleep, ...(dbState.sleep || {}) },
+             loadout: { ...prev.loadout, ...(dbState.loadout || {}) }
+          }));
+          localStorage.setItem('anchor_onboarded', 'true');
+        }
+      }).catch(console.error);
+    } else {
+      // User logged out, clear state
+      setState(initialState);
+      localStorage.removeItem('anchor_app_state');
+      localStorage.removeItem('anchor_onboarded');
+    }
+  }, [user]);
+
   useEffect(() => {
     localStorage.setItem('anchor_app_state', JSON.stringify(state));
-  }, [state]);
+    if (user) {
+      setDoc(doc(db, 'users', user.uid), state, { merge: true }).catch(console.error);
+    }
+  }, [state, user]);
 
   // Track visits and update streak
   useEffect(() => {

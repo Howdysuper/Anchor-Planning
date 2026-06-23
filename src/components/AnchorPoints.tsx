@@ -477,8 +477,7 @@ export default function AnchorPoints() {
       <div className="relative p-[1px] rounded-[24px] bg-gradient-to-br from-[rgba(255,255,255,0.08)] to-[rgba(255,255,255,0.01)] shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
         <div className="bg-[#141414]/90 backdrop-blur-md rounded-[23px] p-6 sm:p-8">
           <div className="relative pl-0 space-y-0">
-            {/* Vertical timeline track line */}
-            <div className="absolute top-6 bottom-6 left-[111px] w-[2px] bg-gradient-to-b from-[#7C6FF7] via-[rgba(111,247,160,0.3)] to-[rgba(255,255,255,0.06)] shadow-[0_0_8px_rgba(124,111,247,0.15)] pointer-events-none"></div>
+            <div className="absolute top-6 bottom-6 left-[95px] sm:left-[111px] w-[2px] bg-gradient-to-b from-[#7C6FF7] via-[rgba(111,247,160,0.3)] to-[rgba(255,255,255,0.06)] shadow-[0_0_8px_rgba(124,111,247,0.15)] pointer-events-none"></div>
 
             <AnimatePresence>
               {state.anchors.map((anchor) => {
@@ -496,8 +495,8 @@ export default function AnchorPoints() {
                     className="relative z-10 flex min-h-[82px] items-stretch mb-4 last:mb-0"
                   >
                     {/* Left Time Column */}
-                    <div className={`w-[100px] pt-5 shrink-0 text-right pr-6 ${anchor.status === "done" ? "opacity-50" : ""}`}>
-                      <span className="text-[13px] font-bold text-[#F0F0F0] tracking-tight tabular-nums block leading-none">
+                    <div className={`w-[80px] sm:w-[100px] pt-5 shrink-0 text-right pr-4 sm:pr-6 ${anchor.status === "done" ? "opacity-50" : ""}`}>
+                      <span className="text-[12px] sm:text-[13px] font-bold text-[#F0F0F0] tracking-tight tabular-nums block leading-none">
                         {anchor.time}
                       </span>
                     </div>
