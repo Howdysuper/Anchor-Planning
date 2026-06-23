@@ -1,10 +1,9 @@
 {
-  "projectId": "tensile-brook-v8gvj",
-  "appId": "1:143330451021:web:69f646e3ecfbb7d969c604",
-  "apiKey": "AIzaSyAfyCsF1yRyBY0ZgFKGl-5tV5chqK1ZeUc",
-  "authDomain": "tensile-brook-v8gvj.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-513fb0f5-48cc-4d05-9fa3-4ff525e44e43",
-  "storageBucket": "tensile-brook-v8gvj.firebasestorage.app",
-  "messagingSenderId": "143330451021",
-  "measurementId": ""
+  "projectId": "shaurya-anchor-project",
+  "appId": "1:347595379715:web:41e7b51be106183358ea36",
+  "apiKey": "AIzaSyBnTw9KB56JBs9O0aFsLuEWrlweP2b5f7E",
+  "authDomain": "shaurya-anchor-project.firebaseapp.com",
+  "storageBucket": "shaurya-anchor-project.firebasestorage.app",
+  "messagingSenderId": "347595379715",
+  "measurementId": "G-BGW4T6Q80G"
 }

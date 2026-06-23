@@ -25,23 +25,24 @@ function AppContent() {
   const { state } = useApp();
   const { user, loading } = useAuth();
   
-  const [isOnboarded, setIsOnboarded] = useState<boolean>(() => {
-    return localStorage.getItem('anchor_onboarded') === 'true';
-  });
-
-  useEffect(() => {
-    const handleStorage = () => setIsOnboarded(localStorage.getItem('anchor_onboarded') === 'true');
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
-
   if (loading) {
     return <div className="h-screen w-screen flex items-center justify-center bg-[#0A0A0A] text-[#F0F0F0]">Loading...</div>;
   }
 
+  // Determine onboarding status per user
+  const isOnboarded = !!(user && (state.user?.onboarded === true || localStorage.getItem(`anchor_onboarded_${user.uid}`) === 'true'));
+
   // If not logged in, or not fully onboarded, show Onboarding
   if (!user || !isOnboarded) {
-    return <Onboarding onComplete={() => setIsOnboarded(true)} />;
+    return (
+      <Onboarding 
+        onComplete={() => {
+          if (user) {
+            localStorage.setItem(`anchor_onboarded_${user.uid}`, 'true');
+          }
+        }} 
+      />
+    );
   }
 
   const renderPage = () => {

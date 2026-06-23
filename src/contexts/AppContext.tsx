@@ -49,7 +49,8 @@ const initialState: AppState = {
     totalAppVisits: 0,
     streakBroken: false,
     savedStreakDays: 1,
-    streak_v3_resetted: true
+    streak_v3_resetted: true,
+    onboarded: false
   },
   sleep: {
     score: 100,
@@ -151,6 +152,40 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (user) {
       dataLoadedRef.current = false;
+      
+      // Load user-specific cached local state first so we reset instantly and synchronously!
+      const userSaved = localStorage.getItem(`anchor_app_state_${user.uid}`);
+      if (userSaved) {
+        try {
+          const parsed = JSON.parse(userSaved);
+          setState({
+            ...initialState,
+            ...parsed,
+            user: { ...initialState.user, ...(parsed.user || {}) },
+            sleep: { ...initialState.sleep, ...(parsed.sleep || {}) },
+            loadout: { ...initialState.loadout, ...(parsed.loadout || {}) }
+          });
+        } catch (e) {
+          setState({
+            ...initialState,
+            user: {
+              ...initialState.user,
+              name: user.displayName || "User",
+              onboarded: false
+            }
+          });
+        }
+      } else {
+        setState({
+          ...initialState,
+          user: {
+            ...initialState.user,
+            name: user.displayName || "User",
+            onboarded: false
+          }
+        });
+      }
+
       getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
         if (docSnap.exists()) {
           const dbState = docSnap.data() as AppState;
@@ -163,12 +198,28 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           }));
           if (dbState.user?.onboarded) {
             localStorage.setItem('anchor_onboarded', 'true');
+            localStorage.setItem(`anchor_onboarded_${user.uid}`, 'true');
             // Trigger a potential re-render if it was lagging
             window.dispatchEvent(new Event('storage'));
+          } else {
+            localStorage.removeItem('anchor_onboarded');
+            localStorage.removeItem(`anchor_onboarded_${user.uid}`);
           }
+        } else {
+          // New user! Ensure clean onboarding triggers
+          localStorage.removeItem('anchor_onboarded');
+          localStorage.removeItem(`anchor_onboarded_${user.uid}`);
         }
         dataLoadedRef.current = true;
-        setDoc(doc(db, 'users', user.uid), docSnap.exists() ? docSnap.data() : state, { merge: true }).catch(console.error);
+        const initialUserDoc = docSnap.exists() ? docSnap.data() : {
+          ...initialState,
+          user: {
+            ...initialState.user,
+            name: user.displayName || "User",
+            onboarded: false
+          }
+        };
+        setDoc(doc(db, 'users', user.uid), initialUserDoc, { merge: true }).catch(console.error);
       }).catch(console.error);
     } else {
       // User logged out, clear state
@@ -179,9 +230,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem('anchor_app_state', JSON.stringify(state));
-    if (user && dataLoadedRef.current) {
-      setDoc(doc(db, 'users', user.uid), state, { merge: true }).catch(console.error);
+    if (user) {
+      localStorage.setItem(`anchor_app_state_${user.uid}`, JSON.stringify(state));
+      localStorage.setItem('anchor_app_state', JSON.stringify(state));
+      if (dataLoadedRef.current) {
+        setDoc(doc(db, 'users', user.uid), state, { merge: true }).catch(console.error);
+      }
+    } else {
+      localStorage.setItem('anchor_app_state', JSON.stringify(state));
     }
   }, [state, user]);
 

@@ -43,6 +43,18 @@ export function ProfileSettings() {
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [tempEmail, setTempEmail] = useState(settings.profile.email);
 
+  useEffect(() => {
+    setTempName(settings.profile.displayName);
+  }, [settings.profile.displayName]);
+
+  useEffect(() => {
+    setUsername(settings.profile.username);
+  }, [settings.profile.username]);
+
+  useEffect(() => {
+    setTempEmail(settings.profile.email);
+  }, [settings.profile.email]);
+
   // Password States
   const [currPassword, setCurrPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');

@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useApp } from './AppContext';
 import { useToast } from './ToastContext';
+import { useAuth } from './AuthContext';
 import { applyTheme, watchSystemTheme } from '../components/settings/themeUtils';
 
 export interface SettingsType {
@@ -345,6 +346,7 @@ export const useSettings = () => {
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { state, updateState, updateUser, setAnchors, setQuests, setBrainDumps } = useApp();
   const { addToast } = useToast();
+  const { user } = useAuth();
 
   const [settings, setSettings] = useState<SettingsType>(() => {
     try {
@@ -358,14 +360,59 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return defaultSettings;
   });
 
-  // Save to localStorage
+  const loadedUserIdRef = useRef<string | null>(null);
+
+  // Synchronize settings profile with the actual logged-in user and isolate cache
+  useEffect(() => {
+    if (user) {
+      const userSettingsKey = `anchor_settings_v1_${user.uid}`;
+      const saved = localStorage.getItem(userSettingsKey);
+      let userSettings = defaultSettings;
+      if (saved) {
+        try {
+          userSettings = deepMerge(defaultSettings, JSON.parse(saved));
+        } catch (e) {
+          console.warn("Could not load user-specific settings", e);
+        }
+      } else {
+        const globalSaved = localStorage.getItem(SETTINGS_KEY);
+        if (globalSaved) {
+          try {
+            userSettings = deepMerge(defaultSettings, JSON.parse(globalSaved));
+          } catch (e) {}
+        }
+      }
+
+      setSettings({
+        ...userSettings,
+        profile: {
+          ...userSettings.profile,
+          email: user.email || userSettings.profile.email,
+          displayName: state.user?.name || user.displayName || userSettings.profile.displayName,
+          username: state.user?.name ? state.user.name.toLowerCase().replace(/\s+/g, '_') : (user.displayName ? user.displayName.toLowerCase().replace(/\s+/g, '_') : userSettings.profile.username)
+        }
+      });
+      loadedUserIdRef.current = user.uid;
+    } else {
+      setSettings(defaultSettings);
+      loadedUserIdRef.current = null;
+    }
+  }, [user, state.user?.name]);
+
+  // Save to localStorage specifically isolated per user
   useEffect(() => {
     try {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      if (user) {
+        if (loadedUserIdRef.current === user.uid) {
+          localStorage.setItem(`anchor_settings_v1_${user.uid}`, JSON.stringify(settings));
+        }
+      } else if (loadedUserIdRef.current === null) {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      }
     } catch (e) {
       console.warn("Could not save settings.", e);
     }
-  }, [settings]);
+  }, [settings, user]);
 
   // Apply settings to document on change
   useEffect(() => {

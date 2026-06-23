@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BrainCircuit, Anchor, Backpack, Flame, Moon, Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
+import { useAuth } from '../contexts/AuthContext';
 
 
 const TOKENS = {
@@ -719,6 +720,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
   const [isFinishing, setIsFinishing] = useState(false);
 
   const { updateUser } = useApp();
+  const { user } = useAuth();
   const direction = useRef(1);
   const handleNext = (nextStep: number) => {
     direction.current = nextStep > step ? 1 : -1;
@@ -729,6 +731,9 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
     setIsFinishing(true);
     updateUser({ onboarded: true });
     localStorage.setItem('anchor_onboarded', 'true');
+    if (user) {
+      localStorage.setItem(`anchor_onboarded_${user.uid}`, 'true');
+    }
     setTimeout(() => {
       onComplete();
     }, 1500);
