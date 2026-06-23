@@ -13,7 +13,8 @@ import {
   Plus,
   LogOut,
   User as UserIcon,
-  ChevronDown
+  ChevronDown,
+  BarChart3
 } from 'lucide-react';
 import { logout } from '../lib/firebase';
 import { ThemeStatusPill } from './settings/ThemeStatusPill';
@@ -25,7 +26,7 @@ const NAV_ITEMS = [
   { id: 'loadout', label: 'Loadout', icon: Backpack },
   { id: 'braindump', label: 'Brain Dump', icon: Brain },
   { id: 'quests', label: 'Quest Log', icon: Sword },
-  { id: 'sleep', label: 'Sleep Intel', icon: Moon },
+  { id: 'stats', label: 'Rhythm Analytics', icon: BarChart3 },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
 ];
 
@@ -149,9 +150,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto pb-24 md:pb-0 relative bg-[#0A0A0A]">
-        {/* Adjusted padding from 24px/16px to 40px as per Problem 1 */}
-        <div className="w-full max-w-[1200px] mx-auto p-6 md:p-10 xl:p-[40px] transition-opacity duration-200">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24 md:pb-0 relative bg-[#0A0A0A]">
+        {/* Adjusted padding to be ultra-responsive on mobile devices */}
+        <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 md:p-10 xl:p-[40px] transition-opacity duration-200">
           {children}
         </div>
       </main>
@@ -189,33 +190,38 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </Modal>
 
       {/* MOBILE BOTTOM NAVIGATION */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-[#141414] border-t border-[rgba(255,255,255,0.06)] h-[84px] px-4 pb-safe flex justify-between items-center z-40">
-        {NAV_ITEMS.slice(0, 4).map((item) => {
+      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-[#141414] border-t border-[rgba(255,255,255,0.06)] h-[84px] px-2 pb-safe grid grid-cols-5 items-center justify-items-center z-40">
+        {[
+          { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+          { id: 'quests', label: 'Quest Log', icon: Sword },
+          { id: 'stats', label: 'Statistics', icon: BarChart3 },
+          { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+        ].map((item) => {
           const isActive = activeTab === item.id;
           const Icon = item.icon;
           return (
             <button
               key={item.id}
               onClick={() => navigate(item.id)}
-              className={`flex flex-col items-center justify-center gap-1 min-w-[64px] h-[56px] rounded-[16px] transition-colors ${
+              className={`flex flex-col items-center justify-center gap-1 w-full h-[56px] rounded-[16px] transition-colors ${
                 isActive ? 'text-[#7C6FF7] bg-[rgba(124,111,247,0.1)]' : 'text-[#888888]'
               }`}
             >
-              <Icon size={24} className={isActive ? 'opacity-100 scale-110 transition-transform' : 'opacity-60'} />
-              <span className="text-[10px] font-bold">{item.label.split(' / ')[0]}</span>
+              <Icon size={20} className={isActive ? 'opacity-100 scale-110 transition-transform' : 'opacity-60'} />
+              <span className="text-[10px] font-bold truncate max-w-full px-1">{item.label}</span>
             </button>
           );
         })}
         <button
            onClick={() => navigate('settings')}
-           className={`flex flex-col items-center justify-center gap-1 min-w-[64px] h-[56px] rounded-[16px] transition-colors ${
+           className={`flex flex-col items-center justify-center gap-1 w-full h-[56px] rounded-[16px] transition-colors ${
              activeTab === 'settings' ? 'text-[#7C6FF7] bg-[rgba(124,111,247,0.1)]' : 'text-[#888888]'
            }`}
         >
-           <div className="w-[26px] h-[26px] rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border border-[rgba(255,255,255,0.1)] flex items-center justify-center font-bold text-[12px] shadow-sm text-[#F0F0F0]">
+           <div className="w-[22px] h-[22px] rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border border-[rgba(255,255,255,0.1)] flex items-center justify-center font-bold text-[11px] shadow-sm text-[#F0F0F0]">
              {state.user.avatar}
            </div>
-           <span className="text-[10px] font-bold">Profile</span>
+           <span className="text-[10px] font-bold truncate px-1">Profile</span>
         </button>
       </nav>
     </div>

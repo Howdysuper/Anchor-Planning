@@ -500,19 +500,24 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const { auth, db } = await import('../lib/firebase');
       const { doc, deleteDoc } = await import('firebase/firestore');
       if (auth.currentUser) {
-        await deleteDoc(doc(db, 'users', auth.currentUser.uid));
+        try {
+          await deleteDoc(doc(db, 'users', auth.currentUser.uid));
+        } catch (dbErr) {
+          console.warn("Could not delete firestore user document, proceeding with signout:", dbErr);
+        }
         await auth.signOut();
       }
     } catch (e) {
-      console.error(e);
+      console.error("Error during database cleanup:", e);
+    } finally {
+      localStorage.clear();
+      // Re-init with defaults
+      localStorage.setItem('anchor_onboarded', 'false');
+      addToast("All data successfully cleared. Setting up character system...", "info");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1200);
     }
-    localStorage.clear();
-    // Re-init with defaults
-    localStorage.setItem('anchor_onboarded', 'false');
-    addToast("All data successfully cleared. Setting up character system...", "info");
-    setTimeout(() => {
-      window.location.reload();
-    }, 1200);
   };
 
   const exportData = (): string => {

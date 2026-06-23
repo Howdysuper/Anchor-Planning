@@ -23,7 +23,8 @@ import {
   Sparkles,
   RefreshCcw,
   Pin,
-  Lock
+  Lock,
+  Backpack
 } from "lucide-react";
 import { useApp } from "../contexts/AppContext";
 import { useToast } from "../contexts/ToastContext";
@@ -49,6 +50,14 @@ const WEEKLY_TREND_DATA = [
   { name: 'Sun', completed: 9 },
 ];
 
+const MORNING_HABITS = [
+  { id: "hydrate", label: "Hydrate", icon: "💧", desc: "Drink 500ml water to kickstart cellular hydration" },
+  { id: "sunlight", label: "Circadian Light", icon: "☀️", desc: "Get 10 minutes of morning sunlight exposure" },
+  { id: "stretch", label: "Mindful Movement", icon: "🧘", desc: "Stretch or do light physical activation" },
+  { id: "offline", label: "Tech-Free Start", icon: "🔌", desc: "No phone/social alerts for the first 30 mins" },
+  { id: "prep", label: "Mind Prepared", icon: "🧠", desc: "Review loadout, anchors & set today's goals" }
+];
+
 export default function ImmersiveDashboard() {
   const {
     state,
@@ -61,6 +70,50 @@ export default function ImmersiveDashboard() {
     setAnchors,
   } = useApp();
   const { addToast } = useToast();
+
+  const getTodayDateString = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
+  const todayStr = getTodayDateString();
+
+  const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
+  const [completedHabitIds, setCompletedHabitIds] = useState<string[]>(() => {
+    const savedDate = localStorage.getItem("anchor_morning_checkin_date");
+    if (savedDate === todayStr) {
+      const savedHabits = localStorage.getItem("anchor_morning_checkin_habits");
+      return savedHabits ? JSON.parse(savedHabits) : [];
+    }
+    return [];
+  });
+
+  const [tempSelectedHabits, setTempSelectedHabits] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (isHabitModalOpen) {
+      setTempSelectedHabits(completedHabitIds);
+    }
+  }, [isHabitModalOpen, completedHabitIds]);
+
+  const isHabitCheckInComplete = localStorage.getItem("anchor_morning_checkin_date") === todayStr;
+
+  const handleCompleteHabitCheckIn = (selectedIds: string[]) => {
+    setCompletedHabitIds(selectedIds);
+    localStorage.setItem("anchor_morning_checkin_date", todayStr);
+    localStorage.setItem("anchor_morning_checkin_habits", JSON.stringify(selectedIds));
+    
+    const wasAlreadyComplete = localStorage.getItem("anchor_morning_checkin_complete_xp_granted") === todayStr;
+    if (!wasAlreadyComplete) {
+      updateUser({ xp: state.user.xp + 25 });
+      addToast("Morning Routine Check-In Complete! +25 XP Claimed ⚡", "success");
+      localStorage.setItem("anchor_morning_checkin_complete_xp_granted", todayStr);
+    } else {
+      addToast("Morning routine habits updated successfully!", "success");
+    }
+    
+    setIsHabitModalOpen(false);
+  };
 
   const [showCaptureModal, setShowCaptureModal] = useState(false);
   const [captureText, setCaptureText] = useState("");
@@ -256,175 +309,177 @@ export default function ImmersiveDashboard() {
             anchors lined up for today.
           </p>
         </div>
-        <div className="hidden sm:block">
+        <div 
+          onClick={() => navigate("leaderboard")}
+          className="flex items-center gap-2 bg-[rgba(247,160,111,0.08)] border border-[rgba(247,160,111,0.15)] hover:border-[rgba(247,160,111,0.3)] text-[#F7A06F] px-4 py-2 rounded-full font-bold shadow-[0_0_15px_rgba(247,160,111,0.06)] hover:bg-[rgba(247,160,111,0.12)] transition-all duration-300 cursor-pointer shrink-0 select-none"
+        >
+          <Flame size={16} fill="#F7A06F" className="animate-pulse text-[#F7A06F]" />
+          <span className="text-[14px] tracking-tight">{state.user.streakDays} Day Streak</span>
         </div>
       </header>
 
-      {/* STATS BAR */}
-      <div className="flex flex-wrap gap-4 mb-8">
-        {/* Render Pinned Widgets First */}
-        {[
-          {
-            id: 'sleep',
-            component: (
-              <div
-                key="sleep"
-                className="bg-[#141414] rounded-[20px] p-5 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] min-h-[110px] min-w-[200px] flex-1 flex flex-col justify-end group transition-colors relative"
+      {/* ACTION BANNERS GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+        {/* Left Column (span 7): Sleep Tracker & Loadout */}
+        <div className="lg:col-span-7 flex flex-col gap-4">
+          <div id="sleep-checkin-banner" className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] flex flex-col sm:flex-row sm:items-center lg:flex-col xl:flex-row xl:items-center justify-between gap-6 flex-1">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-[rgba(124,111,247,0.1)] flex items-center justify-center shrink-0">
+                <Moon size={24} className="text-[#7C6FF7]" />
+              </div>
+              <div>
+                <h2 className="text-[16px] font-bold text-[#F0F0F0]">Sleep Tracker & Check-in</h2>
+                <p className="text-[13px] text-[#888888] mt-0.5">Control bedtimes and track daily rhythms easily</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 w-full sm:w-auto lg:w-full xl:w-auto">
+              <button 
+                id="wake-up-checkin-btn"
+                onClick={() => {
+                    const sleepStart = localStorage.getItem('anchor_sleep_start');
+                    if (sleepStart) {
+                      const durationMs = Date.now() - parseInt(sleepStart);
+                      const hours = durationMs / (1000 * 60 * 60);
+                      const newScore = Math.min(100, Math.max(0, Math.round((hours / 8) * 100)));
+                      const debt = (8 - hours);
+                      updateSleep({
+                         score: newScore,
+                         debtHours: parseFloat((state.sleep.debtHours + debt).toFixed(1)),
+                         history: [...state.sleep.history.slice(1), newScore]
+                      });
+                      localStorage.removeItem('anchor_sleep_start');
+                      addToast(`Woke up! Sleep duration: ${hours.toFixed(1)}h`, "success");
+                    } else {
+                      addToast("You haven't checked in for sleep yet.", "error");
+                    }
+                }} 
+                className="flex-1 sm:flex-none sm:px-6 lg:flex-1 xl:flex-none xl:px-6 bg-[#252525] hover:bg-[#333] text-[#F0F0F0] text-sm font-bold h-[44px] rounded-[12px] transition-colors border border-[rgba(255,255,255,0.04)] flex items-center justify-center gap-2 shadow-sm"
               >
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={(e) => { e.stopPropagation(); togglePin('sleep'); }} className="text-[#888888] hover:text-[#7C6FF7]">
-                    <Pin size={14} className={pinnedWidgets.includes('sleep') ? "fill-[#7C6FF7] text-[#7C6FF7]" : ""} />
-                  </button>
-                </div>
-                <div onClick={() => navigate("sleep")} className="cursor-pointer">
-                  <div className="flex items-center gap-3 mb-2 opacity-80 mt-auto">
-                    <Moon size={18} className="text-[#7C6FF7]" />
-                    <span className="text-[13px] font-medium text-[#888888]">
-                      Sleep Score
-                    </span>
-                  </div>
-                  <p className="text-[32px] font-bold tabular-nums leading-none hover:text-[#7C6FF7] transition-colors">
-                    {state.sleep.score}
-                    <span className="text-lg text-[#888888]">%</span>
-                  </p>
-                </div>
-              </div>
-            )
-          },
-          {
-            id: 'sleep_checkin',
-            component: (
-              <div key="sleep_checkin" className="bg-[#141414] rounded-[20px] p-5 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] min-h-[110px] min-w-[200px] flex-1 flex flex-col justify-end group transition-colors relative">
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                  <button onClick={(e) => { e.stopPropagation(); togglePin('sleep_checkin'); }} className="text-[#888888] hover:text-[#7C6FF7]">
-                    <Pin size={14} className={pinnedWidgets.includes('sleep_checkin') ? "fill-[#7C6FF7] text-[#7C6FF7]" : ""} />
-                  </button>
-                </div>
-                <div className="flex items-center gap-3 mb-3 opacity-80 mt-auto">
-                  <Moon size={18} className="text-[#7C6FF7]" />
-                  <span className="text-[13px] font-medium text-[#888888]">
-                    Sleep Check-in
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 mt-auto w-full">
-                  <button 
-                    onClick={() => {
-                        const sleepStart = localStorage.getItem('anchor_sleep_start');
-                        if (sleepStart) {
-                          const durationMs = Date.now() - parseInt(sleepStart);
-                          const hours = durationMs / (1000 * 60 * 60);
-                          const newScore = Math.min(100, Math.max(0, Math.round((hours / 8) * 100)));
-                          const debt = (8 - hours);
-                          updateSleep({
-                             score: newScore,
-                             debtHours: parseFloat((state.sleep.debtHours + debt).toFixed(1)),
-                             history: [...state.sleep.history.slice(1), newScore]
-                          });
-                          localStorage.removeItem('anchor_sleep_start');
-                          addToast(`Woke up! Sleep duration: ${hours.toFixed(1)}h`, "success");
-                        } else {
-                          addToast("You haven't checked in for sleep yet.", "error");
-                        }
-                    }} 
-                    className="flex-1 bg-[#252525] hover:bg-[#333] text-[#F0F0F0] text-[11px] font-bold py-2 rounded-[10px] transition-colors border border-[rgba(255,255,255,0.04)] flex items-center justify-center gap-1"
-                  >
-                    Waking up
-                  </button>
-                  <button 
-                    onClick={() => {
-                       localStorage.setItem('anchor_sleep_start', Date.now().toString());
-                       addToast("Sleep well! Come back to log wake time.", "info");
-                    }}
-                    className="flex-1 bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] text-[11px] font-bold py-2 rounded-[10px] transition-colors border border-[rgba(124,111,247,0.2)] flex items-center justify-center gap-1"
-                  >
-                    Going to sleep
-                  </button>
-                </div>
-              </div>
-            )
-          },
-          {
-            id: 'xp',
-            component: (
-              <div key="xp" className="bg-[#141414] rounded-[20px] p-5 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] min-h-[110px] min-w-[200px] flex-1 flex flex-col justify-end group relative cursor-pointer">
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                  <button onClick={(e) => { e.stopPropagation(); togglePin('xp'); }} className="text-[#888888] hover:text-[#6FBBF7]">
-                    <Pin size={14} className={pinnedWidgets.includes('xp') ? "fill-[#6FBBF7] text-[#6FBBF7]" : ""} />
-                  </button>
-                </div>
-                <div className="flex items-center gap-3 mb-2 opacity-80 mt-auto">
-                  <Shield size={18} className="text-[#6FBBF7]" />
-                  <span className="text-[13px] font-medium text-[#888888]">
-                    XP This Week
-                  </span>
-                </div>
-                <p className="text-[32px] font-bold tabular-nums leading-none">
-                  {state.user.xp}
-                </p>
-                <div className="absolute inset-0 bg-[#000] bg-opacity-90 rounded-[20px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none p-4 text-center z-10">
-                  <span className="text-xs font-bold text-[#F0F0F0]">
-                    Level {state.user.level}
-                    <br />
-                    Next: {state.user.xpToNextLevel}
-                  </span>
-                </div>
-              </div>
-            )
-          },
-          {
-            id: 'tasks',
-            component: (
-              <div
-                key="tasks"
-                className="bg-[#141414] rounded-[20px] p-5 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] min-h-[110px] min-w-[200px] flex-1 flex flex-col justify-end group transition-colors relative"
+                Waking up
+              </button>
+              <button 
+                id="sleep-checkin-btn"
+                onClick={() => {
+                   localStorage.setItem('anchor_sleep_start', Date.now().toString());
+                   addToast("Sleep well! Come back to log wake time.", "info");
+                 }}
+                className="flex-1 sm:flex-none sm:px-6 lg:flex-1 xl:flex-none xl:px-6 bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] text-sm font-bold h-[44px] rounded-[12px] transition-colors border border-[rgba(124,111,247,0.2)] flex items-center justify-center gap-2 shadow-sm"
               >
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={(e) => { e.stopPropagation(); togglePin('tasks'); }} className="text-[#888888] hover:text-[#6FF7A0]">
-                    <Pin size={14} className={pinnedWidgets.includes('tasks') ? "fill-[#6FF7A0] text-[#6FF7A0]" : ""} />
-                  </button>
-                </div>
-                <div onClick={() => navigate("quests")} className="cursor-pointer">
-                  <div className="flex items-center gap-3 mb-2 opacity-80 mt-auto">
-                    <CheckCircle2 size={18} className="text-[#6FF7A0]" />
-                    <span className="text-[13px] font-medium text-[#888888]">
-                      Tasks Done
-                    </span>
-                  </div>
-                  <p className="text-[32px] font-bold tabular-nums leading-none hover:text-[#6FF7A0] transition-colors">
-                    {completedTodayCount}
-                  </p>
-                </div>
+                Going to sleep
+              </button>
+            </div>
+          </div>
+
+          {/* Loadout reminder banner */}
+          <div id="loadout-reminder-banner" className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-[rgba(124,111,247,0.1)] flex items-center justify-center shrink-0 text-[#7C6FF7]">
+                <Backpack size={24} />
               </div>
-            )
-          }
-        ].sort((a, b) => {
-          const aPinned = pinnedWidgets.includes(a.id);
-          const bPinned = pinnedWidgets.includes(b.id);
-          if (aPinned && !bPinned) return -1;
-          if (!aPinned && bPinned) return 1;
-          return 0;
-        }).map(widget => widget.component)}
+              <div>
+                <h3 className="text-[16px] font-bold text-[#F0F0F0]">Forgetting Something?</h3>
+                <p className="text-[13px] text-[#888888] mt-0.5">Check your Loadout to make sure you are ready to go.</p>
+              </div>
+            </div>
+            <button 
+              id="view-loadout-remind-btn"
+              onClick={() => navigate("loadout")}
+              className="w-full sm:w-auto bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] text-sm font-bold px-6 h-[44px] rounded-[12px] transition-colors border border-[rgba(124,111,247,0.2)] flex items-center justify-center gap-2 shrink-0 active:scale-95"
+            >
+              <span>View Loadout</span>
+              <ChevronRight size={16} strokeWidth={2.5} />
+            </button>
+          </div>
+        </div>
+
+        {/* Right Column (span 5): Daily Morning Habits Check-In */}
+        <div className="lg:col-span-5 flex">
+          <div id="daily-morning-habits-banner" className="w-full bg-gradient-to-br from-[#1E1E1E] to-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] flex flex-col justify-between group">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-[#6FF7A0] animate-pulse" />
+                  <span className="text-[11px] font-black uppercase text-[#888888] tracking-widest">Daily Alignment</span>
+                </div>
+                <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider ${isHabitCheckInComplete ? 'bg-[rgba(111,247,160,0.12)] text-[#6FF7A0]' : 'bg-[rgba(124,111,247,0.12)] text-[#7C6FF7] border border-[rgba(124,111,247,0.2)]'}`}>
+                  {isHabitCheckInComplete ? 'Synchronized' : 'Ready'}
+                </span>
+              </div>
+
+              <h2 className="text-[16px] font-bold text-[#F0F0F0] leading-snug">Morning Routine Check-In</h2>
+              <p className="text-[13px] text-[#888888] mt-1.5 leading-relaxed">
+                {isHabitCheckInComplete 
+                  ? "Your morning habits are logged! Maintaining robust alignment with your daily flow."
+                  : "Track your morning hydration, light, movement, and wellness checklist to stack up XP."
+                }
+              </p>
+
+              {isHabitCheckInComplete && (
+                <div className="flex flex-wrap gap-1.5 mt-4">
+                  {completedHabitIds.map(hId => {
+                    const habit = MORNING_HABITS.find(h => h.id === hId);
+                    if (!habit) return null;
+                    return (
+                      <span key={hId} className="text-[11px] font-semibold bg-[#1C1C1C] text-[#E0E0E0] border border-[rgba(255,255,255,0.06)] pl-1.5 pr-2.5 py-1 rounded-[8px] flex items-center gap-1">
+                        <span>{habit.icon}</span>
+                        <span>{habit.label}</span>
+                      </span>
+                    );
+                  })}
+                  {completedHabitIds.length === 0 && (
+                    <span className="text-xs text-[#888888] italic">No attributes checked off.</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6">
+              <button 
+                id="habit-checkin-start-btn"
+                onClick={() => setIsHabitModalOpen(true)}
+                className={`w-full h-[42px] rounded-[12px] font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
+                  isHabitCheckInComplete 
+                    ? 'bg-[#1F1F1F] hover:bg-[#282828] text-[#A0A0A0] border border-[rgba(255,255,255,0.06)]' 
+                    : 'bg-[#7C6FF7] hover:bg-[#6b5ee0] text-white shadow-[0_0_16px_rgba(124,111,247,0.2)]'
+                }`}
+              >
+                {isHabitCheckInComplete ? (
+                  <>
+                    <RefreshCcw size={13} />
+                    <span>Re-align Logged Habits</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={13} />
+                    <span>Start Morning Check-In (+25 XP)</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* MIDDLE ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
         {/* LEFT 60% - TIMELINE */}
-        <section className="lg:col-span-7 bg-[#141414] rounded-[24px] p-8 border border-[rgba(255,255,255,0.06)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] flex flex-col">
+        <section className="lg:col-span-7 bg-[#141414] rounded-[24px] p-4 sm:p-6 lg:p-8 border border-[rgba(255,255,255,0.06)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] flex flex-col">
           <div className="flex justify-between items-center mb-5">
             <h2 className="text-[16px] font-bold text-[#F0F0F0]">
               Today's Anchor Flow
             </h2>
-            <span
-              className="text-[13px] font-medium text-[#888888] cursor-pointer hover:text-[#F0F0F0] transition-colors"
+            <button
               onClick={() => navigate("anchors")}
+              className="text-[11px] font-black bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] border border-[rgba(124,111,247,0.25)] px-3 py-1.5 rounded-[8px] transition-all uppercase tracking-wider flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95"
             >
-              Manage
-            </span>
+              <span>View your Anchor Flow</span>
+              <ChevronRight size={12} strokeWidth={2.5} />
+            </button>
           </div>
 
           <div className="relative pl-0 flex-1 min-h-[300px]">
             {/* Timeline track */}
-            <div className="absolute top-6 bottom-6 left-[111px] w-[2px] bg-gradient-to-b from-[#7C6FF7] via-[rgba(111,247,160,0.3)] to-[rgba(255,255,255,0.06)] shadow-[0_0_8px_rgba(124,111,247,0.15)] pointer-events-none"></div>
+            <div className="absolute top-6 bottom-6 left-[81px] sm:left-[111px] w-[2px] bg-gradient-to-b from-[#7C6FF7] via-[rgba(111,247,160,0.3)] to-[rgba(255,255,255,0.06)] shadow-[0_0_8px_rgba(124,111,247,0.15)] pointer-events-none"></div>
 
             {state.anchors.map((anchor) => {
               const catTheme = getCategoryTheme(anchor.category);
@@ -436,9 +491,9 @@ export default function ImmersiveDashboard() {
                   key={anchor.id}
                   className="relative z-10 flex min-h-[82px] items-stretch mb-4 last:mb-0 group"
                 >
-                  {/* Left: Time (width 100px) */}
+                  {/* Left: Time (width 70px on mobile, 100px on desktop) */}
                   <div
-                    className={`w-[100px] pt-5 shrink-0 text-right pr-6 ${anchor.status === "done" ? "opacity-50" : ""}`}
+                    className={`w-[70px] sm:w-[100px] pt-5 shrink-0 text-right pr-3 sm:pr-6 ${anchor.status === "done" ? "opacity-50" : ""}`}
                   >
                     <span className="text-[13px] font-semibold text-[#F0F0F0] tabular-nums whitespace-nowrap leading-none block">
                       {anchor.time}
@@ -516,7 +571,7 @@ export default function ImmersiveDashboard() {
 
                   {/* Right: Content card with hover effects and glassy design */}
                   <div
-                    className={`flex-1 pl-10 py-1 ${anchor.status === "done" ? "opacity-[0.62]" : ""}`}
+                    className={`flex-1 pl-4 sm:pl-10 py-1 ${anchor.status === "done" ? "opacity-[0.62]" : ""}`}
                   >
                     <motion.div 
                       drag={anchor.status !== "done" ? "x" : false}
@@ -697,290 +752,171 @@ export default function ImmersiveDashboard() {
           </div>
         </section>
 
-        {/* RIGHT 40% - BATTERY & ACTIVE QUEST */}
+        {/* RIGHT 40% - QUESTS & BRAIN DUMP */}
         <div className="lg:col-span-5 flex flex-col gap-6">
-          {/* SLEEP BATTERY */}
-          <section className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] text-center flex flex-col items-center flex-1">
-            <div className="flex items-center gap-2 mb-5">
-              <Moon size={16} className="text-[#888888]" />
-              <h2 className="text-[13px] font-bold text-[#888888] tracking-widest uppercase">
-                Sleep Intel
-              </h2>
-            </div>
-
-            <div
-              className="relative w-40 h-40 flex items-center justify-center my-auto transition-transform hover:scale-105 cursor-pointer"
-              onClick={() => navigate("sleep")}
-            >
-              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="none"
-                  stroke="#1E1E1E"
-                  strokeWidth="6"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="none"
-                  stroke="#7C6FF7"
-                  strokeWidth="6"
-                  strokeDasharray="282.7"
-                  strokeDashoffset={282.7 * (1 - state.sleep.score / 100)}
-                  strokeLinecap="round"
-                  className="drop-shadow-[0_0_12px_rgba(124,111,247,0.4)]"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-[40px] font-bold tabular-nums leading-none tracking-tight">
-                  {state.sleep.score}
-                </span>
-              </div>
-            </div>
-
-            <div className="w-full bg-[#1A1A1A] rounded-[16px] p-4 flex items-center justify-between mt-4">
-              <div className="text-left">
-                <p className="text-[12px] text-[#888888] font-bold uppercase tracking-wide">
-                  Accumulated Debt
-                </p>
-                <p
-                  className={`text-[15px] font-bold mt-0.5 ${state.sleep.debtHours < 0 ? "text-[#F76F6F]" : "text-[#6FF7A0]"}`}
-                >
-                  {state.sleep.debtHours} hrs this week
-                </p>
-              </div>
+          {/* QUEST LOG */}
+          <section id="up-next-section" className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-[16px] font-bold text-[#F0F0F0]">Up Next</h2>
               <button
-                onClick={() => navigate("sleep")}
-                className="w-8 h-8 rounded-full bg-[#252525] flex items-center justify-center text-[#888888] hover:text-[#F0F0F0] hover:bg-[#333] transition-colors"
+                onClick={() => navigate("quests")}
+                className="text-[13px] font-bold text-[#888888] hover:text-[#F0F0F0] transition-colors"
               >
-                <ChevronRight size={16} strokeWidth={3} />
+                View All
               </button>
+            </div>
+
+            <div className="space-y-3">
+              {primaryQuest && (
+                <div id={`active-quest-item-${primaryQuest.id}`} className="bg-[#1A1A1A] p-4.5 rounded-[18px] border border-[rgba(124,111,247,0.25)] relative overflow-hidden group hover:border-[rgba(124,111,247,0.4)] transition-all">
+                  <div className="absolute -top-12 -right-12 w-24 h-24 bg-[rgba(124,111,247,0.12)] rounded-full blur-[20px] pointer-events-none"></div>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <button
+                        onClick={() => completeQuest(primaryQuest.id, primaryQuest.xp, primaryQuest.createdAt)}
+                        className={`w-[22px] h-[22px] shrink-0 mt-0.5 rounded-[4px] border-2 flex items-center justify-center transition-colors ${justCompletedIds.includes(primaryQuest.id) ? "border-[#6FF7A0] bg-[#6FF7A0]" : "border-[#7C6FF7] hover:border-[#6FF7A0] bg-[#0A0A0A]"}`}
+                      >
+                        {justCompletedIds.includes(primaryQuest.id) && (
+                          <Check size={14} color="#0A0A0A" strokeWidth={3} />
+                        )}
+                      </button>
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1 bg-[rgba(124,111,247,0.12)] px-2 py-0.5 rounded-[4px] w-fit">
+                          <span className="text-[9px] font-bold text-[#7C6FF7] uppercase tracking-wider">Active Quest</span>
+                        </div>
+                        <p className="text-[15px] font-bold text-[#F0F0F0] leading-tight line-clamp-2">
+                          {primaryQuest.title}
+                        </p>
+                        {primaryQuest.due && (
+                          <p className="text-[12px] text-[#888888] font-medium mt-1">
+                            {primaryQuest.due}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-[12px] font-bold px-2.5 py-1 rounded-full bg-[rgba(247,217,111,0.1)] text-[#F7D96F] shrink-0">
+                      +{primaryQuest.xp} XP
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <AnimatePresence>
+                {regularQuests.length > 0 ? (
+                  regularQuests.map((quest) => {
+                    const isJustCompleted = justCompletedIds.includes(quest.id);
+                    return (
+                      <motion.div
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: isJustCompleted ? 0.6 : 1, y: 0 }}
+                        exit={{
+                          opacity: 0,
+                          x: -20,
+                          transition: { duration: 0.2 },
+                        }}
+                        key={quest.id}
+                        className="flex items-center justify-between p-4 bg-[#1A1A1A] rounded-[16px] border border-[rgba(255,255,255,0.04)] group hover:bg-[#1E1E1E] transition-colors min-h-[64px]"
+                      >
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={() =>
+                              completeQuest(quest.id, quest.xp, quest.createdAt)
+                            }
+                            className={`w-[22px] h-[22px] shrink-0 rounded-[4px] border-2 flex items-center justify-center transition-colors ${isJustCompleted ? "border-[#6FF7A0] bg-[#6FF7A0]" : "border-[rgba(255,255,255,0.2)] hover:border-[#6FF7A0] bg-[#0A0A0A]"}`}
+                          >
+                            {isJustCompleted && (
+                              <Check size={14} color="#0A0A0A" strokeWidth={3} />
+                            )}
+                          </button>
+                          <div>
+                            <p
+                              className={`text-[15px] font-bold leading-tight mb-1 line-clamp-1 transition-all ${isJustCompleted ? "text-[#888888] line-through" : "text-[#F0F0F0]"}`}
+                            >
+                              {quest.title}
+                            </p>
+                            <p className="text-[12px] text-[#888888] font-medium leading-none">
+                              {quest.due}
+                            </p>
+                          </div>
+                        </div>
+                        <div
+                          className={`text-[12px] font-bold px-3 py-1.5 rounded-full shrink-0 tabular-nums transition-colors ${isJustCompleted ? "bg-[#F7D96F] text-[#0A0A0A]" : "bg-[rgba(247,217,111,0.1)] text-[#F7D96F]"}`}
+                        >
+                          +{quest.xp} XP
+                        </div>
+                      </motion.div>
+                    );
+                  })
+                ) : (
+                  !primaryQuest && (
+                    <div className="text-center py-6 text-[#888888] text-[14px]">
+                      No upcoming quests.
+                    </div>
+                  )
+                )}
+              </AnimatePresence>
             </div>
           </section>
 
-          {/* NEXT ANCHOR / ACTIVE QUEST */}
-          {primaryQuest && (
-            <AnimatePresence mode="popLayout">
-              <motion.section
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, height: 0, overflow: "hidden" }}
-                className="relative overflow-hidden bg-gradient-to-br from-[#1E1E1E] to-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.08)] shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+          {/* BRAIN DUMP CACHE */}
+          <section id="brain-dump-section" className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-[16px] font-bold text-[#F0F0F0]">Brain Dump</h2>
+              <button
+                onClick={() => navigate("braindump")}
+                className="text-[11px] font-black bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] border border-[rgba(124,111,247,0.25)] px-3 py-1.5 rounded-[8px] transition-all uppercase tracking-wider flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95"
               >
-                <div className="absolute -top-12 -right-12 w-40 h-40 bg-[rgba(111,187,247,0.15)] rounded-full blur-[40px] pointer-events-none"></div>
+                <span>View your Brain Dump</span>
+                <ChevronRight size={12} strokeWidth={2.5} />
+              </button>
+            </div>
 
-                <div className="flex justify-between items-start mb-4 relative z-10">
-                  <div className="pr-4">
-                    <span className="text-[10px] font-bold text-[#6FBBF7] uppercase tracking-widest bg-[rgba(111,187,247,0.15)] px-2.5 py-1 rounded mb-3 inline-block">
-                      Active Quest
-                    </span>
-                    <h3 className="text-[22px] font-bold text-[#F0F0F0] leading-[1.3]">
-                      {primaryQuest.title}
-                    </h3>
-                  </div>
-                  {primaryQuest.minutesLeft && (
-                    <div className="bg-[#0A0A0A] min-w-[56px] h-[56px] rounded-[16px] flex flex-col items-center justify-center shrink-0 border border-[rgba(255,255,255,0.06)] shadow-inner">
-                      <span className="text-[18px] font-bold tabular-nums leading-none mb-1 text-[#F0F0F0]">
-                        {primaryQuest.minutesLeft}
-                      </span>
-                      <span className="text-[9px] font-bold text-[#888888] uppercase tracking-wider">
-                        MIN
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 mb-6 text-[13px] font-bold relative z-10">
-                  {primaryQuest.youtubeBlocked && (
-                    <div className="flex items-center gap-1.5 text-[#888888]">
-                      <Shield size={16} strokeWidth={2.5} /> Focus Mode
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1.5 text-[#F7D96F] bg-[rgba(247,217,111,0.1)] px-2.5 py-1 rounded-md">
-                    <Flame size={14} strokeWidth={2.5} /> +{primaryQuest.xp} XP
-                  </div>
-                </div>
-
-                <button
-                  onClick={() =>
-                    completeQuest(
-                      primaryQuest.id,
-                      primaryQuest.xp,
-                      primaryQuest.createdAt,
-                    )
-                  }
-                  className="relative w-full h-[52px] bg-[#6FBBF7] hover:bg-[#5aaae6] active:scale-[0.98] text-[#0A0A0A] rounded-[14px] font-bold flex items-center justify-center transition-all shadow-[0_0_16px_rgba(111,187,247,0.2)] z-10 text-[16px]"
+            <div className="grid grid-cols-2 gap-3 h-full pb-4">
+              {state.brainDumps.slice(0, 2).map((dump) => (
+                <div
+                  key={dump.id}
+                  onClick={() => navigate("braindump")}
+                  className="bg-[#1A1A1A] p-4 rounded-[16px] border border-[rgba(255,255,255,0.04)] hover:bg-[#1E1E1E] cursor-pointer transition-colors min-h-[80px] flex flex-col justify-between"
                 >
-                  Complete Quest
-                </button>
-              </motion.section>
-            </AnimatePresence>
-          )}
+                  <p className="text-[14px] font-medium text-[#F0F0F0] leading-[1.5] break-words line-clamp-3">
+                    {dump.text}
+                  </p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-[12px] text-[#888888] font-bold">
+                      {dump.time}
+                    </span>
+                    <span
+                      className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]"
+                      style={{ backgroundColor: dump.color, color: dump.color }}
+                    ></span>
+                  </div>
+                </div>
+              ))}
+
+              <div
+                onClick={() => setShowCaptureModal(true)}
+                className="bg-[rgba(124,111,247,0.05)] border border-dashed border-[rgba(124,111,247,0.2)] p-4 rounded-[16px] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-[rgba(124,111,247,0.1)] transition-colors min-h-[80px] col-span-2 sm:col-span-1 group"
+              >
+                <span className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                  <Plus size={16} className="text-[#7C6FF7]" />
+                </span>
+                <p className="text-[13px] font-bold text-[#7C6FF7]">
+                  Quick capture
+                </p>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
 
       {/* BOTTOM ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* QUEST LOG */}
-        <section className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="text-[16px] font-bold text-[#F0F0F0]">Up Next</h2>
-            <button
-              onClick={() => navigate("quests")}
-              className="text-[13px] font-bold text-[#888888] hover:text-[#F0F0F0] transition-colors"
-            >
-              View All
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            <AnimatePresence>
-              {regularQuests.length > 0 ? (
-                regularQuests.map((quest) => {
-                  const isJustCompleted = justCompletedIds.includes(quest.id);
-                  return (
-                    <motion.div
-                      layout
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: isJustCompleted ? 0.6 : 1, y: 0 }}
-                      exit={{
-                        opacity: 0,
-                        x: -20,
-                        transition: { duration: 0.2 },
-                      }}
-                      key={quest.id}
-                      className="flex items-center justify-between p-4 bg-[#1A1A1A] rounded-[16px] border border-[rgba(255,255,255,0.04)] group hover:bg-[#1E1E1E] transition-colors min-h-[64px]"
-                    >
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={() =>
-                            completeQuest(quest.id, quest.xp, quest.createdAt)
-                          }
-                          className={`w-[22px] h-[22px] shrink-0 rounded-[4px] border-2 flex items-center justify-center transition-colors ${isJustCompleted ? "border-[#6FF7A0] bg-[#6FF7A0]" : "border-[rgba(255,255,255,0.2)] hover:border-[#6FF7A0] bg-[#0A0A0A]"}`}
-                        >
-                          {isJustCompleted && (
-                            <Check size={14} color="#0A0A0A" strokeWidth={3} />
-                          )}
-                        </button>
-                        <div>
-                          <p
-                            className={`text-[15px] font-bold leading-tight mb-1 line-clamp-1 transition-all ${isJustCompleted ? "text-[#888888] line-through" : "text-[#F0F0F0]"}`}
-                          >
-                            {quest.title}
-                          </p>
-                          <p className="text-[12px] text-[#888888] font-medium leading-none">
-                            {quest.due}
-                          </p>
-                        </div>
-                      </div>
-                      <div
-                        className={`text-[12px] font-bold px-3 py-1.5 rounded-full shrink-0 tabular-nums transition-colors ${isJustCompleted ? "bg-[#F7D96F] text-[#0A0A0A]" : "bg-[rgba(247,217,111,0.1)] text-[#F7D96F]"}`}
-                      >
-                        +{quest.xp} XP
-                      </div>
-                    </motion.div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-6 text-[#888888] text-[14px]">
-                  No upcoming quests.
-                </div>
-              )}
-            </AnimatePresence>
-          </div>
-        </section>
-
-        {/* BRAIN DUMP CACHE */}
-        <section className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="text-[16px] font-bold text-[#F0F0F0]">Brain Dump</h2>
-            <button
-              onClick={() => navigate("braindump")}
-              className="text-[13px] font-bold text-[#888888] hover:text-[#F0F0F0] transition-colors"
-            >
-              Organize
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 h-full pb-4">
-            {state.brainDumps.slice(0, 2).map((dump) => (
-              <div
-                key={dump.id}
-                onClick={() => navigate("braindump")}
-                className="bg-[#1A1A1A] p-4 rounded-[16px] border border-[rgba(255,255,255,0.04)] hover:bg-[#1E1E1E] cursor-pointer transition-colors min-h-[80px] flex flex-col justify-between"
-              >
-                <p className="text-[14px] font-medium text-[#F0F0F0] leading-[1.5] break-words line-clamp-3">
-                  {dump.text}
-                </p>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-[12px] text-[#888888] font-bold">
-                    {dump.time}
-                  </span>
-                  <span
-                    className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]"
-                    style={{ backgroundColor: dump.color, color: dump.color }}
-                  ></span>
-                </div>
-              </div>
-            ))}
-
-            <div
-              onClick={() => setShowCaptureModal(true)}
-              className="bg-[rgba(124,111,247,0.05)] border border-dashed border-[rgba(124,111,247,0.2)] p-4 rounded-[16px] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-[rgba(124,111,247,0.1)] transition-colors min-h-[80px] col-span-2 sm:col-span-1 group"
-            >
-              <span className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                <Plus size={16} className="text-[#7C6FF7]" />
-              </span>
-              <p className="text-[13px] font-bold text-[#7C6FF7]">
-                Quick capture
-              </p>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      {/* AI INTELLIGENCE ROW */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        {/* Weekly Completion Trends Chart */}
-        <section className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-[16px] font-bold text-[#F0F0F0]">Weekly Trajectory</h2>
-            <select className="bg-transparent text-[12px] font-bold text-[#888888] outline-none">
-              <option>Last 7 Days</option>
-              <option>Last 30 Days</option>
-            </select>
-          </div>
-          <div className="w-full flex-1 min-h-[180px]">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-              <AreaChart data={WEEKLY_TREND_DATA} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7C6FF7" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#7C6FF7" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="name" stroke="#555" fontSize={11} tickLine={false} axisLine={false} tickMargin={8} />
-                <YAxis stroke="#555" fontSize={11} tickLine={false} axisLine={false} tickCount={4} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#1A1A1A", borderColor: "rgba(255,255,255,0.08)", borderRadius: "12px", color: "#F0F0F0", fontSize: "12px" }}
-                  itemStyle={{ color: "#7C6FF7", fontWeight: "bold" }}
-                  labelStyle={{ color: "#888", marginBottom: "4px" }}
-                />
-                <Area type="monotone" dataKey="completed" stroke="#7C6FF7" strokeWidth={2} fillOpacity={1} fill="url(#colorCompleted)" activeDot={{ r: 5, stroke: "#7C6FF7", strokeWidth: 2, fill: "#141414" }} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
+      <div className="grid grid-cols-1 gap-6">
         {/* AI Stretch Goals Array */}
-        <section className="bg-gradient-to-br from-[#1E1E1E] to-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.08)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] relative overflow-hidden flex flex-col">
+        <section id="stretch-goals-section" className="bg-gradient-to-br from-[#1E1E1E] to-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.08)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] relative overflow-hidden flex flex-col">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#7C6FF7] rounded-full blur-[80px] opacity-[0.05] pointer-events-none"></div>
           
-          <div className="flex justify-between items-center mb-6 z-10">
+          <div className="flex justify-between items-center mb-6 z-10 w-full">
             <div>
               <h2 className="text-[16px] font-bold text-[#F0F0F0] flex items-center gap-2">
                 <Sparkles size={16} className="text-[#6FBBF7]" />
@@ -997,7 +933,7 @@ export default function ImmersiveDashboard() {
             </button>
           </div>
 
-          <div className="flex-1 flex flex-col justify-center gap-3 z-10">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 z-10">
             {stretchGoals ? (
               stretchGoals.map((goal, i) => (
                 <div key={i} className="flex items-start gap-4 p-4 bg-[#1A1A1A] rounded-[16px] border border-[rgba(255,255,255,0.04)] group transition-colors hover:bg-[#1E1E1E]">
@@ -1008,7 +944,7 @@ export default function ImmersiveDashboard() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-6 text-[#888888] text-[13px]">
+              <div className="text-center py-6 text-[#888888] text-[13px] col-span-3">
                 Click the refresh icon to scan your habit history and generate custom stretch goals.
               </div>
             )}
@@ -1043,6 +979,82 @@ export default function ImmersiveDashboard() {
             className="h-[52px] w-full bg-[#7C6FF7] hover:bg-[#6b5ee6] text-[#0A0A0A] rounded-[14px] font-bold text-[16px] transition-all"
           >
             Capture
+          </button>
+        </div>
+      </Modal>
+
+      {/* Morning Habits Check-In Modal */}
+      <Modal
+        isOpen={isHabitModalOpen}
+        onClose={() => setIsHabitModalOpen(false)}
+        title="Morning Routine Check-In"
+      >
+        <div className="flex flex-col gap-5">
+          <div>
+            <p className="text-xs text-[#888888] font-bold uppercase tracking-wider mb-2">Progress Alignment</p>
+            <div className="flex items-center justify-between gap-4 mb-2">
+              <div className="flex-1 bg-[#1A1A1A] h-2 rounded-full overflow-hidden border border-[rgba(255,255,255,0.04)]">
+                <div 
+                  className="bg-gradient-to-r from-[#7C6FF7] to-[#6FF7A0] h-full transition-all duration-300"
+                  style={{ width: `${(tempSelectedHabits.length / MORNING_HABITS.length) * 100}%` }}
+                />
+              </div>
+              <span className="text-[13px] font-bold text-[#F0F0F0] shrink-0 tabular-nums">
+                {tempSelectedHabits.length} / {MORNING_HABITS.length}
+              </span>
+            </div>
+            <p className="text-[13px] text-[#888888]">
+              Select the habit anchors you successfully executed this morning.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {MORNING_HABITS.map((habit) => {
+              const isChecked = tempSelectedHabits.includes(habit.id);
+              return (
+                <div 
+                  key={habit.id}
+                  onClick={() => {
+                    if (isChecked) {
+                      setTempSelectedHabits(tempSelectedHabits.filter(id => id !== habit.id));
+                    } else {
+                      setTempSelectedHabits([...tempSelectedHabits, habit.id]);
+                    }
+                  }}
+                  className={`p-4 rounded-[16px] border transition-all cursor-pointer flex items-center justify-between gap-4 ${
+                    isChecked 
+                      ? 'bg-[rgba(124,111,247,0.06)] border-[#7C6FF7] shadow-[0_0_12px_rgba(124,111,247,0.1)]' 
+                      : 'bg-[#1A1A1A] border-[rgba(255,255,255,0.04)] hover:bg-[#202020] hover:border-[rgba(255,255,255,0.05)]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-[24px] select-none shrink-0 w-10 h-10 rounded-full bg-[#141414] flex items-center justify-center border border-[rgba(255,255,255,0.04)]">
+                      {habit.icon}
+                    </div>
+                    <div>
+                      <h4 className="text-[14px] font-bold text-[#F0F0F0] leading-none mb-1">{habit.label}</h4>
+                      <p className="text-[12px] text-[#888888] leading-tight pr-2">{habit.desc}</p>
+                    </div>
+                  </div>
+                  
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
+                    isChecked 
+                      ? 'bg-[#7C6FF7] border-[#7C6FF7] text-white' 
+                      : 'border-[rgba(255,255,255,0.2)]'
+                  }`}>
+                    {isChecked && <Check size={12} strokeWidth={3} />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => handleCompleteHabitCheckIn(tempSelectedHabits)}
+            className="h-[50px] w-full bg-[#7C6FF7] hover:bg-[#6b5ee0] text-white rounded-[14px] font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(124,111,247,0.2)] mt-2"
+          >
+            <CheckCircle2 size={16} />
+            <span>Lock Morning Status & Claim +25 XP</span>
           </button>
         </div>
       </Modal>

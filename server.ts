@@ -1,10 +1,70 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import * as dotenv from "dotenv";
+import fs from "fs";
+import * as adminModule from "firebase-admin";
 
 dotenv.config();
+
+const fbAdmin = (adminModule && (adminModule as any).apps) 
+  ? adminModule 
+  : (((adminModule as any).default && (adminModule as any).default.apps) 
+    ? (adminModule as any).default 
+    : adminModule) as any;
+
+// Initialize Firebase Admin SDK
+try {
+  let serviceAccount: any = null;
+  const filePath = path.join(process.cwd(), "serviceAccountKey.json");
+  if (fs.existsSync(filePath)) {
+    serviceAccount = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  }
+
+  if (serviceAccount) {
+    if (fbAdmin.apps.length === 0) {
+      fbAdmin.initializeApp({
+        credential: fbAdmin.credential.cert(serviceAccount),
+        databaseURL: "https://shaurya-anchor-project-default-rtdb.firebaseio.com"
+      });
+      console.log("🟢 Firebase Admin SDK successfully initialized! Connecting to shaurya-anchor-project Realtime Database.");
+    }
+  } else {
+    console.warn("⚠️ No serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT configuration found on the server.");
+  }
+} catch (e: any) {
+  console.error("🔴 Firebase Admin SDK initialization error:", e.message || e);
+}
+
+interface AuthenticatedRequest extends Request {
+  userId?: string;
+  userEmail?: string;
+}
+
+const requireAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Unauthorized: Missing authorization header." });
+  }
+
+  const idToken = authHeader.split("Bearer ")[1];
+  try {
+    if (fbAdmin.apps.length === 0) {
+      return res.status(503).json({ error: "Service unavailable: Database not initialized on the server." });
+    }
+    const decodedToken = await fbAdmin.auth().verifyIdToken(idToken);
+    req.userId = decodedToken.uid;
+    req.userEmail = decodedToken.email;
+    next();
+  } catch (err: any) {
+    console.error("Token verification failed:", err.message || err);
+    return res.status(401).json({ error: "Unauthorized: Invalid or expired access token." });
+  }
+};
+
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -148,6 +208,43 @@ async function startServer() {
       `);
     } catch (e) {
       res.send('OAuth Error');
+    }
+  });
+
+  // DATABASE STATE SYNC ROUTES
+  app.get("/api/user/state", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (fbAdmin.apps.length === 0) {
+        return res.status(503).json({ error: "Service unavailable: Database not initialized on the server." });
+      }
+      const ref = fbAdmin.database().ref(`users/${req.userId}`);
+      const snapshot = await ref.once("value");
+      const dbState = snapshot.val();
+      
+      // If user state does not exist in Realtime DB, let client initialize it
+      res.json(dbState || {});
+    } catch (e: any) {
+      console.error("Error fetching state from Realtime Database:", e.message || e);
+      res.status(500).json({ error: e.message || "Failed to load state" });
+    }
+  });
+
+  app.post("/api/user/state", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (fbAdmin.apps.length === 0) {
+        return res.status(503).json({ error: "Service unavailable: Database not initialized on the server." });
+      }
+      const { state } = req.body;
+      if (!state) {
+        return res.status(400).json({ error: "Missing state payload." });
+      }
+
+      const ref = fbAdmin.database().ref(`users/${req.userId}`);
+      await ref.set(state);
+      res.json({ success: true, message: "Application state successfully synchronized." });
+    } catch (e: any) {
+      console.error("Error saving state to Realtime Database:", e.message || e);
+      res.status(500).json({ error: e.message || "Failed to save state" });
     }
   });
 

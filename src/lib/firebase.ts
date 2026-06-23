@@ -3,8 +3,13 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEm
 import { getFirestore, initializeFirestore } from "firebase/firestore";
 import config from "../../firebase-applet-config.json";
 
-// The config provides databaseId, use initializeFirestore to ensure it passes through
-export const app = initializeApp(config);
+// Include databaseURL from config, env or default project URL to ensure proper reference
+const firebaseConfig = {
+  ...config,
+  databaseURL: (config as any).databaseURL || (import.meta as any).env.VITE_FIREBASE_DATABASE_URL || "https://shaurya-anchor-project-default-rtdb.firebaseio.com"
+};
+
+export const app = initializeApp(firebaseConfig);
 
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true

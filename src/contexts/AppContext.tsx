@@ -186,7 +186,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         });
       }
 
-      getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
+      const withTimeout = <T,>(promise: Promise<T>, ms = 10000): Promise<T> => {
+        return Promise.race([
+          promise,
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Timeout")), ms)
+          )
+        ]);
+      };
+
+      // Fetch latest state from the database directly via Firestore document operations with 10s timeout
+      withTimeout(getDoc(doc(db, 'users', user.uid)), 10000).then((docSnap) => {
         if (docSnap.exists()) {
           const dbState = docSnap.data() as AppState;
           setState(prev => ({
@@ -199,7 +209,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           if (dbState.user?.onboarded) {
             localStorage.setItem('anchor_onboarded', 'true');
             localStorage.setItem(`anchor_onboarded_${user.uid}`, 'true');
-            // Trigger a potential re-render if it was lagging
             window.dispatchEvent(new Event('storage'));
           } else {
             localStorage.removeItem('anchor_onboarded');
@@ -209,18 +218,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           // New user! Ensure clean onboarding triggers
           localStorage.removeItem('anchor_onboarded');
           localStorage.removeItem(`anchor_onboarded_${user.uid}`);
+          
+          // Write initial state to Firestore
+          const initialUserDoc = {
+            ...initialState,
+            user: {
+              ...initialState.user,
+              name: user.displayName || "User",
+              onboarded: false
+            }
+          };
+          setDoc(doc(db, 'users', user.uid), initialUserDoc, { merge: true }).catch((err) => {
+            console.warn("Firestore initial write error:", err);
+          });
         }
         dataLoadedRef.current = true;
-        const initialUserDoc = docSnap.exists() ? docSnap.data() : {
-          ...initialState,
-          user: {
-            ...initialState.user,
-            name: user.displayName || "User",
-            onboarded: false
-          }
-        };
-        setDoc(doc(db, 'users', user.uid), initialUserDoc, { merge: true }).catch(console.error);
-      }).catch(console.error);
+      }).catch((err) => {
+        console.warn("Firestore state fetch timed out or failed. Falling back to offline client cache.", err);
+        dataLoadedRef.current = true;
+      });
     } else {
       // User logged out, clear state
       setState(initialState);
@@ -234,7 +250,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem(`anchor_app_state_${user.uid}`, JSON.stringify(state));
       localStorage.setItem('anchor_app_state', JSON.stringify(state));
       if (dataLoadedRef.current) {
-        setDoc(doc(db, 'users', user.uid), state, { merge: true }).catch(console.error);
+        setDoc(doc(db, 'users', user.uid), state, { merge: true }).catch((err) => {
+          console.error("Firestore save failed:", err);
+        });
       }
     } else {
       localStorage.setItem('anchor_app_state', JSON.stringify(state));

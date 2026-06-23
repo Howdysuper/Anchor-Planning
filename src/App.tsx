@@ -16,17 +16,18 @@ import AnchorPoints from './components/AnchorPoints';
 import Loadout from './components/Loadout';
 import BrainDump from './components/BrainDump';
 import QuestLog from './components/QuestLog';
-import SleepIntel from './components/SleepIntel';
 import Leaderboard from './components/Leaderboard';
 import Settings from './components/Settings';
+import StatisticsPage from './components/StatisticsPage';
 import { useApp } from './contexts/AppContext';
+import LoadingScreen from './components/LoadingScreen';
 
 function AppContent() {
   const { state } = useApp();
   const { user, loading } = useAuth();
   
   if (loading) {
-    return <div className="h-screen w-screen flex items-center justify-center bg-[#0A0A0A] text-[#F0F0F0]">Loading...</div>;
+    return <LoadingScreen />;
   }
 
   // Determine onboarding status per user
@@ -52,8 +53,9 @@ function AppContent() {
       case 'loadout': return <Loadout />;
       case 'braindump': return <BrainDump />;
       case 'quests': return <QuestLog />;
-      case 'sleep': return <SleepIntel />;
+      case 'sleep': return <StatisticsPage />;
       case 'leaderboard': return <Leaderboard />;
+      case 'stats': return <StatisticsPage />;
       case 'settings': return <Settings />;
       default: return <ImmersiveDashboard />;
     }

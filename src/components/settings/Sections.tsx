@@ -2257,9 +2257,9 @@ export function DangerZoneSettings() {
         <p className="text-[14px] text-[#888888] mt-1.5 font-medium">Destructive administrative actions that clear user records, metrics or profile details.</p>
       </div>
 
-      <div className="border border-[#F76F6F]/20 rounded-[20px] bg-[#F76F6F]/[0.02] overflow-hidden">
+      <div className="border border-[#F76F6F]/20 rounded-[20px] bg-[#F76F6F]/[0.02] overflow-hidden w-full">
         {/* Reset Progress */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 border-b border-[#F76F6F]/10">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-5 border-b border-[#F76F6F]/10 w-full">
           <div className="flex items-start gap-3.5 flex-1 max-w-xl">
             <div className="text-[#F76F6F] mt-1 shrink-0"><AlertTriangle size={18} /></div>
             <div>
@@ -2271,14 +2271,14 @@ export function DangerZoneSettings() {
           </div>
           <button 
             onClick={() => setActiveModal('reset')}
-            className="h-[44px] px-6 shrink-0 bg-[#F76F6F]/10 hover:bg-[#F76F6F]/20 text-[#F76F6F] border border-[#F76F6F]/30 rounded-xl text-[13px] font-bold transition-all"
+            className="w-full lg:w-auto h-[44px] px-6 shrink-0 bg-[#F76F6F]/10 hover:bg-[#F76F6F]/20 text-[#F76F6F] border border-[#F76F6F]/30 rounded-xl text-[13px] font-bold transition-all flex items-center justify-center cursor-pointer select-none"
           >
             Reset Progress
           </button>
         </div>
 
         {/* Clear All Data */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 border-b border-[#F76F6F]/10">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-5 border-b border-[#F76F6F]/10 w-full">
           <div className="flex items-start gap-3.5 flex-1 max-w-xl">
             <div className="text-[#F76F6F] mt-1 shrink-0"><AlertTriangle size={18} /></div>
             <div>
@@ -2290,14 +2290,14 @@ export function DangerZoneSettings() {
           </div>
           <button 
             onClick={() => setActiveModal('clear')}
-            className="h-[44px] px-6 shrink-0 bg-[#F76F6F] hover:bg-[#e05e5e] text-[#0A0A0A] rounded-xl text-[13px] font-bold transition-all shadow-[0_4px_16px_rgba(247,111,111,0.2)]"
+            className="w-full lg:w-auto h-[44px] px-6 shrink-0 bg-[#F76F6F] hover:bg-[#e05e5e] text-[#0A0A0A] rounded-xl text-[13px] font-bold transition-all shadow-[0_4px_16px_rgba(247,111,111,0.2)] flex items-center justify-center cursor-pointer select-none"
           >
             Clear All Data
           </button>
         </div>
 
         {/* Delete Profile */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-5 w-full">
           <div className="flex items-start gap-3.5 flex-1 max-w-xl">
             <div className="text-[#F76F6F] mt-1 shrink-0"><AlertTriangle size={18} /></div>
             <div>
@@ -2309,9 +2309,9 @@ export function DangerZoneSettings() {
           </div>
           <button 
             onClick={() => setActiveModal('delete')}
-            className="h-[44px] px-6 shrink-0 bg-[#F76F6F]/10 hover:bg-[#F76F6F]/20 text-[#F76F6F] border border-[#F76F6F]/30 rounded-xl text-[13px] font-bold transition-all uppercase"
+            className="w-full lg:w-auto h-auto min-h-[44px] py-2.5 px-5 shrink-0 bg-[#F76F6F]/10 hover:bg-[#F76F6F]/20 text-[#F76F6F] border border-[#F76F6F]/30 rounded-xl text-[13px] font-bold transition-all flex items-center justify-center cursor-pointer select-none text-center"
           >
-            Delete all account data
+            Delete Account
           </button>
         </div>
       </div>

@@ -33,6 +33,14 @@
   --success: #6FF7A0;
 }
 
+html,
+body,
+#root {
+  max-width: 100vw;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);

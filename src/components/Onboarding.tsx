@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { BrainCircuit, Anchor, Backpack, Flame, Moon, Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
+import LoadingScreen from './LoadingScreen';
 
 
 const TOKENS = {
@@ -718,13 +719,23 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState(1);
   const [toastMessage, setToastMessage] = useState('');
   const [isFinishing, setIsFinishing] = useState(false);
+  const [isConnectingDb, setIsConnectingDb] = useState(false);
 
   const { updateUser } = useApp();
   const { user } = useAuth();
   const direction = useRef(1);
+  
   const handleNext = (nextStep: number) => {
     direction.current = nextStep > step ? 1 : -1;
-    setStep(nextStep);
+    if (nextStep === 2 && step === 1) {
+      setIsConnectingDb(true);
+      setTimeout(() => {
+        setIsConnectingDb(false);
+        setStep(2);
+      }, 2500); // 2.5s for database connection loading simulation
+    } else {
+      setStep(nextStep);
+    }
   };
 
   const handleFinish = () => {
@@ -752,6 +763,10 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
     { text: "Turn your routines into an optimized flow." },
     { text: "Make Anchor perfectly suited to your life." }
   ];
+
+  if (isConnectingDb) {
+    return <LoadingScreen />;
+  }
 
   return (
     <>
