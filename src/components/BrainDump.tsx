@@ -225,7 +225,7 @@ export default function BrainDump() {
               autoFocus
               value={newDump.text}
               onChange={e => setNewDump({...newDump, text: e.target.value})}
-              placeholder="What's on your mind? You can type or use the mic."
+              placeholder="Quickly dump an idea, task, or distracting thought... You can type or use the mic."
               className="w-full bg-[#1A1A1A] border border-[rgba(255,255,255,0.08)] rounded-[16px] p-4 text-[#F0F0F0] outline-none min-h-[120px] resize-none focus:border-[#7C6FF7] focus:shadow-[0_0_12px_rgba(124,111,247,0.2)] transition-all text-base"
               onKeyDown={e => {
                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSave(); }
@@ -261,7 +261,7 @@ export default function BrainDump() {
                 autoFocus
                 value={editDump.text}
                 onChange={e => setEditDump({...editDump, text: e.target.value})}
-                placeholder="What's on your mind?"
+                placeholder="Quickly dump an idea, task, or distracting thought..."
                 className="w-full bg-[#1A1A1A] border border-[rgba(255,255,255,0.08)] rounded-[16px] p-4 text-[#F0F0F0] outline-none min-h-[120px] resize-none focus:border-[#7C6FF7] focus:shadow-[0_0_12px_rgba(124,111,247,0.2)] transition-all text-base"
                 onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleUpdate(); }

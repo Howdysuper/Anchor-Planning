@@ -314,10 +314,10 @@ export default function ImmersiveDashboard() {
         </div>
         <div 
           onClick={() => setIsStreakDetailsOpen(true)}
-          className="flex items-center gap-2 bg-[rgba(247,160,111,0.08)] border border-[rgba(247,160,111,0.15)] hover:border-[rgba(247,160,111,0.3)] text-[#F7A06F] px-4 py-2 rounded-full font-bold shadow-[0_0_15px_rgba(247,160,111,0.06)] hover:bg-[rgba(247,160,111,0.12)] transition-all duration-300 cursor-pointer shrink-0 select-none"
+          className="flex items-center gap-2 bg-[rgba(250,204,21,0.12)] border border-[rgba(250,204,21,0.3)] hover:border-[rgba(250,204,21,0.5)] text-[#FACC15] px-4 py-2 rounded-full font-bold shadow-[0_0_15px_rgba(250,204,21,0.15)] hover:bg-[rgba(250,204,21,0.2)] transition-all duration-300 cursor-pointer shrink-0 select-none"
         >
-          <Flame size={16} fill="#F7A06F" className="animate-pulse text-[#F7A06F]" />
-          <span className="text-[14px] tracking-tight">{state.user.streakDays} Day Streak</span>
+          <Flame size={18} fill="#FACC15" className="animate-pulse text-[#FACC15]" />
+          <span className="text-[16px] tracking-tight">{state.user.streakDays}</span>
         </div>
       </header>
 
@@ -464,306 +464,16 @@ export default function ImmersiveDashboard() {
       </div>
 
       {/* MIDDLE ROW */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-        {/* LEFT 60% - TIMELINE */}
-        <section className="lg:col-span-7 bg-[#141414] rounded-[24px] p-4 sm:p-6 lg:p-8 border border-[rgba(255,255,255,0.06)] shadow-[0_4px_24px_rgba(0,0,0,0.2)] flex flex-col">
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="text-[16px] font-bold text-[#F0F0F0]">
-              Today's Anchor Flow
-            </h2>
-            <button
-              onClick={() => navigate("anchors")}
-              className="text-[11px] font-black bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] border border-[rgba(124,111,247,0.25)] px-3 py-1.5 rounded-[8px] transition-all uppercase tracking-wider flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95"
-            >
-              <span>View your Anchor Flow</span>
-              <ChevronRight size={12} strokeWidth={2.5} />
-            </button>
-          </div>
-
-          <div className="relative pl-0 flex-1 min-h-[300px]">
-            {/* Timeline track */}
-            <div className="absolute top-6 bottom-6 left-[81px] sm:left-[111px] w-[2px] bg-gradient-to-b from-[#7C6FF7] via-[rgba(111,247,160,0.3)] to-[rgba(255,255,255,0.06)] shadow-[0_0_8px_rgba(124,111,247,0.15)] pointer-events-none"></div>
-
-            {state.anchors.map((anchor) => {
-              const catTheme = getCategoryTheme(anchor.category);
-              const isNoteOpen = expandedNoteId === anchor.id;
-              const isEditingThisNote = editingNoteId === anchor.id;
-
-              return (
-                <div
-                  key={anchor.id}
-                  className="relative z-10 flex min-h-[82px] items-stretch mb-4 last:mb-0 group"
-                >
-                  {/* Left: Time (width 70px on mobile, 100px on desktop) */}
-                  <div
-                    className={`w-[70px] sm:w-[100px] pt-5 shrink-0 text-right pr-3 sm:pr-6 ${anchor.status === "done" ? "opacity-50" : ""}`}
-                  >
-                    <span className="text-[13px] font-semibold text-[#F0F0F0] tabular-nums whitespace-nowrap leading-none block">
-                      {anchor.time}
-                    </span>
-                  </div>
-
-                  {/* Center dot/checkmark with visual PROGRESS RING around the anchor point */}
-                  <div
-                    onClick={() => toggleAnchorStatus(anchor.id)}
-                    title="Click to cycle status - completed, in progress, upcoming"
-                    className="w-8 shrink-0 flex justify-center relative cursor-pointer hover:scale-110 active:scale-95 transition-transform z-20"
-                  >
-                    <svg
-                      className="absolute top-[14px] w-8 h-8 -rotate-90 pointer-events-none"
-                      viewBox="0 0 32 32"
-                    >
-                      <circle
-                        cx="16"
-                        cy="16"
-                        r="13.5"
-                        fill="none"
-                        stroke="rgba(255,255,255,0.04)"
-                        strokeWidth="2.5"
-                      />
-                      <motion.circle
-                        cx="16"
-                        cy="16"
-                        r="13.5"
-                        fill="none"
-                        stroke={
-                          anchor.status === "done"
-                            ? "#6FF7A0"
-                            : anchor.status === "active"
-                              ? "#6FBBF7"
-                              : "#7C6FF7"
-                        }
-                        strokeWidth="2.5"
-                        strokeDasharray="85"
-                        initial={{ strokeDashoffset: 85 }}
-                        animate={{
-                          strokeDashoffset:
-                            anchor.status === "done"
-                              ? 0
-                              : anchor.status === "active"
-                                ? 34
-                                : 68,
-                        }}
-                        transition={{ duration: 0.4, ease: "easeOut" }}
-                        strokeLinecap="round"
-                        className={
-                          anchor.status === "active"
-                            ? "drop-shadow-[0_0_4px_rgba(111,187,247,0.5)]"
-                            : anchor.status === "done"
-                              ? "drop-shadow-[0_0_4px_rgba(111,247,160,0.3)]"
-                              : ""
-                        }
-                      />
-                    </svg>
-
-                    {/* Center contents */}
-                    <div className="absolute top-[18px] w-6 h-6 rounded-full bg-[#141414] z-10 flex items-center justify-center border border-[rgba(255,255,255,0.06)]">
-                      {anchor.status === "done" ? (
-                        <Check
-                          size={11}
-                          strokeWidth={4}
-                          className="text-[#6FF7A0] drop-shadow-[0_0_3px_rgba(111,247,160,0.8)]"
-                        />
-                      ) : anchor.status === "active" ? (
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#6FBBF7] shadow-[0_0_8px_#6FBBF7] animate-pulse" />
-                      ) : (
-                        <div className="w-1.5 h-1.5 rounded-full bg-[rgba(255,255,255,0.25)]" />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Right: Content card with hover effects and glassy design */}
-                  <div
-                    className={`flex-1 pl-4 sm:pl-10 py-1 ${anchor.status === "done" ? "opacity-[0.62]" : ""}`}
-                  >
-                    <motion.div 
-                      drag={anchor.status !== "done" ? "x" : false}
-                      dragConstraints={{ left: 0, right: 0 }}
-                      dragElastic={0.2}
-                      dragSnapToOrigin={true}
-                      onDragEnd={(e, info) => {
-                        if (info.offset.x > 100 && anchor.status !== "done") {
-                           const updated = state.anchors.map(a => {
-                              if (a.id === anchor.id) {
-                                 const xpAward = a.xp || 15;
-                                 updateUser({ xp: state.user.xp + xpAward });
-                                 addToast(`Swipe Completed! +${xpAward} XP`, "success");
-                                 if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                                   navigator.vibrate([40, 30, 40]);
-                                 }
-                                 return { ...a, status: 'done' };
-                              }
-                              return a;
-                           });
-                           setAnchors(updated);
-                        }
-                      }}
-                      className={`relative p-[1.5px] rounded-[20px] bg-gradient-to-br transition-all duration-300 ${
-                      anchor.status === 'active'
-                        ? "from-[#7C6FF7]/60 via-[rgba(111,187,247,0.3)] to-transparent shadow-[0_4px_24px_rgba(124,111,247,0.15)]"
-                        : "from-[rgba(255,255,255,0.08)] to-[rgba(255,255,255,0.02)]"
-                    }`}>
-                      <div
-                        className={`w-full bg-[#141414]/95 backdrop-blur-md rounded-[19px] p-4 group/card transition-all duration-300 ${
-                          anchor.status === "active" ? "bg-[#1C1A2E]/95" : "hover:bg-[#1C1C1C]"
-                        }`}
-                      >
-                        <div className="flex justify-between items-start gap-4">
-                          <div>
-                            <div className="flex items-center gap-2.5 flex-wrap">
-                              <p
-                                className={`text-[16px] font-bold ${
-                                  anchor.status === "upcoming" 
-                                    ? "text-[#F0F0F0]" 
-                                    : anchor.status === "done" 
-                                    ? "text-[#888888] line-through" 
-                                    : "text-[#7C6FF7]"
-                                }`}
-                              >
-                                {anchor.title}
-                              </p>
-                              {/* Dynamic tag badge */}
-                              <span 
-                                style={{ backgroundColor: catTheme.bg, color: catTheme.color, borderColor: catTheme.border }}
-                                className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1 shrink-0"
-                              >
-                                <Tag size={9} />
-                                {anchor.category || 'General'}
-                              </span>
-                            </div>
-
-                            {anchor.subtitle && (
-                              <p className="text-[13px] text-[#888888] font-medium mt-1">
-                                {anchor.subtitle}
-                              </p>
-                            )}
-
-                            <div className="flex items-center gap-3 mt-3">
-                              <span
-                                className={`px-2 py-0.5 rounded-[6px] text-[10px] font-bold uppercase tracking-wide border ${
-                                  anchor.status === "done" 
-                                    ? "bg-[rgba(111,247,160,0.08)] text-[#6FF7A0] border-[rgba(111,247,160,0.2)]" 
-                                    : anchor.status === "active" 
-                                    ? "bg-[rgba(111,187,247,0.12)] text-[#6FBBF7] border-[rgba(111,187,247,0.25)] animate-pulse" 
-                                    : "bg-[#1E1E1E] text-[#888888] border-[rgba(255,255,255,0.04)]"
-                                }`}
-                              >
-                                {anchor.status === "done"
-                                  ? "Done"
-                                  : anchor.status === "active"
-                                    ? "Active"
-                                    : anchor.type}
-                              </span>
-                              {anchor.xp > 0 && (
-                                <span className="text-[12px] font-bold text-[#F7D96F] tabular-nums">
-                                  +{anchor.xp} XP
-                                </span>
-                              )}
-
-                              {/* Toggle expandable notes panel */}
-                              <button
-                                onClick={() => handleToggleNote(anchor.id)}
-                                className={`flex items-center gap-1 text-xs font-bold transition-all p-1 px-2 rounded-md ${
-                                  isNoteOpen 
-                                    ? 'bg-[rgba(124,111,247,0.15)] text-[#7C6FF7]' 
-                                    : anchor.note
-                                    ? 'bg-[rgba(255,255,255,0.05)] text-[#6FBBF7] hover:bg-[rgba(255,255,255,0.08)]'
-                                    : 'text-[#888888] hover:text-[#F0F0F0] hover:bg-[rgba(255,255,255,0.03)]'
-                                }`}
-                              >
-                                <StickyNote size={12} />
-                                <span>{anchor.note ? "Note" : "Add Note"}</span>
-                                {isNoteOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
-                              </button>
-                            </div>
-                          </div>
-
-                          <button
-                            onClick={() => handleDelete(anchor.id)}
-                            className="opacity-0 group-hover/card:opacity-100 p-1.5 text-[#888888] hover:text-[#F76F6F] hover:bg-[rgba(247,111,111,0.1)] rounded-lg transition-all"
-                          >
-                            <X size={15} />
-                          </button>
-                        </div>
-
-                        {/* Collapsible panel with textarea */}
-                        <AnimatePresence>
-                          {isNoteOpen && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: "auto" }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.18 }}
-                              className="overflow-hidden mt-3 pt-3 border-t border-[rgba(255,255,255,0.05)]"
-                            >
-                              {isEditingThisNote ? (
-                                <div className="flex flex-col gap-2.5">
-                                  <textarea
-                                    rows={2}
-                                    value={tempNoteText}
-                                    onChange={(e) => setTempNoteText(e.target.value)}
-                                    placeholder="Write daily checklist notes..."
-                                    className="w-full bg-[#1A1A1A] text-[#F0F0F0] text-[14px] p-2.5 rounded-[10px] border border-[rgba(255,255,255,0.08)] outline-none focus:border-[#7C6FF7]/50 resize-none leading-relaxed"
-                                  />
-                                  <div className="flex justify-end gap-2">
-                                    <button
-                                      onClick={() => setEditingNoteId(null)}
-                                      className="h-[30px] px-3 bg-transparent border border-[rgba(255,255,255,0.08)] text-[#888888] hover:text-[#F0F0F0] rounded-[6px] text-xs font-bold transition-all"
-                                    >
-                                      Cancel
-                                    </button>
-                                    <button
-                                      onClick={() => handleUpdateNote(anchor.id)}
-                                      className="h-[30px] px-3 bg-[#7C6FF7] hover:bg-[#6b5ee6] text-[#0A0A0A] rounded-[6px] text-xs font-bold transition-all flex items-center gap-1"
-                                    >
-                                      <Save size={11} />
-                                      Save
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="flex flex-col gap-2.5">
-                                  {anchor.note ? (
-                                    <div className="bg-[#1A1A1A]/80 p-3 rounded-[10px] border border-[rgba(255,255,255,0.03)] text-[13.5px] text-[#E0E0E0] leading-relaxed">
-                                      {anchor.note}
-                                    </div>
-                                  ) : (
-                                    <p className="text-xs text-[#888888] italic">
-                                      No notes attached to this anchor point.
-                                    </p>
-                                  )}
-                                  <div className="flex justify-end">
-                                    <button
-                                      onClick={() => startEditingNote(anchor.id, anchor.note)}
-                                      className="h-[28px] px-2.5 bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.08)] text-[#888888] hover:text-[#F0F0F0] border border-[rgba(255,255,255,0.06)] rounded-[6px] text-xs font-bold transition-all flex items-center gap-1"
-                                    >
-                                      <FileText size={11} />
-                                      {anchor.note ? "Edit Note" : "Write Note"}
-                                    </button>
-                                  </div>
-                                </div>
-                              )}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </motion.div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* RIGHT 40% - QUESTS & BRAIN DUMP */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
+      <div className="grid grid-cols-1 gap-6 mb-6">
+        {/* QUESTS & BRAIN DUMP */}
+        <div className="flex flex-col gap-6">
           {/* QUEST LOG */}
           <section id="up-next-section" className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
             <div className="flex justify-between items-center mb-5">
-              <h2 className="text-[16px] font-bold text-[#F0F0F0]">Up Next</h2>
+              <h2 className="text-[16px] font-bold text-[#F0F0F0]">Upcoming Tasks</h2>
               <button
                 onClick={() => navigate("quests")}
-                className="text-[13px] font-bold text-[#888888] hover:text-[#F0F0F0] transition-colors"
+                className="text-[13px] font-bold bg-[#1A1A1A] text-[#888888] hover:text-[#F0F0F0] hover:bg-[#2A2A2A] transition-colors border border-[rgba(255,255,255,0.06)] px-3 py-1.5 rounded-[8px]"
               >
                 View All
               </button>
@@ -853,8 +563,16 @@ export default function ImmersiveDashboard() {
                   })
                 ) : (
                   !primaryQuest && (
-                    <div className="text-center py-6 text-[#888888] text-[14px]">
-                      No upcoming quests.
+                    <div className="text-center py-6 px-4 bg-[#1A1A1A] rounded-[16px] border border-dashed border-[rgba(255,255,255,0.1)] flex flex-col items-center">
+                      <p className="text-[#888888] text-[14px] leading-relaxed mb-4 max-w-[280px]">
+                        This is where your uncompleted quests/tasks will show up.
+                      </p>
+                      <button
+                        onClick={() => navigate("quests")}
+                        className="text-[13px] font-bold bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] border border-[rgba(124,111,247,0.25)] px-4 py-2 rounded-[8px] transition-all cursor-pointer shadow-[0_0_12px_rgba(124,111,247,0.1)]"
+                      >
+                        Click View All to create your new task
+                      </button>
                     </div>
                   )
                 )}
@@ -864,18 +582,21 @@ export default function ImmersiveDashboard() {
 
           {/* BRAIN DUMP CACHE */}
           <section id="brain-dump-section" className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-[16px] font-bold text-[#F0F0F0]">Brain Dump</h2>
+            <div className="flex justify-between items-start mb-5">
+              <div>
+                <h2 className="text-[16px] font-bold text-[#F0F0F0]">Brain Dump</h2>
+                <p className="text-[12px] text-[#888888] mt-0.5 max-w-[200px]">Offload your thoughts, ideas, and distractions to stay focused.</p>
+              </div>
               <button
                 onClick={() => navigate("braindump")}
                 className="text-[11px] font-black bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] border border-[rgba(124,111,247,0.25)] px-3 py-1.5 rounded-[8px] transition-all uppercase tracking-wider flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95"
               >
-                <span>View your Brain Dump</span>
+                <span>View All</span>
                 <ChevronRight size={12} strokeWidth={2.5} />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 h-full pb-4">
+            <div className="grid grid-cols-2 gap-3 pb-2">
               {state.brainDumps.slice(0, 2).map((dump) => (
                 <div
                   key={dump.id}
@@ -899,13 +620,13 @@ export default function ImmersiveDashboard() {
 
               <div
                 onClick={() => setShowCaptureModal(true)}
-                className="bg-[rgba(124,111,247,0.05)] border border-dashed border-[rgba(124,111,247,0.2)] p-4 rounded-[16px] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-[rgba(124,111,247,0.1)] transition-colors min-h-[80px] col-span-2 sm:col-span-1 group"
+                className="bg-[rgba(124,111,247,0.05)] border border-dashed border-[rgba(124,111,247,0.2)] py-2 px-4 rounded-[16px] flex flex-row items-center justify-center text-center cursor-pointer hover:bg-[rgba(124,111,247,0.1)] transition-colors min-h-[50px] col-span-2 group gap-2"
               >
-                <span className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                  <Plus size={16} className="text-[#7C6FF7]" />
+                <span className="w-6 h-6 rounded-full bg-[#1A1A1A] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Plus size={14} className="text-[#7C6FF7]" />
                 </span>
                 <p className="text-[13px] font-bold text-[#7C6FF7]">
-                  Quick capture
+                  Add New Note
                 </p>
               </div>
             </div>
@@ -968,7 +689,7 @@ export default function ImmersiveDashboard() {
             autoFocus
             value={captureText}
             onChange={(e) => setCaptureText(e.target.value)}
-            placeholder="What's on your mind?"
+            placeholder="Quickly dump an idea, task, or distracting thought..."
             className="w-full bg-[#1A1A1A] border border-[rgba(255,255,255,0.08)] rounded-[16px] p-4 text-[#F0F0F0] outline-none min-h-[120px] resize-none focus:border-[#7C6FF7] focus:shadow-[0_0_12px_rgba(124,111,247,0.2)] transition-all text-[16px]"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -1070,19 +791,19 @@ export default function ImmersiveDashboard() {
       >
         <div className="flex flex-col gap-5">
           {/* Glowing Streak Flame Banner */}
-          <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[rgba(247,160,111,0.06)] to-[rgba(124,111,247,0.01)] rounded-[24px] border border-[rgba(247,160,111,0.1)] shadow-inner">
-            <div className="relative w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#F7A06F] to-[#E8651A] rounded-2xl shadow-[0_0_24px_rgba(247,160,111,0.3)] animate-pulse">
+          <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[rgba(250,204,21,0.06)] to-[rgba(124,111,247,0.01)] rounded-[24px] border border-[rgba(250,204,21,0.1)] shadow-inner">
+            <div className="relative w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#FACC15] to-[#EAB308] rounded-2xl shadow-[0_0_24px_rgba(250,204,21,0.3)] animate-pulse">
               <Flame size={40} className="text-white fill-white" />
               <div className="absolute -top-1.5 -right-1.5 bg-[#7C6FF7] text-white text-[10px] px-1.5 py-0.5 rounded-full font-black border border-[#141414]">
                 LV.{state.user.level}
               </div>
             </div>
             
-            <h3 className="text-2xl font-black text-[#F7A06F] mt-4 tracking-tight tabular-nums">
+            <h3 className="text-2xl font-black text-[#FACC15] mt-4 tracking-tight tabular-nums">
               {state.user.streakDays} Day Streak!
             </h3>
             <p className="text-[13px] text-zinc-400 font-medium text-center max-w-[320px] mt-1.5 leading-relaxed">
-              Incredible discipline! You have active <span className="text-[#F7A06F] font-bold">1.2x streak multipliers</span> boosting all of today's checklist completions.
+              Incredible discipline! You have active <span className="text-[#FACC15] font-bold">1.2x streak multipliers</span> boosting all of today's checklist completions.
             </p>
           </div>
 
@@ -1147,7 +868,7 @@ export default function ImmersiveDashboard() {
           {/* Grace Period margin */}
           <div className="p-4 rounded-[16px] bg-[#1E1E1E] border border-[rgba(255,255,255,0.04)]">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-[12px] bg-[rgba(247,160,111,0.08)] flex items-center justify-center text-[#F7A06F]">
+              <div className="w-10 h-10 rounded-[12px] bg-[rgba(250,204,21,0.08)] flex items-center justify-center text-[#FACC15]">
                 <Calendar size={18} />
               </div>
               <div>
@@ -1170,7 +891,7 @@ export default function ImmersiveDashboard() {
                     onClick={() => updateSetting('gamification.streakGracePeriod', opt.value)}
                     className={`py-2 px-3 rounded-[12px] text-[12px] font-bold border transition-all cursor-pointer ${
                       isActive 
-                        ? 'bg-[rgba(247,160,111,0.08)] border-[#F7A06F] text-[#F7A06F] shadow-[0_0_10px_rgba(247,160,111,0.05)]' 
+                        ? 'bg-[rgba(250,204,21,0.08)] border-[#FACC15] text-[#FACC15] shadow-[0_0_10px_rgba(250,204,21,0.05)]' 
                         : 'bg-[#141414] border-[rgba(255,255,255,0.04)] text-zinc-400 hover:bg-[#1A1A1A] hover:text-[#F0F0F0]'
                     }`}
                   >
@@ -1195,12 +916,12 @@ export default function ImmersiveDashboard() {
                 const isCompleted = [true, true, false, true, true, false, true][idx];
                 return (
                   <div key={idx} className="flex flex-col items-center gap-1.5 flex-1">
-                    <span className={`text-[10px] font-bold ${isToday ? 'text-[#F7A06F] underline decoration-dotted' : 'text-zinc-500'}`}>
+                    <span className={`text-[10px] font-bold ${isToday ? 'text-[#FACC15] underline decoration-dotted' : 'text-zinc-500'}`}>
                       {dayLabel}
                     </span>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all ${
                       isCompleted 
-                        ? 'bg-[rgba(247,160,111,0.08)] border-[#F7A06F] text-[#F7A06F]' 
+                        ? 'bg-[rgba(250,204,21,0.08)] border-[#FACC15] text-[#FACC15]' 
                         : 'bg-[#141414] border-[rgba(255,255,255,0.04)] text-zinc-600'
                     }`}>
                       {isCompleted ? <Check size={14} strokeWidth={3} /> : <X size={12} />}
@@ -1218,7 +939,7 @@ export default function ImmersiveDashboard() {
               navigate("leaderboard");
               addToast("Compete on specific habit streaks with friends!", "info");
             }}
-            className="h-[50px] w-full bg-gradient-to-r from-[#F7A06F] to-[#EE762F] hover:from-[#EE762F] hover:to-[#F7A06F] text-white rounded-[14px] font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(247,160,111,0.2)] mt-1"
+            className="h-[50px] w-full bg-gradient-to-r from-[#FACC15] to-[#EAB308] hover:from-[#EAB308] hover:to-[#FACC15] text-white rounded-[14px] font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(250,204,21,0.2)] mt-1"
           >
             <Sparkles size={16} />
             <span>Compete on Global Leaderboard</span>

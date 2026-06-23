@@ -6,7 +6,7 @@ import {
   User, Bell, Anchor, Moon, Trophy, Palette, Shield, Focus, Database, 
   Plug, HelpCircle, AlertTriangle, Check, X, ShieldAlert, Key, 
   Download, Upload, Heart, Info, ChevronRight, Play, Eye, EyeOff, 
-  Trash2, Plus, Copy, Lock, Sparkles, MessageSquare, Star, Edit3
+  Trash2, Plus, Copy, Lock, Sparkles, MessageSquare, Star, Edit3, Calendar, Clock
 } from 'lucide-react';
 
 import { SettingsCard } from './SettingsCard';
@@ -878,13 +878,13 @@ export function ScheduleSettings() {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-[#F0F0F0]">Anchor & Schedule</h2>
+        <h2 className="text-2xl font-bold text-[#F0F0F0]">Schedule & Timeblocks</h2>
         <p className="text-[14px] text-[#888888] mt-1.5">Manage default calendars, automatic buffering, and color categories.</p>
       </div>
 
       <SettingsCard title="Time Formats & Conventions">
         {/* Default Week Start */}
-        <SettingsRow icon={<Anchor size={18} />} title="Default Week Start" description="Set calendar rows alignment preference.">
+        <SettingsRow icon={<Calendar size={18} />} title="Default Week Start" description="Set calendar rows alignment preference.">
           <SettingsDropdown
             options={[
               { label: 'Monday First', value: 'monday' },
@@ -896,7 +896,7 @@ export function ScheduleSettings() {
         </SettingsRow>
 
         {/* Time formatting */}
-        <SettingsRow icon={<Anchor size={18} />} title="Time Display Format" description="Set visual clock representation.">
+        <SettingsRow icon={<Clock size={18} />} title="Time Display Format" description="Set visual clock representation.">
           <div className="flex gap-2">
             {[
               { id: '12hr', label: '12 Hour (AM/PM)' },
@@ -918,7 +918,7 @@ export function ScheduleSettings() {
         </SettingsRow>
 
         {/* Date Format */}
-        <SettingsRow icon={<Anchor size={18} />} title="Date System Format" description="Adjust standard dates visualization models.">
+        <SettingsRow icon={<Calendar size={18} />} title="Date System Format" description="Adjust standard dates visualization models.">
           <SettingsDropdown
             options={[
               { label: 'MM / DD / YYYY', value: 'MM/DD/YYYY' },
@@ -932,9 +932,9 @@ export function ScheduleSettings() {
       </SettingsCard>
 
       <SettingsCard title="Buffer Space Calculations">
-        {/* Minimum Break Between Anchors */}
+        {/* Minimum Break Between Events */}
         <SettingsRow 
-          icon={<Anchor size={18} />} 
+          icon={<Clock size={18} />} 
           title="Minimum Buffer Gap" 
           description="Automatic layout margins inserted between sequential events."
         >
@@ -949,7 +949,7 @@ export function ScheduleSettings() {
         </SettingsRow>
 
         {/* Free buffer block creation */}
-        <SettingsRow icon={<Anchor size={18} />} title="Auto Buffer Gaps" description="Automatically inserts dragging buffers inside empty scheduler hours.">
+        <SettingsRow icon={<Calendar size={18} />} title="Auto Buffer Gaps" description="Automatically inserts dragging buffers inside empty scheduler hours.">
           <SettingsToggle 
             checked={settings.schedule.autoBufferBlocks} 
             onChange={(checked) => updateSetting('schedule.autoBufferBlocks', checked)} 
@@ -958,7 +958,7 @@ export function ScheduleSettings() {
 
         {/* Weekends Override block */}
         <SettingsRow 
-          icon={<Anchor size={18} />} 
+          icon={<Calendar size={18} />} 
           title="Weekend Override schedules" 
           description="Designate separate wake and bedtime calendars for Saturdays and Sundays."
           isExpanded={settings.schedule.weekendsOverride}
@@ -1735,14 +1735,13 @@ export function FocusSettings() {
 // --- SECTION 9: DATA & STORAGE ===
 export function DataSettings() {
   const { settings, updateSetting, clearAllData, exportData, importData, backupNow } = useSettings();
-  const { state, setAnchors, setQuests, setBrainDumps } = useApp();
+  const { state, setQuests, setBrainDumps } = useApp();
   const { addToast } = useToast();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const stats = [
     { label: 'Routine Tasks Logs', count: `${state.quests.length} items`, key: 'quests', defaultVal: [] },
-    { label: 'Anchor Timeblocks', count: `${state.anchors.length} items`, key: 'anchors', defaultVal: [] },
     { label: 'Brain Dump Notes', count: `${state.brainDumps.length} items`, key: 'dumps', defaultVal: [] },
   ];
 
@@ -1750,9 +1749,6 @@ export function DataSettings() {
     if (key === 'quests') {
       setQuests([]);
       addToast("Routine quests cleared", "info");
-    } else if (key === 'anchors') {
-      setAnchors([]);
-      addToast("Anchor points cleared", "info");
     } else if (key === 'dumps') {
       setBrainDumps([]);
       addToast("Brain dump entries cleared", "info");

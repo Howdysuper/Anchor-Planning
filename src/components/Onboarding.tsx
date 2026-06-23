@@ -444,8 +444,9 @@ const IntroStage = ({ onNext }: { onNext: () => void }) => {
   const [slide, setSlide] = useState(0);
   
   const CARDS = [
-    { icon: <Anchor size={40} color={TOKENS.primary} />, color: TOKENS.primary, title: "Build your flow", sub: "Add your fixed anchors and let the system schedule the buffer." },
+    { icon: <Anchor size={40} color={TOKENS.primary} />, color: TOKENS.primary, title: "Build your flow", sub: "Add your upcoming tasks and let the app hold you accountable" },
     { icon: <Backpack size={40} color={TOKENS.blue} />, color: TOKENS.blue, title: "Your loadouts", sub: "Checklists before you leave—not after." },
+    { icon: <Moon size={40} color="#9CA3AF" />, color: "#9CA3AF", title: "Manage your sleep", sub: "log your sleep times and let the app manage the rest" },
     { icon: <Flame size={40} color={TOKENS.secondary} />, color: TOKENS.secondary, title: "Quests & XP", sub: "Earn points. Build streaks. Stay consistent." },
   ];
 

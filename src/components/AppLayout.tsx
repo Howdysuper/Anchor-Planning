@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { useToast } from '../contexts/ToastContext';
 import { 
-  LayoutDashboard, 
+  Home, 
   Anchor, 
   Backpack, 
   Brain, 
@@ -21,12 +21,11 @@ import { ThemeStatusPill } from './settings/ThemeStatusPill';
 import Modal from './ui/Modal';
 
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Home / Dashboard', icon: LayoutDashboard },
-  { id: 'anchors', label: 'Anchor Points', icon: Anchor },
+  { id: 'dashboard', label: 'Home', icon: Home },
   { id: 'loadout', label: 'Loadout', icon: Backpack },
   { id: 'braindump', label: 'Brain Dump', icon: Brain },
   { id: 'quests', label: 'Quest Log', icon: Sword },
-  { id: 'stats', label: 'Rhythm Analytics', icon: BarChart3 },
+  { id: 'stats', label: 'Analytics', icon: BarChart3 },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
 ];
 
@@ -97,14 +96,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <button
                 key={item.id}
                 onClick={() => navigate(item.id)}
-                className={`flex items-center justify-center xl:justify-start min-h-[48px] w-full px-0 xl:px-3.5 rounded-[12px] transition-all border-l-[3px] md:border-l-0 xl:border-l-[3px] group ${
+                className={`flex flex-col xl:flex-row items-center justify-center xl:justify-start min-h-[56px] xl:min-h-[48px] w-full px-0 xl:px-3.5 rounded-[12px] transition-all border-l-[3px] md:border-l-0 xl:border-l-[3px] group gap-1 xl:gap-0 ${
                   isActive 
                     ? 'bg-[rgba(124,111,247,0.15)] text-[#7C6FF7] border-[#7C6FF7] font-semibold' 
                     : 'bg-transparent text-[#888888] hover:bg-[#1E1E1E] hover:text-[#F0F0F0] border-transparent font-medium'
                 }`}
               >
                 <Icon size={20} className={`shrink-0 transition-transform ${isActive ? 'scale-105' : 'group-hover:scale-105'}`} />
-                <span className="ml-[14px] hidden xl:block text-[15px] whitespace-nowrap select-none">{item.label}</span>
+                <span className="xl:ml-[14px] text-[9px] xl:text-[15px] whitespace-nowrap select-none">{item.label}</span>
               </button>
             );
           })}
@@ -174,7 +173,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               autoFocus
               value={captureText}
               onChange={e => setCaptureText(e.target.value)}
-              placeholder="What's on your mind?"
+              placeholder="Quickly dump an idea, task, or distracting thought..."
               className="w-full bg-[#1A1A1A] border border-[rgba(255,255,255,0.08)] rounded-[16px] p-4 text-[#F0F0F0] outline-none min-h-[120px] resize-none focus:border-[#7C6FF7] focus:shadow-[0_0_12px_rgba(124,111,247,0.2)] transition-all text-[16px]"
               onKeyDown={e => {
                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCapture(); }
@@ -192,9 +191,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* MOBILE BOTTOM NAVIGATION */}
       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-[#141414] border-t border-[rgba(255,255,255,0.06)] h-[84px] px-2 pb-safe grid grid-cols-5 items-center justify-items-center z-40">
         {[
-          { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+          { id: 'dashboard', label: 'Home', icon: Home },
           { id: 'quests', label: 'Quest Log', icon: Sword },
-          { id: 'stats', label: 'Statistics', icon: BarChart3 },
+          { id: 'stats', label: 'Analytics', icon: BarChart3 },
           { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
         ].map((item) => {
           const isActive = activeTab === item.id;

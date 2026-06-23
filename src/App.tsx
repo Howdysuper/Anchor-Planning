@@ -12,7 +12,6 @@ import Onboarding from './components/Onboarding';
 import ImmersiveDashboard from './components/ImmersiveDashboard';
 import AppLayout from './components/AppLayout';
 
-import AnchorPoints from './components/AnchorPoints';
 import Loadout from './components/Loadout';
 import BrainDump from './components/BrainDump';
 import QuestLog from './components/QuestLog';
@@ -49,7 +48,6 @@ function AppContent() {
   const renderPage = () => {
     switch (state.currentPage) {
       case 'dashboard': return <ImmersiveDashboard />;
-      case 'anchors': return <AnchorPoints />;
       case 'loadout': return <Loadout />;
       case 'braindump': return <BrainDump />;
       case 'quests': return <QuestLog />;

@@ -644,65 +644,6 @@ export default function StatisticsPage() {
             )}
           </section>
 
-          {/* 5. ANCHOR POINT RHYTHM BREAKDOWN */}
-          <section className="w-full">
-            
-            {/* Anchor point rhythm breakdown */}
-            <div className="bg-[#141414] border border-[rgba(255,255,255,0.06)] rounded-[24px] p-6 flex flex-col gap-6 hover:border-[rgba(255,255,255,0.1)] transition-all">
-              <div>
-                <h3 className="text-[18px] font-bold text-[#F0F0F0] flex items-center gap-2">
-                  <Zap size={18} className="text-[#7C6FF7]" />
-                  <span>Anchor Habits Rhythm Index</span>
-                </h3>
-                <p className="text-[13px] text-[#888888] mt-1">
-                  Detailed review of active anchor habits and current completion status.
-                </p>
-              </div>
-
-              <div className="flex-1 flex flex-col gap-3 overflow-y-auto max-h-[300px] pr-1">
-                {state.anchors.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center py-10">
-                    <span className="text-[14px] text-[#888888]">No scheduled anchor point habits found.</span>
-                    <span className="text-xs text-[#666] mt-2">Go to "Anchor Points" to establish your baseline schedule!</span>
-                  </div>
-                ) : (
-                  state.anchors.map((anchor) => (
-                    <div
-                      key={anchor.id}
-                      className="flex items-center justify-between p-3.5 rounded-[16px] bg-[#1A1A1A] border border-[rgba(255,255,255,0.03)] hover:border-[rgba(124,111,247,0.2)] transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                          anchor.status === 'done' 
-                            ? 'bg-[#6FF7A0]/10 text-[#6FF7A0] border border-[#6FF7A0]/20' 
-                            : 'bg-[#ee9c1b]/10 text-[#ee9c1b] border border-[#ee9c1b]/20Off'
-                        }`}>
-                          {anchor.status === 'done' ? '✓' : '•'}
-                        </div>
-                        <div>
-                          <span className="text-[14px] font-bold text-[#F0F0F0] block leading-tight">{anchor.title}</span>
-                          <span className="text-[11px] text-[#888888] block mt-0.5 font-mono">{anchor.time} | {anchor.category || 'Mindset'}</span>
-                        </div>
-                      </div>
-                      <div className="text-right flex flex-col items-end">
-                        <span className={`text-[12px] font-bold ${anchor.status === 'done' ? 'text-[#6FF7A0]' : 'text-[#EE9C1B]'}`}>
-                          {anchor.status === 'done' ? 'SYNCED' : 'PENDING'}
-                        </span>
-                        <span className="text-[10px] text-[#888888] font-mono mt-0.5 block">Consistency: 92%</span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              
-              <div className="bg-[#1A1A1A]/80 border border-[rgba(255,255,255,0.04)] rounded-[16px] p-4 flex justify-between items-center text-xs font-mono">
-                <span className="text-[#888888]">OVERALL COMPLETION RATE:</span>
-                <span className="text-[#7C6FF7] font-black">{anchorOverview.completionRate}%</span>
-              </div>
-            </div>
-
-          </section>
-
         </div>
       )}
 
