@@ -139,7 +139,7 @@ const WheelPicker = ({ value, min, max, onChange, label, format = (v: number) =>
 };
 
 // --- Stages ---
-const Splash = ({ onNext }: { onNext: () => void }) => {
+const Splash = ({ onNext, onLoginClick }: { onNext: () => void, onLoginClick: () => void }) => {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden z-20">
       <motion.div
@@ -179,25 +179,37 @@ const Splash = ({ onNext }: { onNext: () => void }) => {
         Your day. Your rules.
       </motion.p>
       
-      <motion.button
-         initial={{ opacity: 0, y: 10 }}
-         animate={{ opacity: 1, y: 0 }}
-         transition={{ duration: 0.4, delay: 0.8 }}
-         whileHover={{ scale: 1.02 }}
-         whileTap={{ scale: 0.98 }}
-         onClick={onNext}
-         style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}
-         className="mt-12 w-full h-[56px] rounded-[14px] font-bold text-lg shadow-[0_8px_32px_rgba(124,111,247,0.4)]"
-      >
-        Get Started →
-      </motion.button>
+      <div className="w-full flex flex-col items-center mt-12 gap-4">
+        <motion.button
+           initial={{ opacity: 0, y: 10 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.4, delay: 0.8 }}
+           whileHover={{ scale: 1.02 }}
+           whileTap={{ scale: 0.98 }}
+           onClick={onNext}
+           style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}
+           className="w-full h-[56px] rounded-[14px] font-bold text-lg shadow-[0_8px_32px_rgba(124,111,247,0.4)]"
+        >
+          Get Started →
+        </motion.button>
+
+        <motion.button
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           transition={{ duration: 0.4, delay: 1.0 }}
+           onClick={onLoginClick}
+           className="text-sm font-bold text-[#7C6FF7] hover:underline bg-transparent border-none cursor-pointer py-1"
+        >
+          Already have an account? Log In
+        </motion.button>
+      </div>
     </div>
   );
 };
 
-const AuthStage = ({ onNext, setToast }: { onNext: () => void, setToast: (v: string) => void }) => {
+const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => void, setToast: (v: string) => void, initialTab?: 'signup'|'login' }) => {
   const { updateUser } = useApp();
-  const [tab, setTab] = useState<'signup'|'login'>('signup');
+  const [tab, setTab] = useState<'signup'|'login'>(initialTab);
   const [loading, setLoading] = useState(false);
   const [shake, setShake] = useState(0);
 
@@ -717,6 +729,7 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
 // --- Main Component ---
 export default function Onboarding({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState(1);
+  const [authTab, setAuthTab] = useState<'signup'|'login'>('signup');
   const [toastMessage, setToastMessage] = useState('');
   const [isFinishing, setIsFinishing] = useState(false);
   const [isConnectingDb, setIsConnectingDb] = useState(false);
@@ -855,12 +868,21 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
                <AnimatePresence mode="popLayout" custom={direction.current}>
                   {step === 1 && (
                      <motion.div key="1" custom={direction.current} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="w-full h-full absolute inset-0">
-                        <Splash onNext={() => handleNext(2)} />
+                        <Splash 
+                          onNext={() => {
+                            setAuthTab('signup');
+                            handleNext(2);
+                          }} 
+                          onLoginClick={() => {
+                            setAuthTab('login');
+                            handleNext(2);
+                          }}
+                        />
                      </motion.div>
                   )}
                   {step === 2 && (
                      <motion.div key="2" custom={direction.current} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="w-full h-full absolute inset-0">
-                        <AuthStage onNext={() => handleNext(3)} setToast={setToastMessage} />
+                        <AuthStage onNext={() => handleNext(3)} setToast={setToastMessage} initialTab={authTab} />
                      </motion.div>
                   )}
                   {step === 3 && (

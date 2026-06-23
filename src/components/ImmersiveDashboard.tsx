@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useApp } from "../contexts/AppContext";
 import { useToast } from "../contexts/ToastContext";
+import { useSettings } from "../contexts/SettingsContext";
 import { motion, AnimatePresence } from "motion/react";
 import Modal from "./ui/Modal";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -70,6 +71,8 @@ export default function ImmersiveDashboard() {
     setAnchors,
   } = useApp();
   const { addToast } = useToast();
+  const { settings, updateSetting } = useSettings();
+  const [isStreakDetailsOpen, setIsStreakDetailsOpen] = useState(false);
 
   const getTodayDateString = () => {
     const d = new Date();
@@ -310,7 +313,7 @@ export default function ImmersiveDashboard() {
           </p>
         </div>
         <div 
-          onClick={() => navigate("leaderboard")}
+          onClick={() => setIsStreakDetailsOpen(true)}
           className="flex items-center gap-2 bg-[rgba(247,160,111,0.08)] border border-[rgba(247,160,111,0.15)] hover:border-[rgba(247,160,111,0.3)] text-[#F7A06F] px-4 py-2 rounded-full font-bold shadow-[0_0_15px_rgba(247,160,111,0.06)] hover:bg-[rgba(247,160,111,0.12)] transition-all duration-300 cursor-pointer shrink-0 select-none"
         >
           <Flame size={16} fill="#F7A06F" className="animate-pulse text-[#F7A06F]" />
@@ -1055,6 +1058,170 @@ export default function ImmersiveDashboard() {
           >
             <CheckCircle2 size={16} />
             <span>Lock Morning Status & Claim +25 XP</span>
+          </button>
+        </div>
+      </Modal>
+
+      {/* Streak Details Modal */}
+      <Modal
+        isOpen={isStreakDetailsOpen}
+        onClose={() => setIsStreakDetailsOpen(false)}
+        title="Streak Consistency Hub"
+      >
+        <div className="flex flex-col gap-5">
+          {/* Glowing Streak Flame Banner */}
+          <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[rgba(247,160,111,0.06)] to-[rgba(124,111,247,0.01)] rounded-[24px] border border-[rgba(247,160,111,0.1)] shadow-inner">
+            <div className="relative w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#F7A06F] to-[#E8651A] rounded-2xl shadow-[0_0_24px_rgba(247,160,111,0.3)] animate-pulse">
+              <Flame size={40} className="text-white fill-white" />
+              <div className="absolute -top-1.5 -right-1.5 bg-[#7C6FF7] text-white text-[10px] px-1.5 py-0.5 rounded-full font-black border border-[#141414]">
+                LV.{state.user.level}
+              </div>
+            </div>
+            
+            <h3 className="text-2xl font-black text-[#F7A06F] mt-4 tracking-tight tabular-nums">
+              {state.user.streakDays} Day Streak!
+            </h3>
+            <p className="text-[13px] text-zinc-400 font-medium text-center max-w-[320px] mt-1.5 leading-relaxed">
+              Incredible discipline! You have active <span className="text-[#F7A06F] font-bold">1.2x streak multipliers</span> boosting all of today's checklist completions.
+            </p>
+          </div>
+
+          {/* Streak Freeze Shield Safeguard */}
+          <div className="p-4 rounded-[16px] bg-[#1E1E1E] border border-[rgba(255,255,255,0.04)] flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-[12px] bg-[rgba(124,111,247,0.08)] flex items-center justify-center text-[#7C6FF7]">
+                  <Shield size={20} />
+                </div>
+                <div>
+                  <h4 className="text-[14px] font-bold text-[#F0F0F0]">Streak Freeze Shield</h4>
+                  <p className="text-[12px] text-[#888888] leading-tight">
+                    {state.user.streakFreezes ? `${state.user.streakFreezes} active freeze(s)` : "No active freezes"}
+                  </p>
+                </div>
+              </div>
+              <div className="px-3 py-1 bg-[rgba(247,160,111,0.1)] text-[#F7A06F] text-xs font-bold rounded-full border border-[rgba(247,160,111,0.2)] whitespace-nowrap">
+                {state.user.xp} XP
+              </div>
+            </div>
+            
+            {/* Freeze Packages Store */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { days: 1, xp: 20, label: '1 Day' },
+                { days: 2, xp: 40, label: '2 Days' },
+                { days: 3, xp: 60, label: '3 Days' },
+                { days: 7, xp: 100, label: '1 Week', discount: '30% OFF' },
+              ].map((pkg) => (
+                <button
+                  key={pkg.days}
+                  onClick={() => {
+                    if (state.user.xp >= pkg.xp) {
+                      updateUser({
+                        xp: state.user.xp - pkg.xp,
+                        streakFreezes: (state.user.streakFreezes || 0) + pkg.days
+                      });
+                      addToast(`Purchased ${pkg.label} freeze!`, 'success');
+                    } else {
+                      addToast("Not enough XP!", 'error');
+                    }
+                  }}
+                  className={`relative flex flex-col items-center justify-center p-3 rounded-[12px] border transition-all ${
+                    state.user.xp >= pkg.xp
+                      ? 'bg-[#141414] border-[rgba(255,255,255,0.04)] hover:border-[#7C6FF7] hover:bg-[rgba(124,111,247,0.04)] cursor-pointer hover:shadow-[0_4px_12px_rgba(124,111,247,0.1)]'
+                      : 'bg-[#111] border-[rgba(255,255,255,0.02)] opacity-50 cursor-not-allowed'
+                  }`}
+                >
+                  {pkg.discount && (
+                    <div className="absolute -top-2 bg-[#F7A06F] text-[#141414] text-[9px] font-black px-1.5 py-0.5 rounded-sm shadow-md">
+                      {pkg.discount}
+                    </div>
+                  )}
+                  <div className="text-[14px] font-bold text-[#F0F0F0]">{pkg.label}</div>
+                  <div className="text-[11px] font-bold text-[#7C6FF7] mt-1">{pkg.xp} XP</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grace Period margin */}
+          <div className="p-4 rounded-[16px] bg-[#1E1E1E] border border-[rgba(255,255,255,0.04)]">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-[12px] bg-[rgba(247,160,111,0.08)] flex items-center justify-center text-[#F7A06F]">
+                <Calendar size={18} />
+              </div>
+              <div>
+                <h4 className="text-[14px] font-bold text-[#F0F0F0]">Grace Period Buffer</h4>
+                <p className="text-[12px] text-[#888888] leading-tight">Designated clock buffer before streak breaks</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              {[
+                { label: 'None', value: 'none' },
+                { label: '1 Hour Extension', value: '1hour' },
+                { label: '2 Hours Extension', value: '2hour' },
+                { label: 'Until Midnight', value: 'midnight' },
+              ].map((opt) => {
+                const isActive = settings.gamification.streakGracePeriod === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => updateSetting('gamification.streakGracePeriod', opt.value)}
+                    className={`py-2 px-3 rounded-[12px] text-[12px] font-bold border transition-all cursor-pointer ${
+                      isActive 
+                        ? 'bg-[rgba(247,160,111,0.08)] border-[#F7A06F] text-[#F7A06F] shadow-[0_0_10px_rgba(247,160,111,0.05)]' 
+                        : 'bg-[#141414] border-[rgba(255,255,255,0.04)] text-zinc-400 hover:bg-[#1A1A1A] hover:text-[#F0F0F0]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Habit History Chart / Visualizer */}
+          <div className="p-4 rounded-[16px] bg-[#1E1E1E] border border-[rgba(255,255,255,0.04)]">
+            <h4 className="text-[11px] font-bold text-[#888888] uppercase tracking-wider mb-3">
+              Consistency History (Last 7 Days)
+            </h4>
+            <div className="flex justify-between gap-1 select-none font-mono">
+              {Array.from({ length: 7 }).map((_, idx) => {
+                const date = new Date();
+                date.setDate(date.getDate() - (6 - idx));
+                const dayLabel = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const isToday = idx === 6;
+                const isCompleted = [true, true, false, true, true, false, true][idx];
+                return (
+                  <div key={idx} className="flex flex-col items-center gap-1.5 flex-1">
+                    <span className={`text-[10px] font-bold ${isToday ? 'text-[#F7A06F] underline decoration-dotted' : 'text-zinc-500'}`}>
+                      {dayLabel}
+                    </span>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all ${
+                      isCompleted 
+                        ? 'bg-[rgba(247,160,111,0.08)] border-[#F7A06F] text-[#F7A06F]' 
+                        : 'bg-[#141414] border-[rgba(255,255,255,0.04)] text-zinc-600'
+                    }`}>
+                      {isCompleted ? <Check size={14} strokeWidth={3} /> : <X size={12} />}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* View Leaderboard CTA */}
+          <button
+            onClick={() => {
+              setIsStreakDetailsOpen(false);
+              navigate("leaderboard");
+              addToast("Compete on specific habit streaks with friends!", "info");
+            }}
+            className="h-[50px] w-full bg-gradient-to-r from-[#F7A06F] to-[#EE762F] hover:from-[#EE762F] hover:to-[#F7A06F] text-white rounded-[14px] font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(247,160,111,0.2)] mt-1"
+          >
+            <Sparkles size={16} />
+            <span>Compete on Global Leaderboard</span>
           </button>
         </div>
       </Modal>

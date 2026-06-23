@@ -10,6 +10,7 @@ export type AppState = {
     xp: number;
     xpToNextLevel: number;
     streakDays: number;
+    streakFreezes?: number;
     avatar: string;
     proUntil?: number | null;
     lastStreakClaimDate?: string;
@@ -42,6 +43,7 @@ const initialState: AppState = {
     xp: 0,
     xpToNextLevel: 100,
     streakDays: 1,
+    streakFreezes: 0,
     avatar: "U",
     proUntil: null,
     lastStreakClaimDate: "",
