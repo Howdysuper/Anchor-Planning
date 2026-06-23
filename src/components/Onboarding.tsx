@@ -199,35 +199,43 @@ const AuthStage = ({ onNext, setToast }: { onNext: () => void, setToast: (v: str
   const [loading, setLoading] = useState(false);
   const [shake, setShake] = useState(0);
 
-  const [form, setForm] = useState({ name: '', username: '', password: '', confirm: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const isUsernameValid = (e: string) => /^[a-zA-Z0-9_]{3,15}$/.test(e);
+  const isEmailValid = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const isPwdValid = (p: string) => p.length >= 8;
   const isNameValid = (n: string) => n.length >= 2;
   const isConfValid = (c: string) => c === form.password && c.length > 0;
 
   const errors = {
     name: touched.name && !isNameValid(form.name) ? 'Name must be at least 2 characters.' : '',
-    username: touched.username && !isUsernameValid(form.username) ? 'Username 3-15 chars (letters, numbers, _).' : '',
+    email: touched.email && !isEmailValid(form.email) ? 'Please enter a valid email address.' : '',
     password: touched.password && !isPwdValid(form.password) ? 'Password must be at least 8 characters.' : '',
     confirm: touched.confirm && !isConfValid(form.confirm) ? 'Passwords do not match.' : ''
   };
 
-  const isSignUpValid = isNameValid(form.name) && isUsernameValid(form.username) && isPwdValid(form.password) && isConfValid(form.confirm);
-  const isLoginValid = isUsernameValid(form.username) && isPwdValid(form.password);
+  const isSignUpValid = isNameValid(form.name) && isEmailValid(form.email) && isPwdValid(form.password) && isConfValid(form.confirm);
+  const isLoginValid = isEmailValid(form.email) && isPwdValid(form.password);
 
   const handleSubmit = async () => {
     if (tab === 'signup' && !isSignUpValid) { setShake(s => s + 1); return; }
     if (tab === 'login' && !isLoginValid) { setShake(s => s + 1); return; }
 
     setLoading(true);
-    setTimeout(() => {
-      // Allow them to use username as in-app presence
-      updateUser({ name: form.username });
+    try {
+      const { registerEmail, loginEmail } = await import('../lib/firebase');
+      if (tab === 'signup') {
+        const cred = await registerEmail(form.email, form.password);
+        updateUser({ name: form.name, email: form.email });
+      } else {
+        await loginEmail(form.email, form.password);
+      }
       onNext();
+    } catch (e: any) {
+      setToast(e.message || "Authentication failed");
+    } finally {
       setLoading(false);
-    }, 700);
+    }
   };
 
   const handleSocialClick = async (providerName: string) => {
@@ -235,10 +243,13 @@ const AuthStage = ({ onNext, setToast }: { onNext: () => void, setToast: (v: str
     if (providerName === 'Google') {
       import('../lib/firebase').then(async ({ loginWithGoogle }) => {
         try {
-          await loginWithGoogle();
+          const cred = await loginWithGoogle();
+          if (cred.user) {
+            updateUser({ name: cred.user.displayName || 'User', email: cred.user.email || undefined, avatar: cred.user.displayName?.[0] || 'U' });
+          }
           onNext(); // Move to next step
-        } catch (error) {
-          setToast("Google login failed");
+        } catch (error: any) {
+          setToast(error.message || "Google login failed");
         }
         setLoading(false);
       });
@@ -309,14 +320,14 @@ const AuthStage = ({ onNext, setToast }: { onNext: () => void, setToast: (v: str
               />
             )}
             <TextInput 
-              label="Username" 
-              type="text"
-              value={form.username} 
-              onChange={(v) => setForm({ ...form, username: v })} 
-              onBlur={() => setTouched({ ...touched, username: true })}
-              error={errors.username} 
-              valid={isUsernameValid(form.username)}
-              placeholder="alex_123"
+              label="Email" 
+              type="email"
+              value={form.email} 
+              onChange={(v) => setForm({ ...form, email: v })} 
+              onBlur={() => setTouched({ ...touched, email: true })}
+              error={errors.email} 
+              valid={isEmailValid(form.email)}
+              placeholder="alex@example.com"
             />
             <TextInput 
               label="Password" 
@@ -517,7 +528,10 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
   useEffect(() => {
     const saved = localStorage.getItem('anchor_personalization');
     if (saved) {
-      try { setData(JSON.parse(saved)); } catch (e) {}
+      try { 
+        const parsed = JSON.parse(saved);
+        setData(prev => ({ ...prev, ...parsed, activities: parsed.activities || [] })); 
+      } catch (e) {}
     }
   }, []);
 
@@ -704,6 +718,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
   const [toastMessage, setToastMessage] = useState('');
   const [isFinishing, setIsFinishing] = useState(false);
 
+  const { updateUser } = useApp();
   const direction = useRef(1);
   const handleNext = (nextStep: number) => {
     direction.current = nextStep > step ? 1 : -1;
@@ -712,6 +727,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
 
   const handleFinish = () => {
     setIsFinishing(true);
+    updateUser({ onboarded: true });
     localStorage.setItem('anchor_onboarded', 'true');
     setTimeout(() => {
       onComplete();

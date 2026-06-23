@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { db } from '../lib/firebase';
 import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
@@ -18,6 +18,7 @@ export type AppState = {
     streakBroken?: boolean;
     savedStreakDays?: number;
     streak_v3_resetted?: boolean;
+    onboarded?: boolean;
   };
   sleep: {
     score: number;
@@ -144,9 +145,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return parsedState;
   });
 
+  const dataLoadedRef = useRef(false);
+
   // Check Firestore once on user loaded
   useEffect(() => {
     if (user) {
+      dataLoadedRef.current = false;
       getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
         if (docSnap.exists()) {
           const dbState = docSnap.data() as AppState;
@@ -157,8 +161,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
              sleep: { ...prev.sleep, ...(dbState.sleep || {}) },
              loadout: { ...prev.loadout, ...(dbState.loadout || {}) }
           }));
-          localStorage.setItem('anchor_onboarded', 'true');
+          if (dbState.user?.onboarded) {
+            localStorage.setItem('anchor_onboarded', 'true');
+            // Trigger a potential re-render if it was lagging
+            window.dispatchEvent(new Event('storage'));
+          }
         }
+        dataLoadedRef.current = true;
+        setDoc(doc(db, 'users', user.uid), docSnap.exists() ? docSnap.data() : state, { merge: true }).catch(console.error);
       }).catch(console.error);
     } else {
       // User logged out, clear state
@@ -170,7 +180,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     localStorage.setItem('anchor_app_state', JSON.stringify(state));
-    if (user) {
+    if (user && dataLoadedRef.current) {
       setDoc(doc(db, 'users', user.uid), state, { merge: true }).catch(console.error);
     }
   }, [state, user]);

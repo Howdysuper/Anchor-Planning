@@ -3,6 +3,7 @@
   "appId": "1:143330451021:web:69f646e3ecfbb7d969c604",
   "apiKey": "AIzaSyAfyCsF1yRyBY0ZgFKGl-5tV5chqK1ZeUc",
   "authDomain": "tensile-brook-v8gvj.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-513fb0f5-48cc-4d05-9fa3-4ff525e44e43",
   "storageBucket": "tensile-brook-v8gvj.firebasestorage.app",
   "messagingSenderId": "143330451021",
   "measurementId": ""

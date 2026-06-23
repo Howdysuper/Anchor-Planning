@@ -252,8 +252,8 @@ export default function SleepIntel() {
               </div>
             </div>
 
-            <div className="w-full h-[200px] mt-auto">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full h-[200px] mt-auto" style={{ minWidth: 0, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <AreaChart
                   data={chartData}
                   margin={{ top: 10, right: 5, left: -25, bottom: 0 }}
