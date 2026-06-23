@@ -130,6 +130,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             wakeTime: formatHour(p.wakeHour),
             bedtime: formatHour(p.sleepHour),
           };
+          
+          if (parsedState.anchors.length === 0) {
+            parsedState.anchors = [
+               { id: Date.now(), time: formatHour(p.wakeHour), title: "Optimized Wake", subtitle: "Start of day", xp: 15, status: "upcoming", type: "auto", category: "Health", note: "" },
+               { id: Date.now() + 1, time: formatHour(p.sleepHour), title: "Phone Down", subtitle: "Wind-down sequence", xp: 15, status: "upcoming", type: "bedtime", category: "Routine", note: "" }
+            ];
+          }
         }
       }
     } catch (e) {}

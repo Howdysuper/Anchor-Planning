@@ -6,7 +6,9 @@ import config from "../../firebase-applet-config.json";
 // The config provides databaseId, use initializeFirestore to ensure it passes through
 export const app = initializeApp(config);
 
-export const db = initializeFirestore(app, {}, (config as any).firestoreDatabaseId ? (config as any).firestoreDatabaseId : undefined);
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true
+}, (config as any).firestoreDatabaseId ? (config as any).firestoreDatabaseId : undefined);
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();

@@ -21,8 +21,6 @@ import Leaderboard from './components/Leaderboard';
 import Settings from './components/Settings';
 import { useApp } from './contexts/AppContext';
 
-import Login from './components/Login';
-
 function AppContent() {
   const { state } = useApp();
   const { user, loading } = useAuth();
@@ -35,11 +33,8 @@ function AppContent() {
     return <div className="h-screen w-screen flex items-center justify-center bg-[#0A0A0A] text-[#F0F0F0]">Loading...</div>;
   }
 
-  if (!user) {
-    return <Login />;
-  }
-
-  if (!isOnboarded) {
+  // If not logged in, or not fully onboarded, show Onboarding
+  if (!user || !isOnboarded) {
     return <Onboarding onComplete={() => setIsOnboarded(true)} />;
   }
 
