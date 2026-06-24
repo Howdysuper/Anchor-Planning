@@ -73,6 +73,9 @@ export default function ImmersiveDashboard() {
   const { addToast } = useToast();
   const { settings, updateSetting } = useSettings();
   const [isStreakDetailsOpen, setIsStreakDetailsOpen] = useState(false);
+  const [showGuide, setShowGuide] = useState(() => {
+    return localStorage.getItem("anchor_show_guide") !== "false";
+  });
 
   const getTodayDateString = () => {
     const d = new Date();
@@ -467,19 +470,94 @@ export default function ImmersiveDashboard() {
       <div className="grid grid-cols-1 gap-6 mb-6">
         {/* QUESTS & BRAIN DUMP */}
         <div className="flex flex-col gap-6">
-          {/* QUEST LOG */}
-          <section id="up-next-section" className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+          {/* INBOX & TASKS */}
+          <section id="inbox-section" className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
             <div className="flex justify-between items-center mb-5">
-              <h2 className="text-[16px] font-bold text-[#F0F0F0]">Upcoming Tasks</h2>
-              <button
-                onClick={() => navigate("quests")}
-                className="text-[13px] font-bold bg-[#1A1A1A] text-[#888888] hover:text-[#F0F0F0] hover:bg-[#2A2A2A] transition-colors border border-[rgba(255,255,255,0.06)] px-3 py-1.5 rounded-[8px]"
-              >
-                View All
-              </button>
+              <div>
+                <h2 className="text-[16px] font-bold text-[#F0F0F0]">Tasks</h2>
+                <p className="text-[12px] text-[#888888] mt-0.5">Your quests and quick captures in one place.</p>
+              </div>
+              <div className="flex gap-2">
+                {!showGuide && (
+                  <button
+                    onClick={() => {
+                      setShowGuide(true);
+                      localStorage.setItem("anchor_show_guide", "true");
+                    }}
+                    className="text-[11px] font-bold bg-[#1A1A1A] text-[#888888] hover:text-[#7C6FF7] hover:bg-[#201F30] transition-colors border border-[rgba(255,255,255,0.06)] px-2.5 py-1.5 rounded-[8px] flex items-center gap-1"
+                  >
+                    <Sparkles size={12} /> Show Guide
+                  </button>
+                )}
+                <button
+                  onClick={() => navigate("quests")}
+                  className="text-[13px] font-bold bg-[#1A1A1A] text-[#888888] hover:text-[#F0F0F0] hover:bg-[#2A2A2A] transition-colors border border-[rgba(255,255,255,0.06)] px-3 py-1.5 rounded-[8px]"
+                >
+                  View All
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-3">
+            {/* NEW USER QUICKSTART GUIDE */}
+            {showGuide && (
+              <div className="mb-6 bg-[rgba(124,111,247,0.06)] border border-[rgba(124,111,247,0.15)] rounded-[18px] p-5 relative overflow-hidden">
+                <button 
+                  onClick={() => {
+                    setShowGuide(false);
+                    localStorage.setItem("anchor_show_guide", "false");
+                    addToast("Guide hidden. You can show it again anytime using the 'Show Guide' button!", "info");
+                  }}
+                  className="absolute top-4 right-4 text-[#888888] hover:text-[#F0F0F0] transition-all p-1 hover:bg-[rgba(255,255,255,0.05)] rounded-full"
+                  aria-label="Dismiss guide"
+                >
+                  <X size={14} />
+                </button>
+                <h4 className="text-[13px] font-bold text-[#7C6FF7] uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <Sparkles size={14} className="animate-pulse" /> New User Quick Start Guide
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-3 bg-[rgba(255,255,255,0.02)] p-3 rounded-xl border border-[rgba(255,255,255,0.04)]">
+                    <span className="text-[18px] shrink-0">🛌</span>
+                    <div>
+                      <p className="text-[12px] font-bold text-[#F0F0F0] mb-0.5">Track Sleep</p>
+                      <p className="text-[11px] text-[#888888] leading-relaxed">
+                        Log when you go to bed or wake up using the sleep check-in buttons above to align with circadian rhythms.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 bg-[rgba(255,255,255,0.02)] p-3 rounded-xl border border-[rgba(255,255,255,0.04)]">
+                    <span className="text-[18px] shrink-0">💧</span>
+                    <div>
+                      <p className="text-[12px] font-bold text-[#F0F0F0] mb-0.5">Morning Alignment</p>
+                      <p className="text-[11px] text-[#888888] leading-relaxed">
+                        Cross off daily morning habits (Hydrate, Light, Mindful Movement) to stack up XP and set up your day.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 bg-[rgba(255,255,255,0.02)] p-3 rounded-xl border border-[rgba(255,255,255,0.04)]">
+                    <span className="text-[18px] shrink-0">🎒</span>
+                    <div>
+                      <p className="text-[12px] font-bold text-[#F0F0F0] mb-0.5">Pack Loadout</p>
+                      <p className="text-[11px] text-[#888888] leading-relaxed">
+                        Go to the <span className="text-[#7C6FF7] font-semibold">Loadout</span> tab to check off your essential items so you never forget anything.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 bg-[rgba(255,255,255,0.02)] p-3 rounded-xl border border-[rgba(255,255,255,0.04)]">
+                    <span className="text-[18px] shrink-0">⚓</span>
+                    <div>
+                      <p className="text-[12px] font-bold text-[#F0F0F0] mb-0.5">Core Anchors</p>
+                      <p className="text-[11px] text-[#888888] leading-relaxed">
+                        Check off daily schedule anchor milestones as <span className="text-[#6FBBF7] font-semibold">In Progress</span> then <span className="text-[#6FF7A0] font-semibold">Done</span>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* PRIMARY QUEST */}
               {primaryQuest && (
                 <div id={`active-quest-item-${primaryQuest.id}`} className="bg-[#1A1A1A] p-4.5 rounded-[18px] border border-[rgba(124,111,247,0.25)] relative overflow-hidden group hover:border-[rgba(124,111,247,0.4)] transition-all">
                   <div className="absolute -top-12 -right-12 w-24 h-24 bg-[rgba(124,111,247,0.12)] rounded-full blur-[20px] pointer-events-none"></div>
@@ -514,120 +592,66 @@ export default function ImmersiveDashboard() {
                 </div>
               )}
 
-              <AnimatePresence>
-                {regularQuests.length > 0 ? (
-                  regularQuests.map((quest) => {
-                    const isJustCompleted = justCompletedIds.includes(quest.id);
-                    return (
-                      <motion.div
-                        layout
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: isJustCompleted ? 0.6 : 1, y: 0 }}
-                        exit={{
-                          opacity: 0,
-                          x: -20,
-                          transition: { duration: 0.2 },
-                        }}
-                        key={quest.id}
-                        className="flex items-center justify-between p-4 bg-[#1A1A1A] rounded-[16px] border border-[rgba(255,255,255,0.04)] group hover:bg-[#1E1E1E] transition-colors min-h-[64px]"
-                      >
-                        <div className="flex items-center gap-4">
-                          <button
-                            onClick={() =>
-                              completeQuest(quest.id, quest.xp, quest.createdAt)
-                            }
-                            className={`w-[22px] h-[22px] shrink-0 rounded-[4px] border-2 flex items-center justify-center transition-colors ${isJustCompleted ? "border-[#6FF7A0] bg-[#6FF7A0]" : "border-[rgba(255,255,255,0.2)] hover:border-[#6FF7A0] bg-[#0A0A0A]"}`}
-                          >
-                            {isJustCompleted && (
-                              <Check size={14} color="#0A0A0A" strokeWidth={3} />
-                            )}
-                          </button>
-                          <div>
-                            <p
-                              className={`text-[15px] font-bold leading-tight mb-1 line-clamp-1 transition-all ${isJustCompleted ? "text-[#888888] line-through" : "text-[#F0F0F0]"}`}
-                            >
-                              {quest.title}
-                            </p>
-                            <p className="text-[12px] text-[#888888] font-medium leading-none">
-                              {quest.due}
-                            </p>
-                          </div>
-                        </div>
-                        <div
-                          className={`text-[12px] font-bold px-3 py-1.5 rounded-full shrink-0 tabular-nums transition-colors ${isJustCompleted ? "bg-[#F7D96F] text-[#0A0A0A]" : "bg-[rgba(247,217,111,0.1)] text-[#F7D96F]"}`}
+              {/* REGULAR QUESTS */}
+              <div className="space-y-3">
+                <h3 className="text-[11px] font-bold text-[#888888] uppercase tracking-wider mb-2 px-1">Upcoming Tasks</h3>
+                <AnimatePresence>
+                  {regularQuests.length > 0 ? (
+                    regularQuests.map((quest) => {
+                      const isJustCompleted = justCompletedIds.includes(quest.id);
+                      return (
+                        <motion.div
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: isJustCompleted ? 0.6 : 1, y: 0 }}
+                          exit={{
+                            opacity: 0,
+                            x: -20,
+                            transition: { duration: 0.2 },
+                          }}
+                          key={quest.id}
+                          className="flex items-center justify-between p-3 bg-[#1A1A1A] rounded-[14px] border border-[rgba(255,255,255,0.04)] group hover:bg-[#1E1E1E] transition-colors min-h-[56px]"
                         >
-                          +{quest.xp} XP
-                        </div>
-                      </motion.div>
-                    );
-                  })
-                ) : (
-                  !primaryQuest && (
-                    <div className="text-center py-6 px-4 bg-[#1A1A1A] rounded-[16px] border border-dashed border-[rgba(255,255,255,0.1)] flex flex-col items-center">
-                      <p className="text-[#888888] text-[14px] leading-relaxed mb-4 max-w-[280px]">
-                        This is where your uncompleted quests/tasks will show up.
-                      </p>
-                      <button
-                        onClick={() => navigate("quests")}
-                        className="text-[13px] font-bold bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] border border-[rgba(124,111,247,0.25)] px-4 py-2 rounded-[8px] transition-all cursor-pointer shadow-[0_0_12px_rgba(124,111,247,0.1)]"
-                      >
-                        Click View All to create your new task
-                      </button>
-                    </div>
-                  )
-                )}
-              </AnimatePresence>
-            </div>
-          </section>
-
-          {/* BRAIN DUMP CACHE */}
-          <section id="brain-dump-section" className="bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
-            <div className="flex justify-between items-start mb-5">
-              <div>
-                <h2 className="text-[16px] font-bold text-[#F0F0F0]">Brain Dump</h2>
-                <p className="text-[12px] text-[#888888] mt-0.5 max-w-[200px]">Offload your thoughts, ideas, and distractions to stay focused.</p>
-              </div>
-              <button
-                onClick={() => navigate("braindump")}
-                className="text-[11px] font-black bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] border border-[rgba(124,111,247,0.25)] px-3 py-1.5 rounded-[8px] transition-all uppercase tracking-wider flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95"
-              >
-                <span>View All</span>
-                <ChevronRight size={12} strokeWidth={2.5} />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pb-2">
-              {state.brainDumps.slice(0, 2).map((dump) => (
-                <div
-                  key={dump.id}
-                  onClick={() => navigate("braindump")}
-                  className="bg-[#1A1A1A] p-4 rounded-[16px] border border-[rgba(255,255,255,0.04)] hover:bg-[#1E1E1E] cursor-pointer transition-colors min-h-[80px] flex flex-col justify-between"
-                >
-                  <p className="text-[14px] font-medium text-[#F0F0F0] leading-[1.5] break-words line-clamp-3">
-                    {dump.text}
-                  </p>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="text-[12px] text-[#888888] font-bold">
-                      {dump.time}
-                    </span>
-                    <span
-                      className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]"
-                      style={{ backgroundColor: dump.color, color: dump.color }}
-                    ></span>
-                  </div>
-                </div>
-              ))}
-
-              <div
-                onClick={() => setShowCaptureModal(true)}
-                className="bg-[rgba(124,111,247,0.05)] border border-dashed border-[rgba(124,111,247,0.2)] py-2 px-4 rounded-[16px] flex flex-row items-center justify-center text-center cursor-pointer hover:bg-[rgba(124,111,247,0.1)] transition-colors min-h-[50px] col-span-2 group gap-2"
-              >
-                <span className="w-6 h-6 rounded-full bg-[#1A1A1A] flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Plus size={14} className="text-[#7C6FF7]" />
-                </span>
-                <p className="text-[13px] font-bold text-[#7C6FF7]">
-                  Add New Note
-                </p>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() =>
+                                completeQuest(quest.id, quest.xp, quest.createdAt)
+                              }
+                              className={`w-[18px] h-[18px] shrink-0 rounded-[4px] border-2 flex items-center justify-center transition-colors ${isJustCompleted ? "border-[#6FF7A0] bg-[#6FF7A0]" : "border-[rgba(255,255,255,0.2)] hover:border-[#6FF7A0] bg-[#0A0A0A]"}`}
+                            >
+                              {isJustCompleted && (
+                                <Check size={12} color="#0A0A0A" strokeWidth={3} />
+                              )}
+                            </button>
+                            <div>
+                              <p
+                                className={`text-[13px] font-bold leading-tight mb-0.5 line-clamp-1 transition-all ${isJustCompleted ? "text-[#888888] line-through" : "text-[#F0F0F0]"}`}
+                              >
+                                {quest.title}
+                              </p>
+                              <p className="text-[11px] text-[#888888] font-medium leading-none">
+                                {quest.due}
+                              </p>
+                            </div>
+                          </div>
+                          <div
+                            className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 tabular-nums transition-colors ${isJustCompleted ? "bg-[#F7D96F] text-[#0A0A0A]" : "bg-[rgba(247,217,111,0.1)] text-[#F7D96F]"}`}
+                          >
+                            +{quest.xp} XP
+                          </div>
+                        </motion.div>
+                      );
+                    })
+                  ) : (
+                    !primaryQuest && (
+                      <div className="text-center py-4 px-3 bg-[#1A1A1A] rounded-[14px] border border-dashed border-[rgba(255,255,255,0.1)]">
+                        <p className="text-[#888888] text-[12px] leading-relaxed">
+                          No upcoming tasks.
+                        </p>
+                      </div>
+                    )
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </section>

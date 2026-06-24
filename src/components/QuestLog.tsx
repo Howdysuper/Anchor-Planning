@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { useToast } from '../contexts/ToastContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Check, MoreHorizontal, Calendar, Zap, AlertTriangle, Edit2, Trash2, Flame, History } from 'lucide-react';
+import { Plus, Check, MoreHorizontal, Calendar, Zap, AlertTriangle, Edit2, Trash2, Flame, History, Bot, Clock } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import Modal from './ui/Modal';
 import confetti from 'canvas-confetti';
@@ -26,6 +26,44 @@ export default function QuestLog() {
   const [isEditingXpCalculating, setIsEditingXpCalculating] = useState(false);
   const [editingXpDots, setEditingXpDots] = useState("");
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
+
+  // AI Assistant State
+  const [availableTime, setAvailableTime] = useState<number | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<any[] | null>(null);
+
+  const calculateAiSuggestions = (mins: number) => {
+    setAvailableTime(mins);
+    setAiLoading(true);
+    setAiSuggestion(null);
+    
+    // Simulate thinking delay
+    setTimeout(() => {
+      // Very basic algorithm: map xp to roughly 1 xp = 2 mins as a mock,
+      // or just pick some uncompleted tasks that fit into the timeframe.
+      const uncompleted = state.quests.filter(q => !q.done);
+      
+      let timeRemaining = mins;
+      const suggestions = [];
+      
+      // Sort by importance if we had it, but for now let's prioritize by XP (bigger XP first or randomly)
+      // Let's sort randomly to make it feel "dynamic", then pick tasks that fit.
+      const shuffled = [...uncompleted].sort(() => 0.5 - Math.random());
+      
+      for (const task of shuffled) {
+        // mock: each task takes (task.xp * 1.5) minutes roughly
+        const estTime = Math.max(10, Math.floor(task.xp * 1.5));
+        if (timeRemaining >= estTime) {
+          suggestions.push({ ...task, estTime });
+          timeRemaining -= estTime;
+        }
+      }
+      
+      // If we couldn't find any tasks, maybe just suggest creating one
+      setAiSuggestion(suggestions);
+      setAiLoading(false);
+    }, 1500);
+  };
 
   React.useEffect(() => {
     const loadEvents = async () => {
@@ -302,8 +340,8 @@ export default function QuestLog() {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24">
       <header className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-[32px] font-bold text-[#F0F0F0] tracking-tight leading-tight mb-2">Quest Log</h1>
-          <p className="text-[16px] text-[#888888] font-medium">Turn tasks into XP.</p>
+          <h1 className="text-[32px] font-bold text-[#F0F0F0] tracking-tight leading-tight mb-2">Tasks</h1>
+          <p className="text-[16px] text-[#888888] font-medium">Capture ideas and manage your quests.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
@@ -481,120 +519,102 @@ export default function QuestLog() {
         </>
       )}
 
-      {/* Mini Calendar View */}
+      {/* AI Assistant View */}
       <div className="mt-12 bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
             <h3 className="text-[18px] font-bold text-[#F0F0F0] flex items-center gap-2">
-              <Calendar size={18} className="text-[#6FBBF7]" />
-              Schedule & Calendar
+              <Bot size={18} className="text-[#6FF7A0]" />
+              AI Assistant
             </h3>
-            <p className="text-[13px] text-[#888888] mt-1">Syncs with Google Calendar. Quests appear here automatically.</p>
+            <p className="text-[13px] text-[#888888] mt-1">How much time do you have to focus today?</p>
           </div>
-          <button
-            onClick={() => {
-              setNewQuest({...newQuest, title: ''});
-              setIsModalOpen(true);
-            }}
-            className="px-4 py-2 w-full sm:w-auto bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.08)] rounded-[12px] text-sm font-bold text-[#F0F0F0] transition-colors border border-[rgba(255,255,255,0.04)]"
-          >
-            Add Event
-          </button>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 sm:gap-2">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-            <div key={d} className="text-center text-[10px] font-bold text-[#888888] uppercase tracking-wider mb-2">{d}</div>
+        <div className="flex flex-wrap gap-2 mb-6">
+          {[
+            { label: '30 min', val: 30 },
+            { label: '1 hour', val: 60 },
+            { label: '1.5 hours', val: 90 },
+            { label: '2 hours', val: 120 },
+            { label: '2.5 hours', val: 150 },
+            { label: '3 hours', val: 180 },
+          ].map(opt => (
+            <button
+              key={opt.val}
+              onClick={() => calculateAiSuggestions(opt.val)}
+              className={`px-4 py-2 rounded-full text-[13px] font-bold transition-all border ${
+                availableTime === opt.val
+                  ? 'bg-[#6FF7A0] text-[#0A0A0A] border-[#6FF7A0]'
+                  : 'bg-[rgba(255,255,255,0.02)] text-[#888888] border-[rgba(255,255,255,0.08)] hover:text-[#F0F0F0] hover:border-[rgba(255,255,255,0.2)]'
+              }`}
+            >
+              {opt.label}
+            </button>
           ))}
-          {Array.from({ length: 42 }).map((_, i) => {
-            const currentMonth = new Date();
-            const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
-            const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
-            const dateNum = (i - firstDay + 1) > 0 && (i - firstDay + 1) <= daysInMonth ? (i - firstDay + 1) : '';
-            const todayDate = new Date().getDate();
-            const isToday = dateNum === todayDate;
-            
-            let taskCount = 0;
-            let fullDateObj = null;
-            let dayName = "";
-            let dayQuests: any[] = [];
-            let dayEvents: any[] = [];
-
-            if (dateNum !== '') {
-               fullDateObj = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), dateNum as number);
-               const fullDateStr = fullDateObj.getFullYear() + '-' + String(fullDateObj.getMonth() + 1).padStart(2, '0') + '-' + String(fullDateObj.getDate()).padStart(2, '0');
-               
-               dayEvents = calendarEvents.filter(e => {
-                 if (e.start && e.start.date) return e.start.date === fullDateStr;
-                 if (e.start && e.start.dateTime) return (e.start.dateTime as string).startsWith(fullDateStr);
-                 return false;
-               });
-               dayQuests = state.quests.filter(q => q.dueRaw === fullDateStr);
-               taskCount = dayEvents.length + dayQuests.length;
-
-               // Just to grab a title if there's exactly 1 event
-               if (dayEvents.length > 0) dayName = dayEvents[0].summary || "Event";
-               else if (dayQuests.length > 0) dayName = dayQuests[0].title;
-            }
-
-            if (!dateNum) {
-              return <div key={i} className="aspect-[4/3] sm:aspect-square"></div>;
-            }
-
-            return (
-              <div 
-                key={i} 
-                onClick={() => {
-                   if (fullDateObj) {
-                     setNewQuest({...newQuest, title: '', due: fullDateObj.getFullYear() + '-' + String(fullDateObj.getMonth() + 1).padStart(2, '0') + '-' + String(fullDateObj.getDate()).padStart(2, '0')});
-                     setIsModalOpen(true);
-                   }
-                }}
-                className={`aspect-[4/3] sm:aspect-square rounded-[8px] sm:rounded-[12px] border ${isToday ? 'border-[#6FBBF7] bg-[rgba(111,187,247,0.1)]' : 'border-[rgba(255,255,255,0.02)] bg-[rgba(255,255,255,0.01)]'} flex flex-col items-center justify-start p-1 sm:p-2 relative group hover:bg-[rgba(255,255,255,0.04)] hover:border-[#7C6FF7] transition-all cursor-pointer overflow-hidden`}
-              >
-                <span className={`text-[12px] sm:text-[14px] font-bold ${isToday ? 'text-[#6FBBF7]' : 'text-[#888888] group-hover:text-[#F0F0F0]'} mb-1`}>{dateNum}</span>
-                {taskCount > 0 && (
-                  <div className="w-full flex-1 flex flex-col gap-1 items-center overflow-y-auto no-scrollbar pb-1">
-                    {dayQuests.map((q, qIndex) => (
-                      <div 
-                        key={'q'+qIndex}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditQuest(q as any);
-                          setIsEditModalOpen(true);
-                        }}
-                        className="text-[9px] sm:text-[10px] w-full px-1 py-0.5 rounded bg-[rgba(111,187,247,0.15)] text-[#6FBBF7] font-medium truncate text-center leading-tight hover:bg-[#6FBBF7] hover:text-[#0A0A0A] transition-colors"
-                      >
-                        {q.title}
-                      </div>
-                    ))}
-                    {dayEvents.map((evt, eIndex) => (
-                      <div 
-                        key={'e'+eIndex}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditQuest({
-                            id: -1,
-                            title: evt.summary || 'Calendar Event',
-                            description: evt.description || '',
-                            due: evt.start.date || (evt.start.dateTime ? evt.start.dateTime.split('T')[0] : getTodayStr()),
-                            dueRaw: evt.start.date || (evt.start.dateTime ? evt.start.dateTime.split('T')[0] : getTodayStr()),
-                            xp: 15,
-                            done: false,
-                          });
-                          setIsEditModalOpen(true);
-                        }}
-                        className="text-[9px] sm:text-[10px] w-full px-1 py-0.5 rounded bg-[rgba(247,160,111,0.15)] text-[#F7A06F] font-medium truncate text-center leading-tight hover:bg-[#F7A06F] hover:text-[#0A0A0A] transition-colors"
-                      >
-                        {evt.summary || 'Event'}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </div>
+
+        <AnimatePresence mode="wait">
+          {aiLoading && (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex items-center gap-3 p-4 bg-[#1A1A1A] rounded-[16px] border border-[rgba(255,255,255,0.04)]"
+            >
+              <div className="w-5 h-5 rounded-full border-2 border-[#6FF7A0] border-t-transparent animate-spin"></div>
+              <p className="text-[#888888] text-[14px] font-medium">Analyzing tasks and estimating times...</p>
+            </motion.div>
+          )}
+
+          {!aiLoading && aiSuggestion && (
+            <motion.div
+              key="result"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-[rgba(111,247,160,0.05)] border border-[rgba(111,247,160,0.15)] rounded-[16px] p-5"
+            >
+              <h4 className="text-[14px] font-bold text-[#6FF7A0] mb-4 flex items-center gap-2">
+                <Check size={16} />
+                Based on your {availableTime} minutes, I recommend focusing on:
+              </h4>
+
+              {aiSuggestion.length > 0 ? (
+                <div className="space-y-3">
+                  {aiSuggestion.map((task, i) => (
+                    <div key={i} className="flex justify-between items-center bg-[#1A1A1A] p-3 rounded-[12px] border border-[rgba(255,255,255,0.04)]">
+                      <p className="text-[14px] font-bold text-[#F0F0F0]">{task.title}</p>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[11px] font-bold text-[#888888] flex items-center gap-1">
+                          <Clock size={12} />
+                          ~{task.estTime} min
+                        </span>
+                        <span className="text-[11px] font-bold bg-[rgba(247,217,111,0.1)] text-[#F7D96F] px-2 py-1 rounded-full">
+                          +{task.xp} XP
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Totals */}
+                  <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.06)] flex justify-between items-center">
+                    <span className="text-[12px] font-bold text-[#888888]">
+                      Total Estimated Time: {aiSuggestion.reduce((acc, curr) => acc + curr.estTime, 0)} min
+                    </span>
+                    <span className="text-[12px] font-bold text-[#F7D96F]">
+                      Potential XP: {aiSuggestion.reduce((acc, curr) => acc + curr.xp, 0)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[#888888] text-[13px]">
+                  You don't have any uncompleted tasks right now! Why not take a break or add something new?
+                </p>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Add Quest Modal */}
@@ -613,11 +633,11 @@ export default function QuestLog() {
            </div>
 
            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Short Description (Optional)</label>
+              <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Details & Notes (Add context, sub-tasks, or links) (Optional)</label>
               <textarea 
                 value={newQuest.description}
                 onChange={e => setNewQuest({...newQuest, description: e.target.value})}
-                placeholder="Add a short description..."
+                placeholder="Add details, links, or sub-tasks here..."
                 className="h-[80px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 py-3 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[15px] resize-none"
               />
            </div>
@@ -684,11 +704,11 @@ export default function QuestLog() {
              </div>
 
              <div className="flex flex-col gap-2">
-                <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Short Description (Optional)</label>
+                <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Details & Notes (Add context, sub-tasks, or links) (Optional)</label>
                 <textarea 
                   value={editQuest.description || ''}
                   onChange={e => setEditQuest({...editQuest, description: e.target.value})}
-                  placeholder="Add a short description..."
+                  placeholder="Add details, links, or sub-tasks here..."
                   className="h-[80px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 py-3 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[15px] resize-none"
                   readOnly={editQuest.id === -1}
                 />

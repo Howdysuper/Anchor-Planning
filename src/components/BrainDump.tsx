@@ -126,23 +126,20 @@ export default function BrainDump() {
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24">
-      <header className="flex justify-between items-end mb-8">
-        <div>
-          <h1 className="text-[32px] font-bold text-[#F0F0F0] tracking-tight leading-tight mb-2">Brain Dump</h1>
-          <p className="text-[16px] text-[#888888] font-medium">Capture everything. Process later.</p>
-        </div>
+    <div className="pb-12">
+      {/* Filters */}
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-[18px] font-bold text-[#F0F0F0]">Quick Notes</h3>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="h-[44px] px-5 bg-[#7C6FF7] hover:bg-[#6b5ee6] text-[#0A0A0A] rounded-[12px] font-bold text-sm transition-colors flex items-center gap-2"
+          className="h-[36px] px-4 bg-[rgba(124,111,247,0.1)] hover:bg-[rgba(124,111,247,0.2)] text-[#7C6FF7] border border-[rgba(124,111,247,0.2)] rounded-[10px] font-bold text-[13px] transition-colors flex items-center gap-2"
         >
-          <Plus size={18} />
-          New Capture
+          <Plus size={16} />
+          New Note
         </button>
-      </header>
-
-      {/* Filters */}
-      <div className="flex gap-2 mb-8 overflow-x-auto hide-scrollbar pb-2">
+      </div>
+      
+      <div className="flex gap-2 mb-6 overflow-x-auto hide-scrollbar pb-2">
          {FILTERS.map((f) => (
            <button
              key={f}

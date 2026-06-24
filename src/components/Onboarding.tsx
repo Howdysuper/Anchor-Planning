@@ -103,36 +103,109 @@ const TextInput = ({
   );
 };
 
-const WheelPicker = ({ value, min, max, onChange, label, format = (v: number) => String(v) }: any) => {
-  const items = [];
-  for (let i = min; i <= max; i++) items.push(i);
-  
+const WheelColumn = ({ items, value, onChange, width, align = 'center' }: any) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeout = useRef<any>(null);
+
+  useEffect(() => {
+    if (!isScrolling && containerRef.current) {
+      const index = items.findIndex((i: any) => i.value === value);
+      if (index !== -1) {
+        containerRef.current.scrollTop = index * 44;
+      }
+    }
+  }, [value, isScrolling, items]);
+
+  const handleScroll = () => {
+    setIsScrolling(true);
+    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    
+    scrollTimeout.current = setTimeout(() => {
+      setIsScrolling(false);
+      if (containerRef.current) {
+        const index = Math.round(containerRef.current.scrollTop / 44);
+        if (items[index] && items[index].value !== value) {
+          onChange(items[index].value);
+        }
+      }
+    }, 100);
+  };
+
+  const alignClass = align === 'right' ? 'justify-end pr-4' : align === 'left' ? 'justify-start pl-4' : 'justify-center';
+
   return (
-    <div className="flex flex-col items-center flex-1">
-      <span className="text-xs tracking-widest font-bold uppercase mb-4" style={{ color: TOKENS.textMuted }}>{label}</span>
-      <div 
-        className="h-[150px] overflow-y-auto snap-y snap-mandatory rounded-2xl w-[120px] relative hide-scrollbar border border-[rgba(255,255,255,0.06)]"
-        style={{ backgroundColor: TOKENS.surface2 }}
-      >
-        <div className="h-[50px]" /> {/* Top padding */}
-        {items.map((item) => (
+    <div 
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="h-[220px] overflow-y-auto snap-y snap-mandatory hide-scrollbar relative z-10"
+      style={{ width }}
+    >
+      <div className="h-[88px]" />
+      {items.map((item: any) => {
+        const isSelected = value === item.value;
+        return (
           <div 
-            key={item} 
-            onClick={() => onChange(item)}
-            className="h-[50px] snap-center flex items-center justify-center font-bold text-xl cursor-pointer transition-all px-2 select-none whitespace-nowrap"
-            style={{ 
-              color: value === item ? TOKENS.textPrimary : TOKENS.textMuted,
-              transform: value === item ? 'scale(1.05)' : 'scale(1)',
-              opacity: value === item ? 1 : 0.4
-            }}
+            key={item.value} 
+            onClick={() => onChange(item.value)}
+            className={`h-[44px] snap-center flex items-center ${alignClass} cursor-pointer select-none`}
           >
-            {format(item)}
+            <span 
+              className="transition-all duration-200"
+              style={{ 
+                fontSize: isSelected ? '24px' : '20px',
+                fontWeight: isSelected ? '500' : '500',
+                color: isSelected ? '#FFFFFF' : '#4A4A4A',
+              }}
+            >
+              {item.label}
+            </span>
           </div>
-        ))}
-        <div className="h-[50px]" /> {/* Bottom padding */}
-        
-        {/* Highlight strip centrally fixed */}
-        <div className="absolute top-[50px] left-0 w-full h-[50px] border-y border-[rgba(124,111,247,0.3)] pointer-events-none bg-[rgba(124,111,247,0.05)]" />
+        );
+      })}
+      <div className="h-[88px]" />
+    </div>
+  );
+};
+
+const TimePickerIOS = ({ hour, minute, onChange }: { hour: number, minute: number, onChange: (h: number, m: number) => void }) => {
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  const ampm = hour < 12 ? 'AM' : 'PM';
+
+  const handleHourChange = (newDisplayHour: number) => {
+    const isAm = ampm === 'AM';
+    let newHour = newDisplayHour === 12 ? (isAm ? 0 : 12) : newDisplayHour + (isAm ? 0 : 12);
+    onChange(newHour, minute);
+  };
+
+  const handleMinuteChange = (newMin: number) => {
+    onChange(hour, newMin);
+  };
+
+  const handleAmPmChange = (newAmPm: string) => {
+    if (newAmPm === ampm) return;
+    let newHour = hour;
+    if (newAmPm === 'AM') {
+      newHour -= 12;
+    } else {
+      newHour += 12;
+    }
+    onChange(newHour, minute);
+  };
+
+  const hours = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: String(i + 1) }));
+  const minutes = Array.from({ length: 60 }, (_, i) => ({ value: i, label: String(i).padStart(2, '0') }));
+  const ampms = [{ value: 'AM', label: 'AM' }, { value: 'PM', label: 'PM' }];
+
+  return (
+    <div className="relative flex justify-center items-center h-[220px] bg-[#111111] w-full rounded-[32px] overflow-hidden" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      {/* Horizontal pill highlight */}
+      <div className="absolute top-1/2 left-4 right-4 h-[44px] -translate-y-1/2 bg-[#2A2A2C] rounded-xl pointer-events-none z-0" />
+      
+      <div className="flex z-10 w-full justify-between">
+        <WheelColumn items={hours} value={displayHour} onChange={handleHourChange} width="33%" align="right" />
+        <WheelColumn items={minutes} value={minute} onChange={handleMinuteChange} width="33%" align="center" />
+        <WheelColumn items={ampms} value={ampm} onChange={handleAmPmChange} width="33%" align="left" />
       </div>
     </div>
   );
@@ -209,7 +282,11 @@ const Splash = ({ onNext, onLoginClick }: { onNext: () => void, onLoginClick: ()
 
 const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => void, setToast: (v: string) => void, initialTab?: 'signup'|'login' }) => {
   const { updateUser } = useApp();
-  const [tab, setTab] = useState<'signup'|'login'>(initialTab);
+  const [tab, setTab] = useState<'signup'|'login'|'phone'>(initialTab as any);
+  const [phoneStep, setPhoneStep] = useState<'number'|'code'>('number');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [shake, setShake] = useState(0);
 
@@ -237,14 +314,28 @@ const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => 
 
     setLoading(true);
     try {
-      const { registerEmail, loginEmail } = await import('../lib/firebase');
+      const { registerEmail, loginEmail, setupRecaptcha, loginWithPhone } = await import('../lib/firebase');
       if (tab === 'signup') {
         const cred = await registerEmail(form.email, form.password);
         updateUser({ name: form.name, email: form.email });
-      } else {
+        onNext();
+      } else if (tab === 'login') {
         await loginEmail(form.email, form.password);
+        onNext();
+      } else if (tab === 'phone') {
+        if (phoneStep === 'number') {
+          const appVerifier = setupRecaptcha('recaptcha-container');
+          const confResult = await loginWithPhone(phoneNumber, appVerifier);
+          setConfirmationResult(confResult);
+          setPhoneStep('code');
+        } else {
+          const cred = await confirmationResult.confirm(verificationCode);
+          if (cred.user) {
+            updateUser({ name: cred.user.displayName || 'User', email: cred.user.email || undefined, avatar: cred.user.displayName?.[0] || 'U' });
+          }
+          onNext();
+        }
       }
-      onNext();
     } catch (e: any) {
       setToast(e.message || "Authentication failed");
     } finally {
@@ -366,6 +457,27 @@ const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => 
               />
             )}
             
+            {tab === 'phone' && (
+              <div className="w-full">
+                {phoneStep === 'number' ? (
+                  <TextInput 
+                    label="Phone Number" 
+                    value={phoneNumber} 
+                    onChange={setPhoneNumber} 
+                    placeholder="+1 555 555 5555"
+                  />
+                ) : (
+                  <TextInput 
+                    label="Verification Code" 
+                    value={verificationCode} 
+                    onChange={setVerificationCode} 
+                    placeholder="123456"
+                  />
+                )}
+                <div id="recaptcha-container" className="mt-4 flex justify-center"></div>
+              </div>
+            )}
+            
             {tab === 'login' && (
               <div className="w-full flex justify-end mt-2">
                 <span className="text-sm font-bold cursor-pointer hover:underline" style={{ color: TOKENS.primary }}>Forgot password?</span>
@@ -380,7 +492,7 @@ const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => 
 
             <div className="w-full flex flex-col gap-3">
               <SocialBtn provider="Google" onClick={() => handleSocialClick('Google')} />
-              <SocialBtn provider="Apple" onClick={() => handleSocialClick('Apple')} />
+              <SocialBtn provider="Phone" onClick={() => setTab('phone')} />
             </div>
 
             <div className="w-full mt-8 text-center px-4">
@@ -394,14 +506,14 @@ const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => 
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handleSubmit}
-                disabled={tab === 'signup' ? !isSignUpValid : !isLoginValid || loading}
+                disabled={tab === 'signup' ? !isSignUpValid : (tab === 'login' ? !isLoginValid : false) || loading}
                 className="w-full h-[52px] rounded-[14px] font-bold text-center flex items-center justify-center relative overflow-hidden disabled:opacity-50 transition-opacity"
                 style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}
               >
                 {loading ? (
                   <div className="w-5 h-5 rounded-full border-2 border-[#0A0A0A] border-t-transparent animate-spin"/>
                 ) : (
-                  tab === 'signup' ? 'Create my Account' : 'Log In'
+                  tab === 'signup' ? 'Create my Account' : tab === 'login' ? 'Log In' : (phoneStep === 'number' ? 'Send Code' : 'Verify Code')
                 )}
               </motion.button>
             </div>
@@ -428,6 +540,11 @@ const SocialBtn = ({ provider, onClick }: { provider: string, onClick: () => voi
           <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
           <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+      )}
+      {provider === 'Phone' && (
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
         </svg>
       )}
       {provider === 'Apple' && (
@@ -525,27 +642,24 @@ const IntroStage = ({ onNext }: { onNext: () => void }) => {
 };
 
 const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
+  const [step, setStep] = useState(1);
   const [data, setData] = useState({
-    wakeHour: 6, wakeMin: 30,
-    sleepHour: 22, sleepMin: 30,
-    weekendWakeHour: 8, weekendWakeMin: 0,
-    weekendSleepHour: 23, weekendSleepMin: 30,
+    wakeHour: 6,
+    wakeMin: 30,
+    sleepHour: 22,
+    sleepMin: 30,
     activities: [] as string[],
-    challenge: '',
-    leaderboard: false,
-    username: ''
+    challenges: [] as string[],
   });
-
-  const [scheduleTab, setScheduleTab] = useState<'weekday' | 'weekend'>('weekday');
-
   const [loading, setLoading] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('anchor_personalization');
     if (saved) {
       try { 
         const parsed = JSON.parse(saved);
-        setData(prev => ({ ...prev, ...parsed, activities: parsed.activities || [] })); 
+        setData(prev => ({ ...prev, ...parsed, activities: parsed.activities || [], challenges: parsed.challenges || (parsed.challenge ? [parsed.challenge] : []) })); 
       } catch (e) {}
     }
   }, []);
@@ -571,7 +685,13 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
     }
   };
 
-  const isReady = data.activities.length > 0 && data.challenge !== '';
+  const handleToggleChallenge = (cId: string) => {
+    if (data.challenges.includes(cId)) {
+      setData(d => ({ ...d, challenges: d.challenges.filter(c => c !== cId) }));
+    } else {
+      setData(d => ({ ...d, challenges: [...d.challenges, cId] }));
+    }
+  };
 
   const submit = () => {
     setLoading(true);
@@ -580,148 +700,178 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
     }, 1500); 
   };
   
-  const formatHour = (v: number) => {
-    const normalized = ((v % 24) + 24) % 24;
-    if (normalized === 0) return '12:00 AM';
-    if (normalized === 12) return '12:00 PM';
-    if (normalized > 12) return `${normalized - 12}:00 PM`;
-    return `${normalized}:00 AM`;
+  const formatTime = (h: number, m: number) => {
+    const period = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    const minStr = String(m).padStart(2, '0');
+    return `${hour12}:${minStr} ${period}`;
   };
+
+  const nextStep = () => setStep(s => s + 1);
+  const prevStep = () => setStep(s => s - 1);
 
   return (
     <div className="w-full h-full flex flex-col pt-6 pb-4 overflow-y-auto hide-scrollbar z-10 relative">
-      
       <div className="text-center mb-8 shrink-0">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Configure Anchor</h1>
-        <p className="text-sm font-medium" style={{ color: TOKENS.textMuted }}>Takes about 90 seconds</p>
+        {step < 5 && <p className="text-sm font-medium" style={{ color: TOKENS.textMuted }}>Step {step} of 4</p>}
       </div>
 
-      <div className="space-y-10 shrink-0">
-        
-        {/* Section A - Schedule */}
-        <div>
-          <div className="flex items-center gap-2 mb-4 bg-[#1E1E1E] p-1 rounded-xl w-fit border border-[rgba(255,255,255,0.06)] transform-gpu">
-            <button 
-              onClick={() => setScheduleTab('weekday')}
-              className="px-4 py-1.5 rounded-lg text-sm font-bold transition-all relative z-10"
-              style={{ color: scheduleTab === 'weekday' ? TOKENS.textPrimary : TOKENS.textMuted }}
-            >
-              Weekdays
-              {scheduleTab === 'weekday' && <motion.div layoutId="sched-tab" className="absolute inset-0 bg-[#333] rounded-lg -z-10 shadow-sm border border-[rgba(255,255,255,0.08)]" />}
-            </button>
-            <button 
-              onClick={() => setScheduleTab('weekend')}
-              className="px-4 py-1.5 rounded-lg text-sm font-bold transition-all relative z-10"
-              style={{ color: scheduleTab === 'weekend' ? TOKENS.textPrimary : TOKENS.textMuted }}
-            >
-              Weekends
-              {scheduleTab === 'weekend' && <motion.div layoutId="sched-tab" className="absolute inset-0 bg-[#333] rounded-lg -z-10 shadow-sm border border-[rgba(255,255,255,0.08)]" />}
-            </button>
-          </div>
-          
-          <div className="flex justify-between items-center bg-[#141414] p-6 rounded-3xl border border-[rgba(255,255,255,0.06)] shadow-xl w-full relative overflow-hidden">
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.div 
-                key={scheduleTab}
-                initial={{ opacity: 0, x: scheduleTab === 'weekday' ? -20 : 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: scheduleTab === 'weekday' ? 20 : -20 }}
-                transition={{ duration: 0.25, type: 'spring', stiffness: 300, damping: 25 }}
-                className="flex w-full justify-between items-center gap-4"
-              >
-                 <WheelPicker 
-                   label="Wake Up" 
-                   min={0} max={23} 
-                   value={scheduleTab === 'weekday' ? data.wakeHour : data.weekendWakeHour} 
-                   onChange={(v: number) => setData(scheduleTab === 'weekday' ? { ...data, wakeHour: v } : { ...data, weekendWakeHour: v })} 
-                   format={formatHour}
-                 />
-                 <div className="w-[1px] h-32 bg-[rgba(255,255,255,0.08)] shrink-0" />
-                 <WheelPicker 
-                   label="Sleep" 
-                   min={0} max={23} 
-                   value={scheduleTab === 'weekday' ? data.sleepHour : data.weekendSleepHour} 
-                   onChange={(v: number) => setData(scheduleTab === 'weekday' ? { ...data, sleepHour: v } : { ...data, weekendSleepHour: v })} 
-                   format={formatHour}
-                 />
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Section B - Activities */}
-        <div>
-          <h3 className="text-base font-bold mb-4">What's part of your regular week?</h3>
-          <div className="flex flex-wrap gap-2">
-            {ACTIVITIES.map(act => {
-              const isSel = data.activities.includes(act);
-              return (
-                <div 
-                  key={act}
-                  onClick={() => handleToggleActivity(act)}
-                  className="px-4 py-2.5 rounded-full text-sm font-bold cursor-pointer transition-all border select-none"
-                  style={{ 
-                    backgroundColor: isSel ? TOKENS.primary : TOKENS.surface2,
-                    color: isSel ? TOKENS.textPrimary : TOKENS.textMuted,
-                    borderColor: isSel ? TOKENS.primary : 'rgba(255,255,255,0.06)',
-                  }}
-                >
-                  {act}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Section C - Challenge */}
-        <div>
-          <h3 className="text-base font-bold mb-4">What do you struggle with most?</h3>
-          <div className="flex flex-col gap-3">
-            {CHALLENGES.map(c => {
-              const isSel = data.challenge === c.id;
-              return (
-                <div
-                  key={c.id}
-                  onClick={() => setData({ ...data, challenge: c.id })}
-                  className="h-16 rounded-[16px] flex items-center px-4 cursor-pointer transition-all border-l-4 border-r border-y select-none"
-                  style={{
-                    backgroundColor: isSel ? 'rgba(124,111,247,0.1)' : TOKENS.surface2,
-                    borderLeftColor: isSel ? TOKENS.primary : 'rgba(255,255,255,0.06)',
-                    borderRightColor: 'rgba(255,255,255,0.06)',
-                    borderTopColor: 'rgba(255,255,255,0.06)',
-                    borderBottomColor: 'rgba(255,255,255,0.06)'
-                  }}
-                >
-                  <span className="text-2xl mr-4">{c.icon}</span>
-                  <span className="font-medium text-[15px]">{c.label}</span>
-                  {isSel && <Check className="ml-auto" color={TOKENS.primary} size={20} />}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-8 sticky bottom-0 z-20 pb-4 bg-[#0A0A0A] pt-4 shrink-0 shadow-[0_-24px_32px_#0A0A0A]">
-        <motion.button
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={isReady ? submit : undefined}
-          style={{ 
-            backgroundColor: isReady ? TOKENS.primary : TOKENS.surface2, 
-            color: isReady ? TOKENS.bg : TOKENS.textMuted,
-            boxShadow: isReady ? '0 8px 32px rgba(124,111,247,0.4)' : 'none'
-          }}
-          className="w-full h-[56px] rounded-[14px] font-bold text-center flex items-center justify-center text-lg transition-all"
-        >
-          {loading ? (
-            <div className="w-5 h-5 rounded-full border-2 border-[#0A0A0A] border-t-transparent animate-spin"/>
-          ) : (
-            "Build my Anchor →"
+      <div className="flex-1 flex flex-col shrink-0">
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+              <h3 className="text-xl font-bold mb-8 text-center">What time do you usually wake up?</h3>
+              <div className="flex justify-center items-center w-full mx-auto max-w-[320px]">
+                <TimePickerIOS 
+                  hour={data.wakeHour} 
+                  minute={data.wakeMin} 
+                  onChange={(h: number, m: number) => setData({ ...data, wakeHour: h, wakeMin: m })} 
+                />
+              </div>
+              <div className="mt-auto pt-8">
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} className="w-full h-[56px] rounded-[14px] font-bold text-lg" style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}>Next</motion.button>
+              </div>
+            </motion.div>
           )}
-        </motion.button>
-      </div>
 
+          {step === 2 && (
+            <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+              <h3 className="text-xl font-bold mb-8 text-center">What time do you usually sleep?</h3>
+              <div className="flex justify-center items-center w-full mx-auto max-w-[320px]">
+                <TimePickerIOS 
+                  hour={data.sleepHour} 
+                  minute={data.sleepMin} 
+                  onChange={(h: number, m: number) => setData({ ...data, sleepHour: h, sleepMin: m })} 
+                />
+              </div>
+              <div className="mt-auto pt-8 flex gap-3">
+                <button onClick={prevStep} className="px-6 h-[56px] rounded-[14px] font-bold border border-[rgba(255,255,255,0.1)] text-[#888888] hover:text-[#F0F0F0] transition-colors">Back</button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg" style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}>Next</motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 3 && (
+            <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+              <h3 className="text-xl font-bold mb-8 text-center">What's part of your regular week?</h3>
+              <div className="flex flex-wrap gap-3 justify-center">
+                {ACTIVITIES.map(act => {
+                  const isSel = data.activities.includes(act);
+                  return (
+                    <div 
+                      key={act}
+                      onClick={() => handleToggleActivity(act)}
+                      className="px-5 py-3 rounded-full text-sm font-bold cursor-pointer transition-all border select-none shadow-sm"
+                      style={{ 
+                        backgroundColor: isSel ? TOKENS.primary : TOKENS.surface2,
+                        color: isSel ? TOKENS.textPrimary : TOKENS.textMuted,
+                        borderColor: isSel ? TOKENS.primary : 'rgba(255,255,255,0.06)',
+                      }}
+                    >
+                      {act}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-auto pt-8 flex gap-3">
+                <button onClick={prevStep} className="px-6 h-[56px] rounded-[14px] font-bold border border-[rgba(255,255,255,0.1)] text-[#888888] hover:text-[#F0F0F0] transition-colors">Back</button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} disabled={data.activities.length === 0} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg disabled:opacity-50" style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}>Next</motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 4 && (
+            <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+              <h3 className="text-xl font-bold mb-2 text-center">What do you struggle with the most?</h3>
+              <p className="text-sm text-center mb-8 text-[#888888]">Select all that apply</p>
+              <div className="flex flex-col gap-3">
+                {CHALLENGES.map(c => {
+                  const isSel = data.challenges.includes(c.id);
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => handleToggleChallenge(c.id)}
+                      className="h-[72px] rounded-[16px] flex items-center px-5 cursor-pointer transition-all border select-none shadow-sm"
+                      style={{
+                        backgroundColor: isSel ? 'rgba(124,111,247,0.1)' : TOKENS.surface2,
+                        borderColor: isSel ? TOKENS.primary : 'rgba(255,255,255,0.06)',
+                      }}
+                    >
+                      <span className="text-3xl mr-5">{c.icon}</span>
+                      <span className="font-bold text-[16px]">{c.label}</span>
+                      {isSel && <Check className="ml-auto" color={TOKENS.primary} size={24} />}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-auto pt-8 flex gap-3">
+                <button onClick={prevStep} className="px-6 h-[56px] rounded-[14px] font-bold border border-[rgba(255,255,255,0.1)] text-[#888888] hover:text-[#F0F0F0] transition-colors">Back</button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} disabled={data.challenges.length === 0} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg disabled:opacity-50" style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}>Next</motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 5 && (
+            <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+              <h3 className="text-xl font-bold mb-8 text-center">Is this information correct?</h3>
+              
+              <div className="bg-[#141414] rounded-2xl p-6 border border-[rgba(255,255,255,0.06)] shadow-xl mb-8 space-y-6">
+                <div className="flex justify-between items-center pb-4 border-b border-[rgba(255,255,255,0.06)]">
+                  <span className="text-[#888888] font-bold text-sm uppercase tracking-wide">Wake Up</span>
+                  <span className="font-bold text-lg">{formatTime(data.wakeHour, data.wakeMin)}</span>
+                </div>
+                <div className="flex justify-between items-center pb-4 border-b border-[rgba(255,255,255,0.06)]">
+                  <span className="text-[#888888] font-bold text-sm uppercase tracking-wide">Sleep</span>
+                  <span className="font-bold text-lg">{formatTime(data.sleepHour, data.sleepMin)}</span>
+                </div>
+                <div className="pb-4 border-b border-[rgba(255,255,255,0.06)]">
+                  <span className="text-[#888888] font-bold text-sm uppercase tracking-wide block mb-3">Your Week</span>
+                  <div className="flex flex-wrap gap-2">
+                    {data.activities.map(act => (
+                      <span key={act} className="px-3 py-1 bg-[rgba(255,255,255,0.05)] rounded-full text-sm font-medium">{act}</span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[#888888] font-bold text-sm uppercase tracking-wide block mb-3">Challenges</span>
+                  <div className="flex flex-wrap gap-2">
+                    {data.challenges.map(cId => {
+                      const chal = CHALLENGES.find(c => c.id === cId);
+                      return chal ? <span key={cId} className="px-3 py-1 bg-[rgba(124,111,247,0.15)] text-[#6FBBF7] rounded-full text-sm font-medium">{chal.icon} {chal.label}</span> : null;
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {!confirmed ? (
+                <div className="mt-auto flex gap-4">
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setStep(1)} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg border border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.05)] transition-colors">No, edit</motion.button>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setConfirmed(true)} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg" style={{ backgroundColor: TOKENS.success, color: TOKENS.bg }}>Yes, looks good</motion.button>
+                </div>
+              ) : (
+                <div className="mt-auto">
+                  <motion.button
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={submit}
+                    className="w-full h-[56px] rounded-[14px] font-bold text-center flex items-center justify-center text-lg shadow-[0_8px_32px_rgba(124,111,247,0.4)]"
+                    style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}
+                  >
+                    {loading ? (
+                      <div className="w-5 h-5 rounded-full border-2 border-[#0A0A0A] border-t-transparent animate-spin"/>
+                    ) : (
+                      "Build my Anchor →"
+                    )}
+                  </motion.button>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

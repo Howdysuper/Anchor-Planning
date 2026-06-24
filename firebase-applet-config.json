@@ -1,9 +1,10 @@
 {
-  "projectId": "shaurya-anchor-project",
-  "appId": "1:347595379715:web:41e7b51be106183358ea36",
-  "apiKey": "AIzaSyBnTw9KB56JBs9O0aFsLuEWrlweP2b5f7E",
-  "authDomain": "shaurya-anchor-project.firebaseapp.com",
-  "storageBucket": "shaurya-anchor-project.firebasestorage.app",
-  "messagingSenderId": "347595379715",
-  "measurementId": "G-BGW4T6Q80G"
+  "projectId": "gen-lang-client-0426829545",
+  "appId": "1:1011553307771:web:1f82ab360975c439ec66de",
+  "apiKey": "AIzaSyCRTbc1AVusKRscp6-LSiSdIcdrYYKnzq0",
+  "authDomain": "gen-lang-client-0426829545.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-513fb0f5-48cc-4d05-9fa3-4ff525e44e43",
+  "storageBucket": "gen-lang-client-0426829545.firebasestorage.app",
+  "messagingSenderId": "1011553307771",
+  "measurementId": ""
 }

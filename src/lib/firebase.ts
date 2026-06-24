@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { getFirestore, initializeFirestore } from "firebase/firestore";
 import config from "../../firebase-applet-config.json";
 
@@ -28,6 +28,19 @@ export const registerEmail = async (email: string, pass: string) => {
 
 export const loginEmail = async (email: string, pass: string) => {
   return await signInWithEmailAndPassword(auth, email, pass);
+};
+
+export const setupRecaptcha = (containerId: string) => {
+  if (!(window as any).recaptchaVerifier) {
+    (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+      'size': 'invisible'
+    });
+  }
+  return (window as any).recaptchaVerifier;
+};
+
+export const loginWithPhone = async (phoneNumber: string, appVerifier: any) => {
+  return await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
 };
 
 export const logout = async () => {

@@ -14,7 +14,8 @@ import {
   LogOut,
   User as UserIcon,
   ChevronDown,
-  BarChart3
+  BarChart3,
+  Inbox
 } from 'lucide-react';
 import { logout } from '../lib/firebase';
 import { ThemeStatusPill } from './settings/ThemeStatusPill';
@@ -23,8 +24,7 @@ import Modal from './ui/Modal';
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Home', icon: Home },
   { id: 'loadout', label: 'Loadout', icon: Backpack },
-  { id: 'braindump', label: 'Brain Dump', icon: Brain },
-  { id: 'quests', label: 'Quest Log', icon: Sword },
+  { id: 'quests', label: 'Tasks', icon: Inbox },
   { id: 'stats', label: 'Analytics', icon: BarChart3 },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
 ];
