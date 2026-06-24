@@ -1,24 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BrainCircuit, Anchor, Backpack, Flame, Moon, Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
+import { BrainCircuit, Anchor, Backpack, Flame, Moon, Eye, EyeOff, Check, AlertCircle, Sparkles, Sun, Laptop, User, Camera, Upload, Type, Trophy, BarChart3, Gift, MessageSquare } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useSettings } from '../contexts/SettingsContext';
 import LoadingScreen from './LoadingScreen';
 
 
 const TOKENS = {
-  bg: '#0A0A0A',
-  surface: '#141414',
-  surface2: '#1E1E1E',
-  primary: '#7C6FF7',
-  secondary: '#F7A06F',
-  blue: '#6FBBF7',
-  green: '#6FF7A0',
-  gold: '#F7D96F',
-  textPrimary: '#F0F0F0',
-  textMuted: '#888888',
-  error: '#F76F6F',
-  success: '#6FF7A0',
+  bg: 'var(--color-bg)',
+  surface: 'var(--color-surface)',
+  surface2: 'var(--color-surface2)',
+  primary: 'var(--color-primary)',
+  secondary: 'var(--color-orange)',
+  blue: 'var(--color-blue)',
+  green: 'var(--color-success)',
+  gold: 'var(--color-gold)',
+  textPrimary: 'var(--color-text)',
+  textMuted: 'var(--color-text-muted)',
+  error: 'var(--color-error)',
+  success: 'var(--color-success)',
 };
 
 const Toast = ({ message, onClose }: { message: string; onClose: () => void }) => {
@@ -367,160 +368,174 @@ const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => 
   };
 
   return (
-    <div className="w-full h-full flex flex-col pb-8 pt-4 justify-center overflow-y-auto hide-scrollbar z-10 relative">
-      
-      {/* Tabs */}
-      <div className="flex bg-[#1E1E1E] rounded-full p-1 border border-[rgba(255,255,255,0.06)] shadow-xl mb-8 relative self-center shrink-0">
-        <div 
-          className="absolute h-10 rounded-full transition-transform duration-300" 
-          style={{ 
-            backgroundColor: TOKENS.surface,
-            border: '1px solid rgba(255,255,255,0.1)',
-            width: tab === 'signup' ? 96 : 84,
-            transform: tab === 'signup' ? 'translateX(0)' : 'translateX(96px)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-          }}
-        />
-        <button 
-          onClick={() => setTab('signup')}
-          className="w-24 h-10 relative z-10 text-sm font-bold transition-colors"
-          style={{ color: tab === 'signup' ? TOKENS.textPrimary : TOKENS.textMuted }}
-        >
-          Sign Up
-          {tab === 'signup' && <motion.div layoutId="auth-tab" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 rounded-full bg-[#7C6FF7]" />}
-        </button>
-        <button 
-          onClick={() => setTab('login')}
-          className="w-[84px] h-10 relative z-10 text-sm font-bold transition-colors"
-          style={{ color: tab === 'login' ? TOKENS.textPrimary : TOKENS.textMuted }}
-        >
-          Log In
-          {tab === 'login' && <motion.div layoutId="auth-tab" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 rounded-full bg-[#7C6FF7]" />}
-        </button>
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div 
-          key={tab}
-          initial={{ opacity: 0, x: tab === 'signup' ? -20 : 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: tab === 'signup' ? 20 : -20 }}
-          transition={{ duration: 0.15 }}
-          className="w-full shrink-0"
-        >
-          <motion.div 
-            animate={{ x: shake > 0 ? [-5, 5, -5, 5, 0] : 0 }} 
-            transition={{ duration: 0.2 }}
-            className="w-full flex flex-col items-center"
+    <div className="w-full h-full flex flex-col overflow-y-auto hide-scrollbar z-10 relative scroll-smooth">
+      <div className="w-full my-auto flex flex-col py-8 shrink-0">
+        
+        {/* Tabs */}
+        <div className="flex bg-[#1E1E1E] rounded-full p-1 border border-[rgba(255,255,255,0.06)] shadow-xl mb-8 relative self-center shrink-0">
+          <div 
+            className="absolute h-10 rounded-full transition-all duration-300" 
+            style={{ 
+              backgroundColor: TOKENS.surface,
+              border: '1px solid rgba(255,255,255,0.1)',
+              width: tab === 'signup' ? 96 : 84,
+              transform: tab === 'signup' ? 'translateX(0)' : (tab === 'login' ? 'translateX(96px)' : 'translateX(180px)'),
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+            }}
+          />
+          <button 
+            onClick={() => { setTab('signup'); setPhoneStep('number'); }}
+            className="w-24 h-10 relative z-10 text-sm font-bold transition-colors"
+            style={{ color: tab === 'signup' ? TOKENS.textPrimary : TOKENS.textMuted }}
           >
-            {tab === 'signup' && (
-              <TextInput 
-                label="Display Name" 
-                value={form.name} 
-                onChange={(v) => setForm({ ...form, name: v })} 
-                onBlur={() => setTouched({ ...touched, name: true })}
-                error={errors.name} 
-                valid={isNameValid(form.name)}
-                placeholder="Alex"
-              />
-            )}
-            <TextInput 
-              label="Email" 
-              type="email"
-              value={form.email} 
-              onChange={(v) => setForm({ ...form, email: v })} 
-              onBlur={() => setTouched({ ...touched, email: true })}
-              error={errors.email} 
-              valid={isEmailValid(form.email)}
-              placeholder="alex@example.com"
-            />
-            <TextInput 
-              label="Password" 
-              type="password"
-              value={form.password} 
-              onChange={(v) => setForm({ ...form, password: v })} 
-              onBlur={() => setTouched({ ...touched, password: true })}
-              error={errors.password} 
-              valid={isPwdValid(form.password)}
-              placeholder="Min. 8 characters"
-            />
-            {tab === 'signup' && (
-              <TextInput 
-                label="Confirm Password" 
-                type="password"
-                value={form.confirm} 
-                onChange={(v) => setForm({ ...form, confirm: v })} 
-                onBlur={() => setTouched({ ...touched, confirm: true })}
-                error={errors.confirm} 
-                valid={isConfValid(form.confirm)}
-                placeholder="Match your password"
-              />
-            )}
-            
-            {tab === 'phone' && (
-              <div className="w-full">
-                {phoneStep === 'number' ? (
+            Sign Up
+            {tab === 'signup' && <motion.div layoutId="auth-tab" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 rounded-full bg-[#7C6FF7]" />}
+          </button>
+          <button 
+            onClick={() => { setTab('login'); setPhoneStep('number'); }}
+            className="w-[84px] h-10 relative z-10 text-sm font-bold transition-colors"
+            style={{ color: tab === 'login' ? TOKENS.textPrimary : TOKENS.textMuted }}
+          >
+            Log In
+            {tab === 'login' && <motion.div layoutId="auth-tab" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 rounded-full bg-[#7C6FF7]" />}
+          </button>
+          <button 
+            onClick={() => { setTab('phone'); setPhoneStep('number'); }}
+            className="w-[84px] h-10 relative z-10 text-sm font-bold transition-colors"
+            style={{ color: tab === 'phone' ? TOKENS.textPrimary : TOKENS.textMuted }}
+          >
+            Phone
+            {tab === 'phone' && <motion.div layoutId="auth-tab" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 rounded-full bg-[#7C6FF7]" />}
+          </button>
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={tab}
+            initial={{ opacity: 0, x: tab === 'signup' ? -20 : (tab === 'login' ? 0 : 20) }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: tab === 'signup' ? 20 : -20 }}
+            transition={{ duration: 0.15 }}
+            className="w-full shrink-0"
+          >
+            <motion.div 
+              animate={{ x: shake > 0 ? [-5, 5, -5, 5, 0] : 0 }} 
+              transition={{ duration: 0.2 }}
+              className="w-full flex flex-col items-center"
+            >
+              {tab === 'signup' && (
+                <TextInput 
+                  label="Display Name" 
+                  value={form.name} 
+                  onChange={(v) => setForm({ ...form, name: v })} 
+                  onBlur={() => setTouched({ ...touched, name: true })}
+                  error={errors.name} 
+                  valid={isNameValid(form.name)}
+                  placeholder="Alex"
+                />
+              )}
+              {(tab === 'signup' || tab === 'login') && (
+                <>
                   <TextInput 
-                    label="Phone Number" 
-                    value={phoneNumber} 
-                    onChange={setPhoneNumber} 
-                    placeholder="+1 555 555 5555"
+                    label="Email" 
+                    type="email"
+                    value={form.email} 
+                    onChange={(v) => setForm({ ...form, email: v })} 
+                    onBlur={() => setTouched({ ...touched, email: true })}
+                    error={errors.email} 
+                    valid={isEmailValid(form.email)}
+                    placeholder="alex@example.com"
                   />
-                ) : (
                   <TextInput 
-                    label="Verification Code" 
-                    value={verificationCode} 
-                    onChange={setVerificationCode} 
-                    placeholder="123456"
+                    label="Password" 
+                    type="password"
+                    value={form.password} 
+                    onChange={(v) => setForm({ ...form, password: v })} 
+                    onBlur={() => setTouched({ ...touched, password: true })}
+                    error={errors.password} 
+                    valid={isPwdValid(form.password)}
+                    placeholder="Min. 8 characters"
                   />
-                )}
-                <div id="recaptcha-container" className="mt-4 flex justify-center"></div>
+                </>
+              )}
+              {tab === 'signup' && (
+                <TextInput 
+                  label="Confirm Password" 
+                  type="password"
+                  value={form.confirm} 
+                  onChange={(v) => setForm({ ...form, confirm: v })} 
+                  onBlur={() => setTouched({ ...touched, confirm: true })}
+                  error={errors.confirm} 
+                  valid={isConfValid(form.confirm)}
+                  placeholder="Match your password"
+                />
+              )}
+              
+              {tab === 'phone' && (
+                <div className="w-full">
+                  {phoneStep === 'number' ? (
+                    <TextInput 
+                      label="Phone Number" 
+                      value={phoneNumber} 
+                      onChange={setPhoneNumber} 
+                      placeholder="+1 555 555 5555"
+                    />
+                  ) : (
+                    <TextInput 
+                      label="Verification Code" 
+                      value={verificationCode} 
+                      onChange={setVerificationCode} 
+                      placeholder="123456"
+                    />
+                  )}
+                  <div id="recaptcha-container" className="mt-4 flex justify-center"></div>
+                </div>
+              )}
+              
+              {tab === 'login' && (
+                <div className="w-full flex justify-end mt-2">
+                  <span className="text-sm font-bold cursor-pointer hover:underline" style={{ color: TOKENS.primary }}>Forgot password?</span>
+                </div>
+              )}
+
+              <div className="flex items-center w-full my-6">
+                <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
+                <span className="px-4 text-xs font-bold uppercase tracking-widest text-[#888888]">or continue with</span>
+                <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
               </div>
-            )}
-            
-            {tab === 'login' && (
-              <div className="w-full flex justify-end mt-2">
-                <span className="text-sm font-bold cursor-pointer hover:underline" style={{ color: TOKENS.primary }}>Forgot password?</span>
+
+              <div className="w-full flex flex-col gap-3">
+                <SocialBtn provider="Google" onClick={() => handleSocialClick('Google')} />
+                <SocialBtn provider="Phone" onClick={() => { setTab('phone'); setPhoneStep('number'); }} />
               </div>
-            )}
 
-            <div className="flex items-center w-full my-6">
-              <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
-              <span className="px-4 text-xs font-bold uppercase tracking-widest text-[#888888]">or continue with</span>
-              <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
-            </div>
+              <div className="w-full mt-8 text-center px-4">
+                <p className="text-xs text-[#888888] leading-relaxed">
+                  By continuing you agree to our <span className="text-[#7C6FF7] cursor-pointer hover:underline font-medium">Terms</span> & <span className="text-[#7C6FF7] cursor-pointer hover:underline font-medium">Privacy Policy</span>
+                </p>
+              </div>
 
-            <div className="w-full flex flex-col gap-3">
-              <SocialBtn provider="Google" onClick={() => handleSocialClick('Google')} />
-              <SocialBtn provider="Phone" onClick={() => setTab('phone')} />
-            </div>
+              <div className="w-full mt-8 pb-4 shrink-0">
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={handleSubmit}
+                  disabled={tab === 'signup' ? !isSignUpValid : (tab === 'login' ? !isLoginValid : false) || loading}
+                  className="w-full h-[52px] rounded-[14px] font-bold text-center flex items-center justify-center relative overflow-hidden disabled:opacity-50 transition-opacity"
+                  style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}
+                >
+                  {loading ? (
+                    <div className="w-5 h-5 rounded-full border-2 border-[#0A0A0A] border-t-transparent animate-spin"/>
+                  ) : (
+                    tab === 'signup' ? 'Create my Account' : tab === 'login' ? 'Log In' : (phoneStep === 'number' ? 'Send Code' : 'Verify Code')
+                  )}
+                </motion.button>
+              </div>
 
-            <div className="w-full mt-8 text-center px-4">
-              <p className="text-xs text-[#888888] leading-relaxed">
-                By continuing you agree to our <span className="text-[#7C6FF7] cursor-pointer hover:underline font-medium">Terms</span> & <span className="text-[#7C6FF7] cursor-pointer hover:underline font-medium">Privacy Policy</span>
-              </p>
-            </div>
-
-            <div className="w-full mt-8 pb-4 shrink-0">
-              <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleSubmit}
-                disabled={tab === 'signup' ? !isSignUpValid : (tab === 'login' ? !isLoginValid : false) || loading}
-                className="w-full h-[52px] rounded-[14px] font-bold text-center flex items-center justify-center relative overflow-hidden disabled:opacity-50 transition-opacity"
-                style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}
-              >
-                {loading ? (
-                  <div className="w-5 h-5 rounded-full border-2 border-[#0A0A0A] border-t-transparent animate-spin"/>
-                ) : (
-                  tab === 'signup' ? 'Create my Account' : tab === 'login' ? 'Log In' : (phoneStep === 'number' ? 'Send Code' : 'Verify Code')
-                )}
-              </motion.button>
-            </div>
-
+            </motion.div>
           </motion.div>
-        </motion.div>
-      </AnimatePresence>
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
@@ -555,16 +570,52 @@ const SocialBtn = ({ provider, onClick }: { provider: string, onClick: () => voi
       <span>Continue with {provider}</span>
     </motion.button>
   );
-};
-
-const IntroStage = ({ onNext }: { onNext: () => void }) => {
+};const IntroStage = ({ onNext }: { onNext: () => void }) => {
   const [slide, setSlide] = useState(0);
   
   const CARDS = [
-    { icon: <Anchor size={40} color={TOKENS.primary} />, color: TOKENS.primary, title: "Build your flow", sub: "Add your upcoming tasks and let the app hold you accountable" },
-    { icon: <Backpack size={40} color={TOKENS.blue} />, color: TOKENS.blue, title: "Your loadouts", sub: "Checklists before you leave—not after." },
-    { icon: <Moon size={40} color="#9CA3AF" />, color: "#9CA3AF", title: "Manage your sleep", sub: "log your sleep times and let the app manage the rest" },
-    { icon: <Flame size={40} color={TOKENS.secondary} />, color: TOKENS.secondary, title: "Quests & XP", sub: "Earn points. Build streaks. Stay consistent." },
+    { 
+      icon: <Flame size={40} color={TOKENS.secondary} />, 
+      color: TOKENS.secondary, 
+      title: "Quests & XP", 
+      sub: "Complete daily quests to build streaks, earn XP, and form lasting healthy habits." 
+    },
+    { 
+      icon: <Backpack size={40} color={TOKENS.blue} />, 
+      color: TOKENS.blue, 
+      title: "Your Loadouts", 
+      sub: "Create smart checklist templates for your daily routines before leaving, not after." 
+    },
+    { 
+      icon: <Moon size={40} color={TOKENS.primary} />, 
+      color: TOKENS.primary, 
+      title: "Circadian Sleep Tracker", 
+      sub: "Log your sleep times easily, improve sleep hygiene, and lock in your bedtime windows." 
+    },
+    { 
+      icon: <BarChart3 size={40} color={TOKENS.green} />, 
+      color: TOKENS.green, 
+      title: "Sleep & Habit Analytics", 
+      sub: "Visualize your progress with nightly sleep recovery trends and deep routine stability scores." 
+    },
+    { 
+      icon: <Gift size={40} color={TOKENS.gold} />, 
+      color: TOKENS.gold, 
+      title: "Level Rewards", 
+      sub: "Redeem your hard-earned XP to unlock premium aesthetic level rewards and custom badges." 
+    },
+    { 
+      icon: <Trophy size={40} color={TOKENS.secondary} />, 
+      color: TOKENS.secondary, 
+      title: "Global Leaderboards", 
+      sub: "Climb the weekly divisions and stay mutually accountable with your friends." 
+    },
+    { 
+      icon: <MessageSquare size={40} color={TOKENS.primary} />, 
+      color: TOKENS.primary, 
+      title: "AI Anchor Assistant", 
+      sub: "Chat with a server-side Gemini powered coach to analyze habits, adjust sleep, and get tailored tips." 
+    }
   ];
 
   useEffect(() => {
@@ -629,11 +680,11 @@ const IntroStage = ({ onNext }: { onNext: () => void }) => {
                  className="w-full h-[56px] rounded-[14px] font-bold text-center flex items-center justify-center text-lg shadow-[0_8px_32px_rgba(124,111,247,0.4)]"
                  style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}
                >
-                 Set up profile →
+                 Get Started →
                </motion.button>
              </motion.div>
           ) : (
-             <div key="pad" className="w-full h-[56px]" />
+              <div key="pad" className="w-full h-[56px]" />
           )}
         </AnimatePresence>
       </div>
@@ -643,6 +694,8 @@ const IntroStage = ({ onNext }: { onNext: () => void }) => {
 
 const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
   const [step, setStep] = useState(1);
+  const { state, updateUser } = useApp();
+  const { settings, updateSetting } = useSettings();
   const [data, setData] = useState({
     wakeHour: 6,
     wakeMin: 30,
@@ -653,6 +706,92 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
   });
   const [loading, setLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+
+  const [customInitials, setCustomInitials] = useState('');
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setCameraActive(false);
+  };
+
+  const startCamera = async () => {
+    setCameraError('');
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 300, height: 300, facingMode: 'user' },
+        audio: false
+      });
+      setStream(mediaStream);
+      setCameraActive(true);
+    } catch (err: any) {
+      console.error(err);
+      setCameraError('Could not access camera. Please check permissions.');
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 300;
+      canvas.height = video.videoHeight || 300;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const size = Math.min(canvas.width, canvas.height);
+        const xOffset = (canvas.width - size) / 2;
+        const yOffset = (canvas.height - size) / 2;
+        
+        canvas.width = size;
+        canvas.height = size;
+        
+        ctx.drawImage(
+          video,
+          xOffset, yOffset, size, size,
+          0, 0, size, size
+        );
+        
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        updateSetting('profile.avatarType', 'image');
+        updateSetting('profile.avatarImage', dataUrl);
+        updateUser({ avatar: dataUrl });
+        stopCamera();
+      }
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        updateSetting('profile.avatarType', 'image');
+        updateSetting('profile.avatarImage', base64);
+        updateUser({ avatar: base64 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, cameraActive]);
+
+  useEffect(() => {
+    if (state.user.avatar && state.user.avatar.length <= 2 && !state.user.avatar.startsWith('data:') && !state.user.avatar.includes('/') && !state.user.avatar.includes('.')) {
+      setCustomInitials(state.user.avatar);
+    }
+  }, [state.user.avatar]);
 
   useEffect(() => {
     const saved = localStorage.getItem('anchor_personalization');
@@ -714,7 +853,7 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
     <div className="w-full h-full flex flex-col pt-6 pb-4 overflow-y-auto hide-scrollbar z-10 relative">
       <div className="text-center mb-8 shrink-0">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Configure Anchor</h1>
-        {step < 5 && <p className="text-sm font-medium" style={{ color: TOKENS.textMuted }}>Step {step} of 4</p>}
+        {step < 7 && <p className="text-sm font-medium text-text-muted">Step {step} of 6</p>}
       </div>
 
       <div className="flex-1 flex flex-col shrink-0">
@@ -730,7 +869,7 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
                 />
               </div>
               <div className="mt-auto pt-8">
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} className="w-full h-[56px] rounded-[14px] font-bold text-lg" style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}>Next</motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} className="w-full h-[56px] rounded-[14px] font-bold text-lg bg-primary text-white hover:opacity-90 transition-opacity">Next</motion.button>
               </div>
             </motion.div>
           )}
@@ -746,8 +885,8 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
                 />
               </div>
               <div className="mt-auto pt-8 flex gap-3">
-                <button onClick={prevStep} className="px-6 h-[56px] rounded-[14px] font-bold border border-[rgba(255,255,255,0.1)] text-[#888888] hover:text-[#F0F0F0] transition-colors">Back</button>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg" style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}>Next</motion.button>
+                <button onClick={prevStep} className="px-6 h-[56px] rounded-[14px] font-bold border border-border-strong text-text-muted hover:text-text-primary hover:bg-surface-2 transition-colors">Back</button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg bg-primary text-white hover:opacity-90 transition-opacity">Next</motion.button>
               </div>
             </motion.div>
           )}
@@ -762,12 +901,11 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
                     <div 
                       key={act}
                       onClick={() => handleToggleActivity(act)}
-                      className="px-5 py-3 rounded-full text-sm font-bold cursor-pointer transition-all border select-none shadow-sm"
-                      style={{ 
-                        backgroundColor: isSel ? TOKENS.primary : TOKENS.surface2,
-                        color: isSel ? TOKENS.textPrimary : TOKENS.textMuted,
-                        borderColor: isSel ? TOKENS.primary : 'rgba(255,255,255,0.06)',
-                      }}
+                      className={`px-5 py-3 rounded-full text-sm font-bold cursor-pointer transition-all border select-none shadow-sm ${
+                        isSel 
+                          ? 'bg-primary text-white border-primary' 
+                          : 'bg-surface-2 text-text-muted border-border-base hover:bg-surface-3'
+                      }`}
                     >
                       {act}
                     </div>
@@ -775,8 +913,8 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
                 })}
               </div>
               <div className="mt-auto pt-8 flex gap-3">
-                <button onClick={prevStep} className="px-6 h-[56px] rounded-[14px] font-bold border border-[rgba(255,255,255,0.1)] text-[#888888] hover:text-[#F0F0F0] transition-colors">Back</button>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} disabled={data.activities.length === 0} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg disabled:opacity-50" style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}>Next</motion.button>
+                <button onClick={prevStep} className="px-6 h-[56px] rounded-[14px] font-bold border border-border-strong text-text-muted hover:text-text-primary hover:bg-surface-2 transition-colors">Back</button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} disabled={data.activities.length === 0} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg bg-primary text-white disabled:opacity-50 hover:opacity-90 transition-opacity">Next</motion.button>
               </div>
             </motion.div>
           )}
@@ -784,7 +922,7 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
           {step === 4 && (
             <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
               <h3 className="text-xl font-bold mb-2 text-center">What do you struggle with the most?</h3>
-              <p className="text-sm text-center mb-8 text-[#888888]">Select all that apply</p>
+              <p className="text-sm text-center mb-8 text-text-muted">Select all that apply</p>
               <div className="flex flex-col gap-3">
                 {CHALLENGES.map(c => {
                   const isSel = data.challenges.includes(c.id);
@@ -792,53 +930,285 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
                     <div
                       key={c.id}
                       onClick={() => handleToggleChallenge(c.id)}
-                      className="h-[72px] rounded-[16px] flex items-center px-5 cursor-pointer transition-all border select-none shadow-sm"
-                      style={{
-                        backgroundColor: isSel ? 'rgba(124,111,247,0.1)' : TOKENS.surface2,
-                        borderColor: isSel ? TOKENS.primary : 'rgba(255,255,255,0.06)',
-                      }}
+                      className={`h-[72px] rounded-[16px] flex items-center px-5 cursor-pointer transition-all border select-none shadow-sm ${
+                        isSel 
+                          ? 'bg-primary/10 border-primary text-primary' 
+                          : 'bg-surface-2 border-border-base text-text-primary hover:bg-surface-3'
+                      }`}
                     >
                       <span className="text-3xl mr-5">{c.icon}</span>
                       <span className="font-bold text-[16px]">{c.label}</span>
-                      {isSel && <Check className="ml-auto" color={TOKENS.primary} size={24} />}
+                      {isSel && <Check className="ml-auto text-primary" size={24} />}
                     </div>
                   );
                 })}
               </div>
               <div className="mt-auto pt-8 flex gap-3">
-                <button onClick={prevStep} className="px-6 h-[56px] rounded-[14px] font-bold border border-[rgba(255,255,255,0.1)] text-[#888888] hover:text-[#F0F0F0] transition-colors">Back</button>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} disabled={data.challenges.length === 0} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg disabled:opacity-50" style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}>Next</motion.button>
+                <button onClick={prevStep} className="px-6 h-[56px] rounded-[14px] font-bold border border-border-strong text-text-muted hover:text-text-primary hover:bg-surface-2 transition-colors">Back</button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} disabled={data.challenges.length === 0} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg bg-primary text-white disabled:opacity-50 hover:opacity-90 transition-opacity">Next</motion.button>
               </div>
             </motion.div>
           )}
 
           {step === 5 && (
-            <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+            <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 pb-4">
+              <h3 className="text-xl font-bold mb-1 text-center">Customize Your Identity</h3>
+              <p className="text-xs text-center mb-5 text-text-muted">Type custom initials, choose an emoji mascot, upload a photo, or take a picture!</p>
+              
+              <div className="flex flex-col items-center gap-4 mb-4 overflow-y-auto max-h-[420px] pr-1 scrollbar-thin">
+                {/* Live Preview Circle */}
+                <div className="relative shrink-0">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border-2 border-primary flex items-center justify-center font-bold text-3xl shadow-[0_0_20px_rgba(124,111,247,0.35)] overflow-hidden shrink-0 text-white">
+                    {state.user.avatar && (state.user.avatar.startsWith('data:') || state.user.avatar.includes('/') || state.user.avatar.includes('.')) ? (
+                      <img src={state.user.avatar} className="w-full h-full object-cover rounded-full" alt="avatar" />
+                    ) : (
+                      state.user.avatar || 'S'
+                    )}
+                  </div>
+                </div>
+
+                {/* CAMERA STREAM VIEW */}
+                {cameraActive ? (
+                  <div className="w-full bg-surface border border-border-strong rounded-2xl p-3 flex flex-col items-center gap-3">
+                    <div className="w-full aspect-square max-w-[200px] overflow-hidden rounded-xl border border-dashed border-primary/40 relative bg-bg-base">
+                      <video 
+                        ref={videoRef} 
+                        autoPlay 
+                        playsInline 
+                        className="w-full h-full object-cover transform -scale-x-100" 
+                      />
+                    </div>
+                    {cameraError ? (
+                      <p className="text-xs text-error text-center font-semibold">{cameraError}</p>
+                    ) : (
+                      <p className="text-[11px] text-text-muted text-center">Position your face in the camera view</p>
+                    )}
+                    <div className="flex w-full gap-2">
+                      <button 
+                        type="button" 
+                        onClick={capturePhoto} 
+                        className="flex-1 py-2 bg-primary text-white hover:opacity-90 rounded-[10px] text-xs font-bold transition-all"
+                      >
+                        Capture Photo
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={stopCamera} 
+                        className="px-3 py-2 bg-surface-2 border border-border-base text-text-primary hover:bg-surface-3 rounded-[10px] text-xs font-bold transition-all"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full space-y-4">
+                    {/* CAMERA & FILE UPLOAD ACTION BAR */}
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={startCamera}
+                        className="py-3 bg-surface-2 hover:bg-surface-3 border border-border-base rounded-[14px] text-xs font-bold text-text-primary flex items-center justify-center gap-2 transition-all cursor-pointer"
+                      >
+                        <Camera size={15} className="text-primary" />
+                        Take Picture
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="py-3 bg-surface-2 hover:bg-surface-3 border border-border-base rounded-[14px] text-xs font-bold text-text-primary flex items-center justify-center gap-2 transition-all cursor-pointer"
+                      >
+                        <Upload size={15} className="text-blue-500" />
+                        Upload Image
+                      </button>
+
+                      <input 
+                        ref={fileInputRef}
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleFileUpload} 
+                        className="hidden" 
+                      />
+                    </div>
+
+                    {/* CUSTOM INITIALS INPUT */}
+                    <div className="bg-surface p-3 rounded-[20px] border border-border-base flex items-center gap-3">
+                      <div className="p-2 bg-surface-2 rounded-lg text-primary">
+                        <Type size={16} />
+                      </div>
+                      <div className="flex-1">
+                        <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider block">Custom Initials (Max 2 Chars)</label>
+                        <input
+                          type="text"
+                          maxLength={2}
+                          value={customInitials}
+                          placeholder="e.g. JD"
+                          onChange={(e) => {
+                            const val = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+                            setCustomInitials(val);
+                            if (val) {
+                              updateSetting('profile.avatarType', 'letter');
+                              updateSetting('profile.avatarImage', null);
+                              updateUser({ avatar: val });
+                            }
+                          }}
+                          className="bg-transparent border-0 outline-none p-0 text-text-primary font-bold text-sm w-full mt-0.5 placeholder-text-muted/30"
+                        />
+                      </div>
+                    </div>
+
+                    {/* EMOJI MASCOT SELECTOR */}
+                    <div className="w-full">
+                      <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-2 px-1 text-center">Select Mascot</label>
+                      <div className="grid grid-cols-6 gap-2 bg-surface p-2.5 rounded-[20px] border border-border-base">
+                        {['⚡', '🧬', '👾', '🚀', '🔮', '🍀', '🍕', '🐱', '🐶', '🦊', '🐼', '🤖'].map((av) => (
+                          <button
+                            key={av}
+                            type="button"
+                            onClick={() => {
+                              updateSetting('profile.avatarType', 'mascot');
+                              updateSetting('profile.avatarImage', null);
+                              updateUser({ avatar: av });
+                            }}
+                            className={`h-10 rounded-[10px] text-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer ${
+                              state.user.avatar === av 
+                                ? 'bg-primary/20 border-2 border-primary' 
+                                : 'bg-surface-2 border border-border-base hover:bg-surface-3'
+                            }`}
+                          >
+                            {av}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* ACTIONS ROW */}
+                    <div className="flex gap-2 w-full pt-1">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const list = ['⚡', '🧬', '👾', '🚀', '🔮', '🍀', '🍕', '🐱', '🐶', '🦊', '🐼', '🤖'];
+                          const rand = list[Math.floor(Math.random() * list.length)];
+                          updateSetting('profile.avatarType', 'mascot');
+                          updateSetting('profile.avatarImage', null);
+                          updateUser({ avatar: rand });
+                        }}
+                        className="flex-1 py-2.5 bg-surface-2 hover:bg-surface-3 border border-border-base rounded-[12px] font-bold text-[11px] text-primary flex items-center justify-center gap-1.5 transition-all"
+                      >
+                        <Sparkles size={12} />
+                        Random Mascot
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const initial = state.user.name ? state.user.name[0].toUpperCase() : 'S';
+                          updateSetting('profile.avatarType', 'letter');
+                          updateSetting('profile.avatarImage', null);
+                          updateUser({ avatar: initial });
+                          setCustomInitials(initial);
+                        }}
+                        className="flex-1 py-2.5 bg-surface-2 hover:bg-surface-3 border border-border-base rounded-[12px] font-bold text-[11px] text-text-muted hover:text-text-primary transition-all"
+                      >
+                        Reset to Initials
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-auto pt-3 flex gap-3 shrink-0">
+                <button onClick={prevStep} className="px-6 h-[56px] rounded-[14px] font-bold border border-border-strong text-text-muted hover:text-text-primary hover:bg-surface-2 transition-colors">Back</button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg bg-primary text-white hover:opacity-90 transition-opacity">Next</motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 6 && (
+            <motion.div key="step6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+              <h3 className="text-xl font-bold mb-2 text-center">Choose Visual Theme</h3>
+              <p className="text-sm text-center mb-6 text-text-muted">Select how the app should appear on your screens</p>
+              
+              <div className="flex flex-col gap-3 mb-6">
+                {[
+                  { id: 'dark', label: 'Dark Mode', desc: 'Sleek, futuristic, and easy on the eyes', icon: <Moon size={22} className="text-primary" /> },
+                  { id: 'light', label: 'Light Mode', desc: 'Crisp, high-contrast, and ultra-clean', icon: <Sun size={22} className="text-yellow-500" /> },
+                  { id: 'auto', label: 'Match Browser', desc: 'Synchronizes in real-time with system settings', icon: <Laptop size={22} className="text-blue-500" /> }
+                ].map((mode) => {
+                  const isSel = settings.appearance.colorMode === mode.id;
+                  return (
+                    <div
+                      key={mode.id}
+                      onClick={() => {
+                        updateSetting('appearance.colorMode', mode.id);
+                      }}
+                      className={`p-4 rounded-[16px] flex items-center gap-4 cursor-pointer transition-all border select-none shadow-sm ${
+                        isSel 
+                          ? 'bg-primary/10 border-primary' 
+                          : 'bg-surface-2 border-border-base hover:bg-surface-3'
+                      }`}
+                    >
+                      <div className="p-3 bg-surface rounded-[12px] border border-border-base shrink-0">
+                        {mode.icon}
+                      </div>
+                      <div className="flex-1 text-left">
+                        <h4 className="font-bold text-[15px] text-text-primary">{mode.label}</h4>
+                        <p className="text-[12px] text-text-muted mt-0.5">{mode.desc}</p>
+                      </div>
+                      {isSel && <Check className="text-primary shrink-0" size={22} />}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-auto pt-4 flex gap-3">
+                <button onClick={prevStep} className="px-6 h-[56px] rounded-[14px] font-bold border border-border-strong text-text-muted hover:text-text-primary hover:bg-surface-2 transition-colors">Back</button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={nextStep} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg bg-primary text-white hover:opacity-90 transition-opacity">Next</motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 7 && (
+            <motion.div key="step7" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
               <h3 className="text-xl font-bold mb-8 text-center">Is this information correct?</h3>
               
-              <div className="bg-[#141414] rounded-2xl p-6 border border-[rgba(255,255,255,0.06)] shadow-xl mb-8 space-y-6">
-                <div className="flex justify-between items-center pb-4 border-b border-[rgba(255,255,255,0.06)]">
-                  <span className="text-[#888888] font-bold text-sm uppercase tracking-wide">Wake Up</span>
-                  <span className="font-bold text-lg">{formatTime(data.wakeHour, data.wakeMin)}</span>
+              <div className="bg-surface rounded-2xl p-6 border border-border-base shadow-xl mb-8 space-y-6 text-left">
+                <div className="flex justify-between items-center pb-4 border-b border-border-base">
+                  <span className="text-text-muted font-bold text-sm uppercase tracking-wide">Wake Up</span>
+                  <span className="font-bold text-lg text-text-primary">{formatTime(data.wakeHour, data.wakeMin)}</span>
                 </div>
-                <div className="flex justify-between items-center pb-4 border-b border-[rgba(255,255,255,0.06)]">
-                  <span className="text-[#888888] font-bold text-sm uppercase tracking-wide">Sleep</span>
-                  <span className="font-bold text-lg">{formatTime(data.sleepHour, data.sleepMin)}</span>
+                <div className="flex justify-between items-center pb-4 border-b border-border-base">
+                  <span className="text-text-muted font-bold text-sm uppercase tracking-wide">Sleep</span>
+                  <span className="font-bold text-lg text-text-primary">{formatTime(data.sleepHour, data.sleepMin)}</span>
                 </div>
-                <div className="pb-4 border-b border-[rgba(255,255,255,0.06)]">
-                  <span className="text-[#888888] font-bold text-sm uppercase tracking-wide block mb-3">Your Week</span>
+                <div className="flex justify-between items-center pb-4 border-b border-border-base">
+                  <span className="text-text-muted font-bold text-sm uppercase tracking-wide">Avatar & Theme</span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border border-primary flex items-center justify-center text-sm font-bold shadow-[0_0_8px_rgba(124,111,247,0.3)] overflow-hidden shrink-0 text-white">
+                      {state.user.avatar && (state.user.avatar.startsWith('data:') || state.user.avatar.includes('/') || state.user.avatar.includes('.')) ? (
+                        <img src={state.user.avatar} className="w-full h-full object-cover rounded-full" alt="avatar" />
+                      ) : (
+                        state.user.avatar || 'S'
+                      )}
+                    </span>
+                    <span className="px-3 py-1 bg-surface-2 border border-border-base text-text-primary rounded-full text-xs font-semibold capitalize">
+                      {settings.appearance.colorMode === 'auto' ? 'Match System' : settings.appearance.colorMode}
+                    </span>
+                  </div>
+                </div>
+                <div className="pb-4 border-b border-border-base">
+                  <span className="text-text-muted font-bold text-sm uppercase tracking-wide block mb-3">Your Week</span>
                   <div className="flex flex-wrap gap-2">
                     {data.activities.map(act => (
-                      <span key={act} className="px-3 py-1 bg-[rgba(255,255,255,0.05)] rounded-full text-sm font-medium">{act}</span>
+                      <span key={act} className="px-3 py-1 bg-surface-2 border border-border-base text-text-primary rounded-full text-sm font-medium">{act}</span>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <span className="text-[#888888] font-bold text-sm uppercase tracking-wide block mb-3">Challenges</span>
+                  <span className="text-text-muted font-bold text-sm uppercase tracking-wide block mb-3">Challenges</span>
                   <div className="flex flex-wrap gap-2">
                     {data.challenges.map(cId => {
                       const chal = CHALLENGES.find(c => c.id === cId);
-                      return chal ? <span key={cId} className="px-3 py-1 bg-[rgba(124,111,247,0.15)] text-[#6FBBF7] rounded-full text-sm font-medium">{chal.icon} {chal.label}</span> : null;
+                      return chal ? <span key={cId} className="px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-sm font-medium">{chal.icon} {chal.label}</span> : null;
                     })}
                   </div>
                 </div>
@@ -846,22 +1216,21 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
 
               {!confirmed ? (
                 <div className="mt-auto flex gap-4">
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setStep(1)} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg border border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.05)] transition-colors">No, edit</motion.button>
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setConfirmed(true)} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg" style={{ backgroundColor: TOKENS.success, color: TOKENS.bg }}>Yes, looks good</motion.button>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setStep(1)} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg border border-border-strong text-text-muted hover:text-text-primary hover:bg-surface-2 transition-colors">No, edit</motion.button>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setConfirmed(true)} className="flex-1 h-[56px] rounded-[14px] font-bold text-lg bg-[#6FF7A0] hover:bg-[#5ae68a] text-[#141414] transition-all">Yes, looks good</motion.button>
                 </div>
               ) : (
                 <div className="mt-auto">
                   <motion.button
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={submit}
-                    className="w-full h-[56px] rounded-[14px] font-bold text-center flex items-center justify-center text-lg shadow-[0_8px_32px_rgba(124,111,247,0.4)]"
-                    style={{ backgroundColor: TOKENS.primary, color: TOKENS.bg }}
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     whileHover={{ scale: 1.01 }}
+                     whileTap={{ scale: 0.97 }}
+                     onClick={submit}
+                     className="w-full h-[56px] rounded-[14px] font-bold text-center flex items-center justify-center text-lg bg-primary text-white hover:opacity-90 shadow-lg transition-all"
                   >
                     {loading ? (
-                      <div className="w-5 h-5 rounded-full border-2 border-[#0A0A0A] border-t-transparent animate-spin"/>
+                      <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin"/>
                     ) : (
                       "Build my Anchor →"
                     )}
@@ -924,8 +1293,8 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
   const LEFT_CONTENT = [
     { text: "Your day. Your rules." },
     { text: "Save your progress and build your daily streaks." },
-    { text: "Turn your routines into an optimized flow." },
-    { text: "Make Anchor perfectly suited to your life." }
+    { text: "Make Anchor perfectly suited to your life." },
+    { text: "Turn your routines into an optimized flow." }
   ];
 
   if (isConnectingDb) {
@@ -950,13 +1319,13 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
         }
       `}</style>
 
-      <div className="w-full h-screen flex flex-col md:flex-row bg-[#0A0A0A] overflow-hidden text-[#F0F0F0] font-sans">
+      <div className="w-full h-screen flex flex-col md:flex-row bg-bg-base overflow-hidden text-text-primary font-sans">
         
         {/* LEFT HALF (DESKTOP) */}
-        <div className="hidden md:flex flex-col w-1/2 h-full bg-[#141414] border-r border-[rgba(255,255,255,0.06)] relative p-12 lg:p-24 justify-between shrink-0">
+        <div className="hidden md:flex flex-col w-1/2 h-full bg-surface border-r border-border-base relative p-12 lg:p-24 justify-between shrink-0">
            <div className="flex items-center gap-3 relative z-10">
-             <Anchor size={36} color={TOKENS.primary} strokeWidth={2.5} />
-             <span className="font-bold text-3xl tracking-tight">Anchor</span>
+             <Anchor size={36} className="text-primary" strokeWidth={2.5} />
+             <span className="font-bold text-3xl tracking-tight text-text-primary">Anchor</span>
            </div>
 
            <div className="relative z-10 max-w-[480px]">
@@ -979,30 +1348,29 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
              {[1,2,3,4].map((s) => (
                 <div 
                   key={s} 
-                  className="h-1.5 rounded-full transition-all duration-500"
-                  style={{ 
-                    width: s === step ? 32 : 12, 
-                    backgroundColor: s <= step ? TOKENS.primary : TOKENS.surface2 
-                  }}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    s === step ? 'w-8' : 'w-3'
+                  } ${
+                    s <= step ? 'bg-primary' : 'bg-surface-2'
+                  }`}
                 />
              ))}
            </div>
            
            {/* Decorative Background Blob */}
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#7C6FF7] rounded-full blur-[120px] opacity-[0.04] pointer-events-none" />
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary rounded-full blur-[120px] opacity-[0.04] pointer-events-none" />
         </div>
 
         {/* RIGHT HALF (FORM) */}
-        <div className="w-full md:w-1/2 h-full relative flex flex-col items-center justify-center bg-[#0A0A0A]">
+        <div className="w-full md:w-1/2 h-full relative flex flex-col items-center justify-center bg-bg-base">
             
           {/* Progress Bar (Top) */}
-          <div className="absolute top-0 left-0 w-full h-[3px] bg-[#1E1E1E] z-50 overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-[3px] bg-surface-2 z-50 overflow-hidden">
              <motion.div
                 initial={{ width: `${((step - 1) / 4) * 100}%` }}
                 animate={{ width: `${(step / 4) * 100}%` }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
-                className="h-full bg-[#7C6FF7]"
-                style={{ boxShadow: `0 0 8px ${TOKENS.primary}` }}
+                className="h-full bg-primary shadow-[0_0_8px_var(--color-primary)]"
              />
           </div>
 
@@ -1038,12 +1406,12 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
                   )}
                   {step === 3 && (
                      <motion.div key="3" custom={direction.current} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="w-full h-full absolute inset-0">
-                        <IntroStage onNext={() => handleNext(4)} />
+                        <PersonalizationStage onFinish={() => handleNext(4)} />
                      </motion.div>
                   )}
                   {step === 4 && (
                      <motion.div key="4" custom={direction.current} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="w-full h-full absolute inset-0">
-                        <PersonalizationStage onFinish={handleFinish} />
+                        <IntroStage onNext={handleFinish} />
                      </motion.div>
                   )}
                </AnimatePresence>
@@ -1057,7 +1425,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }} 
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 z-50 flex items-center justify-center bg-[#0A0A0A]"
+                className="absolute inset-0 z-50 flex items-center justify-center bg-bg-base"
               >
                 <div style={{ backgroundColor: TOKENS.primary }} className="w-24 h-24 rounded-[32px] flex items-center justify-center shadow-[0_0_64px_rgba(124,111,247,0.8)] relative">
                   <Anchor size={48} color={TOKENS.bg} className="relative z-10" />

@@ -15,11 +15,15 @@ import {
   User as UserIcon,
   ChevronDown,
   BarChart3,
-  Inbox
+  Inbox,
+  MessageSquareText,
+  X
 } from 'lucide-react';
 import { logout } from '../lib/firebase';
 import { ThemeStatusPill } from './settings/ThemeStatusPill';
 import Modal from './ui/Modal';
+import { ChatBotWidget } from './ChatBotModal';
+import { AnimatePresence, motion } from 'motion/react';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Home', icon: Home },
@@ -76,9 +80,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [navigate]);
 
   return (
-    <div className="flex h-screen w-full bg-[#0A0A0A] text-[#F0F0F0] overflow-hidden font-sans">
+    <div className="flex h-screen w-full bg-bg-base text-text-primary overflow-hidden font-sans">
       {/* SIDEBAR (Desktop & Tablet) */}
-      <aside className="hidden md:flex flex-col bg-[#141414] border-r border-[rgba(255,255,255,0.06)] shrink-0 transition-all duration-300 w-[72px] xl:w-[260px] pt-[28px] pb-6 px-3 xl:px-6">
+      <aside className="hidden md:flex flex-col bg-surface border-r border-border-base shrink-0 transition-all duration-300 w-[72px] xl:w-[260px] pt-[28px] pb-6 px-3 xl:px-6">
         {/* Top Header */}
         <div className="flex items-center justify-center xl:justify-start gap-3 mb-[36px] overflow-hidden">
           <div className="shrink-0 flex items-center justify-center">
@@ -98,8 +102,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 onClick={() => navigate(item.id)}
                 className={`flex flex-col xl:flex-row items-center justify-center xl:justify-start min-h-[56px] xl:min-h-[48px] w-full px-0 xl:px-3.5 rounded-[12px] transition-all border-l-[3px] md:border-l-0 xl:border-l-[3px] group gap-1 xl:gap-0 ${
                   isActive 
-                    ? 'bg-[rgba(124,111,247,0.15)] text-[#7C6FF7] border-[#7C6FF7] font-semibold' 
-                    : 'bg-transparent text-[#888888] hover:bg-[#1E1E1E] hover:text-[#F0F0F0] border-transparent font-medium'
+                    ? 'bg-primary-tint/15 text-primary border-primary font-semibold' 
+                    : 'bg-transparent text-text-muted hover:bg-surface-2 hover:text-text-primary border-transparent font-medium'
                 }`}
               >
                 <Icon size={20} className={`shrink-0 transition-transform ${isActive ? 'scale-105' : 'group-hover:scale-105'}`} />
@@ -110,24 +114,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* User Profile */}
-        <div className="mt-auto pt-[16px] border-t border-[rgba(255,255,255,0.06)] relative flex flex-col justify-end">
+        <div className="mt-auto pt-[16px] border-t border-border-base relative flex flex-col justify-end">
           
           {/* Profile Popover */}
           {profileOpen && (
-            <div className="absolute bottom-full mb-4 left-0 w-[170px] xl:w-full bg-[#1E1E1E] border border-[rgba(255,255,255,0.08)] rounded-[16px] shadow-[0_16px_48px_rgba(0,0,0,0.6)] p-2 z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
-               <button onClick={() => { setProfileOpen(false); navigate('settings'); }} className="w-full text-left px-4 py-2.5 hover:bg-[#2A2A2A] rounded-[8px] text-[14px] font-bold transition-colors">Settings</button>
-               <button onClick={() => { setProfileOpen(false); addToast('Profile edit coming soon!', 'info'); }} className="w-full text-left px-4 py-2.5 hover:bg-[#2A2A2A] rounded-[8px] text-[14px] font-bold transition-colors">Edit Profile</button>
-               <div className="h-px bg-[rgba(255,255,255,0.06)] my-1"></div>
-               <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 hover:bg-[rgba(247,111,111,0.1)] text-[#F76F6F] rounded-[8px] text-[14px] font-bold transition-colors">Log Out</button>
+            <div className="absolute bottom-full mb-4 left-0 w-[170px] xl:w-full bg-surface-2 border border-border-strong rounded-[16px] shadow-lg p-2 z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
+               <button onClick={() => { setProfileOpen(false); navigate('settings'); }} className="w-full text-left px-4 py-2.5 hover:bg-surface-3 rounded-[8px] text-[14px] font-bold transition-colors">Settings</button>
+               <button onClick={() => { setProfileOpen(false); addToast('Profile edit coming soon!', 'info'); }} className="w-full text-left px-4 py-2.5 hover:bg-surface-3 rounded-[8px] text-[14px] font-bold transition-colors">Edit Profile</button>
+               <div className="h-px bg-border-base my-1"></div>
+               <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 hover:bg-error/10 text-error rounded-[8px] text-[14px] font-bold transition-colors">Log Out</button>
             </div>
           )}
 
           <div 
             onClick={() => setProfileOpen(!profileOpen)}
-            className="flex items-center justify-center xl:justify-start gap-3 px-1 py-1 cursor-pointer group rounded-[12px] hover:bg-[#1A1A1A] transition-colors xl:-mx-2 xl:pl-2"
+            className="flex items-center justify-center xl:justify-start gap-3 px-1 py-1 cursor-pointer group rounded-[12px] hover:bg-surface-2 transition-colors xl:-mx-2 xl:pl-2"
           >
-            <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border border-[rgba(255,255,255,0.1)] flex items-center justify-center font-bold text-[15px] shadow-[0_0_12px_rgba(124,111,247,0.3)] shrink-0">
-              {state.user.avatar}
+            <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border border-border-strong flex items-center justify-center font-bold text-[15px] shadow-[0_0_12px_rgba(124,111,247,0.3)] shrink-0 overflow-hidden">
+              {state.user.avatar && (state.user.avatar.startsWith('data:') || state.user.avatar.includes('/') || state.user.avatar.includes('.')) ? (
+                <img src={state.user.avatar} className="w-full h-full object-cover rounded-full" alt="avatar" />
+              ) : (
+                state.user.avatar
+              )}
             </div>
             <div className="hidden xl:flex flex-col items-start overflow-hidden w-full group relative">
               <div className="flex items-center justify-between gap-1.5 w-full pr-2">
@@ -135,13 +143,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <ThemeStatusPill />
               </div>
               <div className="flex items-center gap-2 mt-0.5" title={`${state.user.xp} / ${state.user.xpToNextLevel} XP to Level ${state.user.level + 1}`}>
-                 <span className="text-[11px] font-bold bg-[#1A1A1A] px-2 py-0.5 rounded-[4px] text-[#7C6FF7] uppercase tracking-wider border border-[rgba(124,111,247,0.2)]">LV {state.user.level}</span>
-                 <div className="w-[60px] h-[4px] bg-[#1E1E1E] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#7C6FF7]" style={{ width: `${(state.user.xp / state.user.xpToNextLevel) * 100}%` }}></div>
+                 <span className="text-[11px] font-bold bg-surface px-2 py-0.5 rounded-[4px] text-primary uppercase tracking-wider border border-primary/20">LV {state.user.level}</span>
+                 <div className="w-[60px] h-[4px] bg-surface-2 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: `${(state.user.xp / state.user.xpToNextLevel) * 100}%` }}></div>
                  </div>
               </div>
             </div>
-            <div className="hidden xl:flex shrink-0 p-1 mr-1 text-[#888888] group-hover:text-[#F0F0F0] transition-colors">
+            <div className="hidden xl:flex shrink-0 p-1 mr-1 text-text-muted group-hover:text-text-primary transition-colors">
               <ChevronDown size={16} className={`transition-transform duration-300 ${profileOpen ? 'rotate-180' : ''}`} />
             </div>
           </div>
@@ -149,47 +157,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24 md:pb-0 relative bg-[#0A0A0A]">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24 md:pb-0 relative bg-bg-base">
         {/* Adjusted padding to be ultra-responsive on mobile devices */}
         <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 md:p-10 xl:p-[40px] transition-opacity duration-200">
           {children}
         </div>
       </main>
 
-      {/* FLOATING ACTION BUTTON */}
-      <button 
-        onClick={() => setShowCaptureModal(true)}
-        title="Quick Capture (Cmd+K)"
-        className="fixed bottom-24 md:bottom-8 right-6 md:right-8 w-14 h-14 bg-[#7C6FF7] text-[#0A0A0A] rounded-[16px] flex items-center justify-center shadow-[0_8px_32px_rgba(124,111,247,0.4)] hover:scale-105 active:scale-95 transition-transform z-50 border border-[rgba(255,255,255,0.2)]"
-      >
-        <Plus size={28} strokeWidth={2.5} />
-      </button>
-
-      {/* Capture Modal */}
-      <Modal isOpen={showCaptureModal} onClose={() => setShowCaptureModal(false)}>
-         <div className="flex flex-col gap-6">
-            <h2 className="text-[20px] font-bold text-[#F0F0F0]">Quick Capture</h2>
-            <textarea
-              autoFocus
-              value={captureText}
-              onChange={e => setCaptureText(e.target.value)}
-              placeholder="Quickly dump an idea, task, or distracting thought..."
-              className="w-full bg-[#1A1A1A] border border-[rgba(255,255,255,0.08)] rounded-[16px] p-4 text-[#F0F0F0] outline-none min-h-[120px] resize-none focus:border-[#7C6FF7] focus:shadow-[0_0_12px_rgba(124,111,247,0.2)] transition-all text-[16px]"
-              onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCapture(); }
-              }}
-            />
-            <button
-               onClick={handleCapture}
-               className="h-[52px] w-full bg-[#7C6FF7] hover:bg-[#6b5ee6] text-[#0A0A0A] rounded-[14px] font-bold text-[16px] transition-all"
-            >
-              Capture
-            </button>
-         </div>
-      </Modal>
+      <ChatBotWidget />
 
       {/* MOBILE BOTTOM NAVIGATION */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-[#141414] border-t border-[rgba(255,255,255,0.06)] h-[84px] px-2 pb-safe grid grid-cols-5 items-center justify-items-center z-40">
+      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-border-base h-[84px] px-2 pb-safe grid grid-cols-5 items-center justify-items-center z-40">
         {[
           { id: 'dashboard', label: 'Home', icon: Home },
           { id: 'quests', label: 'Quest Log', icon: Sword },
@@ -203,7 +181,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               key={item.id}
               onClick={() => navigate(item.id)}
               className={`flex flex-col items-center justify-center gap-1 w-full h-[56px] rounded-[16px] transition-colors ${
-                isActive ? 'text-[#7C6FF7] bg-[rgba(124,111,247,0.1)]' : 'text-[#888888]'
+                isActive ? 'text-primary bg-primary/10' : 'text-text-muted'
               }`}
             >
               <Icon size={20} className={isActive ? 'opacity-100 scale-110 transition-transform' : 'opacity-60'} />
@@ -214,11 +192,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <button
            onClick={() => navigate('settings')}
            className={`flex flex-col items-center justify-center gap-1 w-full h-[56px] rounded-[16px] transition-colors ${
-             activeTab === 'settings' ? 'text-[#7C6FF7] bg-[rgba(124,111,247,0.1)]' : 'text-[#888888]'
+             activeTab === 'settings' ? 'text-primary bg-primary/10' : 'text-text-muted'
            }`}
         >
-           <div className="w-[22px] h-[22px] rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border border-[rgba(255,255,255,0.1)] flex items-center justify-center font-bold text-[11px] shadow-sm text-[#F0F0F0]">
-             {state.user.avatar}
+           <div className="w-[22px] h-[22px] rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border border-border-strong flex items-center justify-center font-bold text-[11px] shadow-sm text-[#F0F0F0] overflow-hidden">
+             {state.user.avatar && (state.user.avatar.startsWith('data:') || state.user.avatar.includes('/') || state.user.avatar.includes('.')) ? (
+               <img src={state.user.avatar} className="w-full h-full object-cover rounded-full" alt="avatar" />
+             ) : (
+               state.user.avatar
+             )}
            </div>
            <span className="text-[10px] font-bold truncate px-1">Profile</span>
         </button>

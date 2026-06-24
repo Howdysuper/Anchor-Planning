@@ -79,6 +79,8 @@ export default function ImmersiveDashboard() {
 
   const getTodayDateString = () => {
     const d = new Date();
+    // Shift backward by 11 hours so the check-in day resets/refreshes at exactly 11:00 AM every day
+    d.setHours(d.getHours() - 11);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
@@ -191,10 +193,14 @@ export default function ImmersiveDashboard() {
     setIsStretchLoading(true);
     try {
       const recentHabits = state.anchors.filter(a => a.status === 'done').map(a => a.title).slice(0, 10);
+      const morningHabitLabels = completedHabitIds.map(hId => {
+        const habit = MORNING_HABITS.find(h => h.id === hId);
+        return habit ? habit.label : hId;
+      });
       const res = await fetch("/api/stretch-goals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recentHabits })
+        body: JSON.stringify({ recentHabits, morningHabits: morningHabitLabels })
       });
       if (res.ok) {
         const data = await res.json();
@@ -338,9 +344,10 @@ export default function ImmersiveDashboard() {
                 <p className="text-[13px] text-[#888888] mt-0.5">Control bedtimes and track daily rhythms easily</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 w-full sm:w-auto lg:w-full xl:w-auto">
+            <div className="flex items-center gap-3 w-full sm:w-auto lg:w-full xl:w-auto shrink-0">
               <button 
                 id="wake-up-checkin-btn"
+                disabled={!localStorage.getItem('anchor_sleep_start')}
                 onClick={() => {
                     const sleepStart = localStorage.getItem('anchor_sleep_start');
                     if (sleepStart) {
@@ -359,17 +366,26 @@ export default function ImmersiveDashboard() {
                       addToast("You haven't checked in for sleep yet.", "error");
                     }
                 }} 
-                className="flex-1 sm:flex-none sm:px-6 lg:flex-1 xl:flex-none xl:px-6 bg-[#252525] hover:bg-[#333] text-[#F0F0F0] text-sm font-bold h-[44px] rounded-[12px] transition-colors border border-[rgba(255,255,255,0.04)] flex items-center justify-center gap-2 shadow-sm"
+                className={`flex-1 sm:flex-none sm:px-6 lg:flex-1 xl:flex-none xl:px-6 text-sm font-bold h-[44px] rounded-[12px] transition-colors border flex items-center justify-center gap-2 shadow-sm ${
+                  !localStorage.getItem('anchor_sleep_start') 
+                  ? 'bg-[#1A1A1A] text-[#555555] border-[rgba(255,255,255,0.02)] cursor-not-allowed'
+                  : 'bg-[#252525] hover:bg-[#333] text-[#F0F0F0] border-[rgba(255,255,255,0.04)]'
+                }`}
               >
                 Waking up
               </button>
               <button 
                 id="sleep-checkin-btn"
+                disabled={!!localStorage.getItem('anchor_sleep_start')}
                 onClick={() => {
                    localStorage.setItem('anchor_sleep_start', Date.now().toString());
                    addToast("Sleep well! Come back to log wake time.", "info");
                  }}
-                className="flex-1 sm:flex-none sm:px-6 lg:flex-1 xl:flex-none xl:px-6 bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] text-sm font-bold h-[44px] rounded-[12px] transition-colors border border-[rgba(124,111,247,0.2)] flex items-center justify-center gap-2 shadow-sm"
+                className={`flex-1 sm:flex-none sm:px-6 lg:flex-1 xl:flex-none xl:px-6 text-sm font-bold h-[44px] rounded-[12px] transition-colors border flex items-center justify-center gap-2 shadow-sm ${
+                  !!localStorage.getItem('anchor_sleep_start')
+                  ? 'bg-[rgba(124,111,247,0.05)] text-[#7C6FF7]/30 border-[rgba(124,111,247,0.05)] cursor-not-allowed'
+                  : 'bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] border-[rgba(124,111,247,0.2)]'
+                }`}
               >
                 Going to sleep
               </button>
@@ -443,16 +459,17 @@ export default function ImmersiveDashboard() {
               <button 
                 id="habit-checkin-start-btn"
                 onClick={() => setIsHabitModalOpen(true)}
+                disabled={isHabitCheckInComplete}
                 className={`w-full h-[42px] rounded-[12px] font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
                   isHabitCheckInComplete 
-                    ? 'bg-[#1F1F1F] hover:bg-[#282828] text-[#A0A0A0] border border-[rgba(255,255,255,0.06)]' 
+                    ? 'bg-[#1F1F1F] text-[#606060] border border-[rgba(255,255,255,0.03)] cursor-not-allowed opacity-60' 
                     : 'bg-[#7C6FF7] hover:bg-[#6b5ee0] text-white shadow-[0_0_16px_rgba(124,111,247,0.2)]'
                 }`}
               >
                 {isHabitCheckInComplete ? (
                   <>
-                    <RefreshCcw size={13} />
-                    <span>Re-align Logged Habits</span>
+                    <Check size={13} className="text-[#6FF7A0]" />
+                    <span>Check-In Completed Today</span>
                   </>
                 ) : (
                   <>
@@ -478,17 +495,6 @@ export default function ImmersiveDashboard() {
                 <p className="text-[12px] text-[#888888] mt-0.5">Your quests and quick captures in one place.</p>
               </div>
               <div className="flex gap-2">
-                {!showGuide && (
-                  <button
-                    onClick={() => {
-                      setShowGuide(true);
-                      localStorage.setItem("anchor_show_guide", "true");
-                    }}
-                    className="text-[11px] font-bold bg-[#1A1A1A] text-[#888888] hover:text-[#7C6FF7] hover:bg-[#201F30] transition-colors border border-[rgba(255,255,255,0.06)] px-2.5 py-1.5 rounded-[8px] flex items-center gap-1"
-                  >
-                    <Sparkles size={12} /> Show Guide
-                  </button>
-                )}
                 <button
                   onClick={() => navigate("quests")}
                   className="text-[13px] font-bold bg-[#1A1A1A] text-[#888888] hover:text-[#F0F0F0] hover:bg-[#2A2A2A] transition-colors border border-[rgba(255,255,255,0.06)] px-3 py-1.5 rounded-[8px]"
@@ -498,63 +504,65 @@ export default function ImmersiveDashboard() {
               </div>
             </div>
 
-            {/* NEW USER QUICKSTART GUIDE */}
-            {showGuide && (
-              <div className="mb-6 bg-[rgba(124,111,247,0.06)] border border-[rgba(124,111,247,0.15)] rounded-[18px] p-5 relative overflow-hidden">
+            <Modal isOpen={showGuide} onClose={() => {
+              setShowGuide(false);
+              localStorage.setItem("anchor_show_guide", "false");
+            }}>
+              <div className="bg-[#141414] rounded-[24px] p-6 relative overflow-hidden max-w-2xl w-full mx-auto border border-[rgba(124,111,247,0.15)] shadow-[0_4px_32px_rgba(0,0,0,0.4)]">
                 <button 
                   onClick={() => {
                     setShowGuide(false);
                     localStorage.setItem("anchor_show_guide", "false");
-                    addToast("Guide hidden. You can show it again anytime using the 'Show Guide' button!", "info");
+                    addToast("Guide hidden. You're ready to go!", "info");
                   }}
                   className="absolute top-4 right-4 text-[#888888] hover:text-[#F0F0F0] transition-all p-1 hover:bg-[rgba(255,255,255,0.05)] rounded-full"
                   aria-label="Dismiss guide"
                 >
-                  <X size={14} />
+                  <X size={18} />
                 </button>
-                <h4 className="text-[13px] font-bold text-[#7C6FF7] uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <Sparkles size={14} className="animate-pulse" /> New User Quick Start Guide
+                <h4 className="text-[18px] font-bold text-[#7C6FF7] uppercase tracking-wider mb-6 flex items-center gap-2">
+                  <Sparkles size={18} className="animate-pulse" /> New User Quick Start Guide
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-3 bg-[rgba(255,255,255,0.02)] p-3 rounded-xl border border-[rgba(255,255,255,0.04)]">
-                    <span className="text-[18px] shrink-0">🛌</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="flex items-start gap-4 bg-[rgba(255,255,255,0.02)] p-4 rounded-xl border border-[rgba(255,255,255,0.04)]">
+                    <span className="text-[24px] shrink-0">🛌</span>
                     <div>
-                      <p className="text-[12px] font-bold text-[#F0F0F0] mb-0.5">Track Sleep</p>
-                      <p className="text-[11px] text-[#888888] leading-relaxed">
-                        Log when you go to bed or wake up using the sleep check-in buttons above to align with circadian rhythms.
+                      <p className="text-[14px] font-bold text-[#F0F0F0] mb-1">Track Sleep</p>
+                      <p className="text-[12px] text-[#888888] leading-relaxed">
+                        Log when you go to bed or wake up using the sleep check-in buttons to align with circadian rhythms.
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 bg-[rgba(255,255,255,0.02)] p-3 rounded-xl border border-[rgba(255,255,255,0.04)]">
-                    <span className="text-[18px] shrink-0">💧</span>
+                  <div className="flex items-start gap-4 bg-[rgba(255,255,255,0.02)] p-4 rounded-xl border border-[rgba(255,255,255,0.04)]">
+                    <span className="text-[24px] shrink-0">💧</span>
                     <div>
-                      <p className="text-[12px] font-bold text-[#F0F0F0] mb-0.5">Morning Alignment</p>
-                      <p className="text-[11px] text-[#888888] leading-relaxed">
+                      <p className="text-[14px] font-bold text-[#F0F0F0] mb-1">Morning Alignment</p>
+                      <p className="text-[12px] text-[#888888] leading-relaxed">
                         Cross off daily morning habits (Hydrate, Light, Mindful Movement) to stack up XP and set up your day.
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 bg-[rgba(255,255,255,0.02)] p-3 rounded-xl border border-[rgba(255,255,255,0.04)]">
-                    <span className="text-[18px] shrink-0">🎒</span>
+                  <div className="flex items-start gap-4 bg-[rgba(255,255,255,0.02)] p-4 rounded-xl border border-[rgba(255,255,255,0.04)]">
+                    <span className="text-[24px] shrink-0">🎒</span>
                     <div>
-                      <p className="text-[12px] font-bold text-[#F0F0F0] mb-0.5">Pack Loadout</p>
-                      <p className="text-[11px] text-[#888888] leading-relaxed">
+                      <p className="text-[14px] font-bold text-[#F0F0F0] mb-1">Pack Loadout</p>
+                      <p className="text-[12px] text-[#888888] leading-relaxed">
                         Go to the <span className="text-[#7C6FF7] font-semibold">Loadout</span> tab to check off your essential items so you never forget anything.
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 bg-[rgba(255,255,255,0.02)] p-3 rounded-xl border border-[rgba(255,255,255,0.04)]">
-                    <span className="text-[18px] shrink-0">⚓</span>
+                  <div className="flex items-start gap-4 bg-[rgba(255,255,255,0.02)] p-4 rounded-xl border border-[rgba(255,255,255,0.04)]">
+                    <span className="text-[24px] shrink-0">⚓</span>
                     <div>
-                      <p className="text-[12px] font-bold text-[#F0F0F0] mb-0.5">Core Anchors</p>
-                      <p className="text-[11px] text-[#888888] leading-relaxed">
-                        Check off daily schedule anchor milestones as <span className="text-[#6FBBF7] font-semibold">In Progress</span> then <span className="text-[#6FF7A0] font-semibold">Done</span>.
+                      <p className="text-[14px] font-bold text-[#F0F0F0] mb-1">Tasks</p>
+                      <p className="text-[12px] text-[#888888] leading-relaxed">
+                        Set your own tasks from the bottom right plus button. Complete tasks to earn XP and level up. Use the AI Assistant to help organize and schedule your day automatically!
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
+            </Modal>
 
             <div className="space-y-4">
               {/* PRIMARY QUEST */}
@@ -886,43 +894,6 @@ export default function ImmersiveDashboard() {
                   <div className="text-[11px] font-bold text-[#7C6FF7] mt-1">{pkg.xp} XP</div>
                 </button>
               ))}
-            </div>
-          </div>
-
-          {/* Grace Period margin */}
-          <div className="p-4 rounded-[16px] bg-[#1E1E1E] border border-[rgba(255,255,255,0.04)]">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-[12px] bg-[rgba(250,204,21,0.08)] flex items-center justify-center text-[#FACC15]">
-                <Calendar size={18} />
-              </div>
-              <div>
-                <h4 className="text-[14px] font-bold text-[#F0F0F0]">Grace Period Buffer</h4>
-                <p className="text-[12px] text-[#888888] leading-tight">Designated clock buffer before streak breaks</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-2 mt-1">
-              {[
-                { label: 'None', value: 'none' },
-                { label: '1 Hour Extension', value: '1hour' },
-                { label: '2 Hours Extension', value: '2hour' },
-                { label: 'Until Midnight', value: 'midnight' },
-              ].map((opt) => {
-                const isActive = settings.gamification.streakGracePeriod === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => updateSetting('gamification.streakGracePeriod', opt.value)}
-                    className={`py-2 px-3 rounded-[12px] text-[12px] font-bold border transition-all cursor-pointer ${
-                      isActive 
-                        ? 'bg-[rgba(250,204,21,0.08)] border-[#FACC15] text-[#FACC15] shadow-[0_0_10px_rgba(250,204,21,0.05)]' 
-                        : 'bg-[#141414] border-[rgba(255,255,255,0.04)] text-zinc-400 hover:bg-[#1A1A1A] hover:text-[#F0F0F0]'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
             </div>
           </div>
 

@@ -123,32 +123,32 @@ export default function Loadout() {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 border-box">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
         <div>
-          <h1 className="text-[32px] font-bold text-[#F0F0F0] tracking-tight leading-tight mb-2">Loadout</h1>
-          <p className="text-[16px] text-[#888888] font-medium">Checklists before you leave.</p>
+          <h1 className="text-[32px] font-bold text-text-primary tracking-tight leading-tight mb-2">Loadout</h1>
+          <p className="text-[16px] text-text-muted font-medium">Checklists before you leave.</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="flex-1 md:flex-none flex items-center justify-between gap-4 px-4 py-2.5 bg-[rgba(124,111,247,0.1)] border border-[rgba(124,111,247,0.2)] rounded-[12px]">
+          <div className="flex-1 md:flex-none flex items-center justify-between gap-4 px-4 py-2.5 bg-primary/10 border border-primary/20 rounded-[12px]">
              <div className="flex flex-col">
-               <span className="text-[10px] font-bold text-[#7C6FF7] uppercase tracking-wider flex items-center gap-1">
+               <span className="text-[10px] font-bold text-primary uppercase tracking-wider flex items-center gap-1">
                  <Zap size={10} /> XP Pool
                </span>
-               <span className="text-[13px] font-bold text-[#F0F0F0] tabular-nums">
+               <span className="text-[13px] font-bold text-text-primary tabular-nums">
                  {xpInfo.maxXP - (xpInfo.day === getDayString() ? xpInfo.dailyEarned : 0)} XP left
                </span>
              </div>
-             <div className="w-px h-8 bg-[rgba(124,111,247,0.2)] mx-1"></div>
+             <div className="w-px h-8 bg-primary/20 mx-1"></div>
              <div className="flex flex-col items-end">
-               <span className="text-[10px] font-bold text-[#888888] uppercase tracking-wider flex items-center gap-1">
+               <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider flex items-center gap-1">
                  <Clock size={10} /> Resets in
                </span>
-               <span className="text-[13px] font-bold text-[#888888] tabular-nums">
+               <span className="text-[13px] font-bold text-text-muted tabular-nums">
                  {timeUntilReset}
                </span>
              </div>
           </div>
           <button 
             onClick={resetAll}
-            className="h-[50px] md:h-[44px] px-4 bg-[#1E1E1E] hover:bg-[#252525] border border-[rgba(255,255,255,0.06)] text-[#F0F0F0] rounded-[12px] font-bold text-sm transition-colors flex items-center gap-2"
+            className="h-[50px] md:h-[44px] px-4 bg-surface-2 hover:bg-surface-3 border border-border-base text-text-primary rounded-[12px] font-bold text-sm transition-colors flex items-center gap-2"
           >
             <RotateCcw size={16} />
             <span className="hidden sm:inline">Reset All</span>
@@ -164,8 +164,8 @@ export default function Loadout() {
             onClick={() => setActiveTab(tab)}
             className={`px-5 py-2.5 rounded-full text-[14px] font-bold transition-all whitespace-nowrap border ${
               activeTab === tab
-                ? 'bg-[rgba(124,111,247,0.1)] text-[#7C6FF7] border-[#7C6FF7]'
-                : 'bg-[#141414] text-[#888888] border-[rgba(255,255,255,0.04)] hover:bg-[#1E1E1E]'
+                ? 'bg-primary/10 text-primary border-primary'
+                : 'bg-surface text-text-muted border-border-base hover:bg-surface-2'
             }`}
           >
             {tab}
@@ -173,15 +173,15 @@ export default function Loadout() {
         ))}
       </div>
 
-      <div className="bg-[#141414] rounded-[24px] p-8 border border-[rgba(255,255,255,0.06)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+      <div className="bg-surface rounded-[24px] p-8 border border-border-base shadow-card">
         
         {/* Progress */}
         <div className="mb-8">
           <div className="flex justify-between items-end mb-3">
-             <span className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Preparation limits</span>
-             <span className="text-[14px] font-bold text-[#F0F0F0] tabular-nums">{checkedCount} / {items.length} Ready</span>
+             <span className="text-[13px] font-bold text-text-muted uppercase tracking-wide">Preparation limits</span>
+             <span className="text-[14px] font-bold text-text-primary tabular-nums">{checkedCount} / {tabItems.length} Ready</span>
           </div>
-          <div className="h-2 w-full bg-[#1E1E1E] rounded-full overflow-hidden">
+          <div className="h-2 w-full bg-surface-2 rounded-full overflow-hidden">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
@@ -201,25 +201,25 @@ export default function Loadout() {
                 key={item.id}
                 className={`group flex justify-between items-center p-4 rounded-[16px] border transition-all cursor-pointer ${
                   item.checked 
-                    ? 'bg-[#1A1A1A] border-[rgba(255,255,255,0.02)] opacity-60' 
-                    : 'bg-[#1E1E1E] border-[rgba(255,255,255,0.06)] hover:bg-[#252525]'
+                    ? 'bg-surface-2 border-border-base opacity-60' 
+                    : 'bg-surface border-border-base hover:bg-surface-2'
                 }`}
                 onClick={() => toggleItem(item.id)}
               >
                 <div className="flex items-center gap-4">
                   <div className={`w-[26px] h-[26px] rounded-[8px] border-[2px] flex items-center justify-center transition-colors ${
-                    item.checked ? 'bg-[#6FF7A0] border-[#6FF7A0]' : 'border-[rgba(255,255,255,0.2)] group-hover:border-[#6FF7A0]'
+                    item.checked ? 'bg-[#6FF7A0] border-[#6FF7A0]' : 'border-border-strong group-hover:border-[#6FF7A0]'
                   }`}>
-                    {item.checked && <Check size={16} color="#0A0A0A" strokeWidth={3} />}
+                    {item.checked && <Check size={16} className="text-[#0A0A0A]" strokeWidth={3} />}
                   </div>
-                  <span className={`text-[16px] font-medium transition-all ${item.checked ? 'text-[#888888] line-through decoration-[#888888]' : 'text-[#F0F0F0]'}`}>
+                  <span className={`text-[16px] font-medium transition-all ${item.checked ? 'text-text-muted line-through decoration-text-muted' : 'text-text-primary'}`}>
                     {item.label}
                   </span>
                 </div>
                 
                 <button
                   onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }}
-                  className="opacity-0 group-hover:opacity-100 p-2 text-[#888888] hover:text-[#F76F6F] hover:bg-[rgba(247,111,111,0.1)] rounded-lg transition-all"
+                  className="opacity-0 group-hover:opacity-100 p-2 text-text-muted hover:text-[#F76F6F] hover:bg-[#F76F6F]/10 rounded-lg transition-all"
                 >
                   <X size={18} />
                 </button>
@@ -230,20 +230,23 @@ export default function Loadout() {
 
         {/* Add Item form inline */}
         <form onSubmit={handleAddItem} className="mt-4 flex items-center gap-3">
-           <div className="h-[52px] flex-1 bg-[#1A1A1A] rounded-[16px] border border-[rgba(255,255,255,0.04)] px-4 flex items-center focus-within:border-[rgba(255,255,255,0.15)] transition-colors">
-              <Plus size={20} className="text-[#888888] mr-3" />
+           <div className="h-[52px] flex-1 bg-surface-2 rounded-[16px] border border-border-base px-4 flex items-center focus-within:border-primary/40 transition-colors">
               <input 
                 type="text"
                 value={newItem}
                 onChange={e => setNewItem(e.target.value)}
                 placeholder="Add new item..."
-                className="w-full h-full bg-transparent outline-none text-[#F0F0F0] text-[16px] placeholder-[#888888]"
+                className="w-full h-full bg-transparent outline-none text-text-primary text-[16px] placeholder-text-muted"
               />
            </div>
            <button 
              type="submit"
              disabled={!newItem.trim()}
-             className="h-[52px] px-6 bg-[#6FF7A0] text-[#0A0A0A] rounded-[16px] font-bold text-[15px] disabled:opacity-50 transition-opacity"
+             className={`h-[52px] px-6 rounded-[16px] font-bold text-[15px] transition-all shadow-sm ${
+               newItem.trim()
+                 ? 'bg-[#6FF7A0] text-[#141414] hover:bg-[#5ae68a]'
+                 : 'bg-primary text-white hover:bg-primary-hover disabled:opacity-50'
+             }`}
            >
              Save
            </button>

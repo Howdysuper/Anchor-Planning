@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Cartes
 import Modal from './ui/Modal';
 import confetti from 'canvas-confetti';
 import { fetchCalendarEvents, createCalendarEvent, getCalendarToken } from '../lib/googleCalendar';
+import { formatDueDisplay } from '../lib/questUtils';
 
 export default function QuestLog() {
   const { state, setQuests, updateUser } = useApp();
@@ -14,7 +15,7 @@ export default function QuestLog() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const getTodayStr = () => new Date().toISOString().split('T')[0];
-  const [newQuest, setNewQuest] = useState({ title: '', description: '', due: getTodayStr(), difficulty: 1, importance: 1, category: 'School' });
+  const [newQuest, setNewQuest] = useState({ title: '', description: '', due: getTodayStr(), dueTime: '', difficulty: 1, importance: 1 });
 
   const [isCalculatingXp, setIsCalculatingXp] = useState(false);
   const [calculatedXp, setCalculatedXp] = useState(15);
@@ -22,7 +23,7 @@ export default function QuestLog() {
 
   const [activeDropdownId, setActiveDropdownId] = useState<number | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editQuest, setEditQuest] = useState<{ id: number, title: string, description?: string, due: string, dueRaw?: string, xp: number, done: boolean, createdAt?: number } | null>(null);
+  const [editQuest, setEditQuest] = useState<{ id: number, title: string, description?: string, due: string, dueRaw?: string, dueTime?: string, xp: number, done: boolean, createdAt?: number } | null>(null);
   const [isEditingXpCalculating, setIsEditingXpCalculating] = useState(false);
   const [editingXpDots, setEditingXpDots] = useState("");
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
@@ -31,38 +32,77 @@ export default function QuestLog() {
   const [availableTime, setAvailableTime] = useState<number | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<any[] | null>(null);
+  const [aiSummary, setAiSummary] = useState<string>("");
+  
+  const [showCustomTimeInput, setShowCustomTimeInput] = useState(false);
+  const [customTimeInput, setCustomTimeInput] = useState("");
 
-  const calculateAiSuggestions = (mins: number) => {
+  const handleCustomTimeSubmit = async () => {
+    if (!customTimeInput.trim()) return;
+    setAiLoading(true);
+    setAvailableTime(null);
+    setShowCustomTimeInput(false);
+    
+    try {
+      const res = await fetch("/api/parse-time", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timeString: customTimeInput })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.minutes > 0) {
+           calculateAiSuggestions(data.minutes);
+           return;
+        }
+      }
+      addToast("Could not understand that time, please try again", "error");
+      setAiLoading(false);
+    } catch (e) {
+      addToast("Failed to parse time", "error");
+      setAiLoading(false);
+    }
+  };
+
+  const calculateAiSuggestions = async (mins: number) => {
     setAvailableTime(mins);
     setAiLoading(true);
     setAiSuggestion(null);
+    setAiSummary("");
     
-    // Simulate thinking delay
-    setTimeout(() => {
-      // Very basic algorithm: map xp to roughly 1 xp = 2 mins as a mock,
-      // or just pick some uncompleted tasks that fit into the timeframe.
-      const uncompleted = state.quests.filter(q => !q.done);
-      
-      let timeRemaining = mins;
-      const suggestions = [];
-      
-      // Sort by importance if we had it, but for now let's prioritize by XP (bigger XP first or randomly)
-      // Let's sort randomly to make it feel "dynamic", then pick tasks that fit.
-      const shuffled = [...uncompleted].sort(() => 0.5 - Math.random());
-      
-      for (const task of shuffled) {
-        // mock: each task takes (task.xp * 1.5) minutes roughly
-        const estTime = Math.max(10, Math.floor(task.xp * 1.5));
-        if (timeRemaining >= estTime) {
-          suggestions.push({ ...task, estTime });
-          timeRemaining -= estTime;
+    try {
+      const today = new Date();
+      const payload = {
+        availableMinutes: mins,
+        quests: state.quests.filter(q => !q.done),
+        currentTime: {
+          year: today.getFullYear(),
+          month: today.getMonth() + 1,
+          day: today.getDate(),
+          weekday: today.toLocaleDateString('en-US', { weekday: 'long' }),
+          time: today.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })
         }
-      }
+      };
+
+      const res = await fetch("/api/ai-schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
       
-      // If we couldn't find any tasks, maybe just suggest creating one
-      setAiSuggestion(suggestions);
+      if (res.ok) {
+        const data = await res.json();
+        setAiSuggestion(data.suggestions || []);
+        setAiSummary(data.summary || "");
+      } else {
+        addToast("Failed to calculate suggestions with AI", "error");
+      }
+    } catch (e) {
+      console.error("AI schedule fetch error", e);
+      addToast("Failed to connect to AI schedule assistant", "error");
+    } finally {
       setAiLoading(false);
-    }, 1500);
+    }
   };
 
   React.useEffect(() => {
@@ -152,7 +192,13 @@ export default function QuestLog() {
         const res = await fetch("/api/xp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, description }),
+          body: JSON.stringify({ 
+            title, 
+            description,
+            due: newQuest.due,
+            dueTime: newQuest.dueTime,
+            currentDate: new Date().toISOString()
+          }),
         });
         if (res.ok) {
           const data = await res.json();
@@ -168,7 +214,7 @@ export default function QuestLog() {
     }, 800);
 
     return () => clearTimeout(timeout);
-  }, [newQuest.title, newQuest.description]);
+  }, [newQuest.title, newQuest.description, newQuest.due, newQuest.dueTime]);
 
   // Debounce API call for Edited XP
   React.useEffect(() => {
@@ -185,7 +231,13 @@ export default function QuestLog() {
         const res = await fetch("/api/xp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, description }),
+          body: JSON.stringify({ 
+            title, 
+            description,
+            due: editQuest.dueRaw,
+            dueTime: editQuest.dueTime,
+            currentDate: new Date().toISOString()
+          }),
         });
         if (res.ok) {
           const data = await res.json();
@@ -201,7 +253,7 @@ export default function QuestLog() {
     }, 800);
 
     return () => clearTimeout(timeout);
-  }, [editQuest?.title, editQuest?.description]);
+  }, [editQuest?.title, editQuest?.description, editQuest?.dueRaw, editQuest?.dueTime]);
 
   const activeQuests = state.quests.filter(q => !q.done);
   const completedQuests = state.quests.filter(q => q.done);
@@ -256,8 +308,10 @@ export default function QuestLog() {
     setEditQuest({
       id: quest.id,
       title: quest.title,
+      description: quest.description || '',
       due: quest.due,
       dueRaw: quest.dueRaw || getTodayStr(),
+      dueTime: quest.dueTime || '',
       xp: quest.xp,
       done: quest.done,
       createdAt: quest.createdAt
@@ -269,22 +323,16 @@ export default function QuestLog() {
   const handleSaveEdit = () => {
     if (!editQuest || !editQuest.title.trim()) return;
 
-    let dueDateStr = "Today";
-    const today = getTodayStr();
     const targetedDue = editQuest.dueRaw || getTodayStr();
-
-    if (targetedDue === today) {
-      dueDateStr = "Today";
-    } else {
-      const dateObj = new Date(targetedDue + 'T00:00:00');
-      dueDateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
+    const dueDateStr = formatDueDisplay(targetedDue, editQuest.dueTime);
 
     setQuests(state.quests.map(q => q.id === editQuest.id ? {
       ...q,
       title: editQuest.title.trim(),
+      description: editQuest.description || '',
       due: dueDateStr,
       dueRaw: targetedDue,
+      dueTime: editQuest.dueTime || '',
       xp: editQuest.xp
     } : q));
 
@@ -297,23 +345,18 @@ export default function QuestLog() {
     if (!newQuest.title.trim()) return;
     
     const xp = calculatedXp;
+    const targetedDue = newQuest.due || getTodayStr();
+    const dueDateStr = formatDueDisplay(targetedDue, newQuest.dueTime);
     
-    // Parse due date for clean display
-    let dueDateStr = "Today";
-    const today = getTodayStr();
-    let targetDateObj = new Date();
-    if (newQuest.due === today) {
-      dueDateStr = "Today";
-    } else {
-       targetDateObj = new Date(newQuest.due + 'T00:00:00'); 
-       dueDateStr = targetDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
+    let targetDateObj = new Date(targetedDue + 'T00:00:00');
 
     setQuests([...state.quests, { 
       id: Date.now(),
       title: newQuest.title.trim(),
+      description: newQuest.description || '',
       due: dueDateStr,
-      dueRaw: newQuest.due,
+      dueRaw: targetedDue,
+      dueTime: newQuest.dueTime || '',
       xp,
       category: 'General',
       done: false,
@@ -323,7 +366,7 @@ export default function QuestLog() {
 
     addToast(`Quest added! Worth ${xp} XP`, 'success');
     setIsModalOpen(false);
-    setNewQuest({ title: '', due: getTodayStr(), difficulty: 1, importance: 1, category: 'General' });
+    setNewQuest({ title: '', description: '', due: getTodayStr(), dueTime: '', difficulty: 1, importance: 1 });
 
     // Sync to Google Calendar if configured
     if (getCalendarToken()) {
@@ -387,7 +430,7 @@ export default function QuestLog() {
                         </div>
                       )}
                     </div>
-                    <span className="text-[12px] font-medium text-[#888888]">{quest.due} • {quest.category}</span>
+                    <span className="text-[12px] font-medium text-[#888888]">{quest.due}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 relative">
@@ -542,9 +585,9 @@ export default function QuestLog() {
           ].map(opt => (
             <button
               key={opt.val}
-              onClick={() => calculateAiSuggestions(opt.val)}
+              onClick={() => { setShowCustomTimeInput(false); calculateAiSuggestions(opt.val); }}
               className={`px-4 py-2 rounded-full text-[13px] font-bold transition-all border ${
-                availableTime === opt.val
+                availableTime === opt.val && !showCustomTimeInput
                   ? 'bg-[#6FF7A0] text-[#0A0A0A] border-[#6FF7A0]'
                   : 'bg-[rgba(255,255,255,0.02)] text-[#888888] border-[rgba(255,255,255,0.08)] hover:text-[#F0F0F0] hover:border-[rgba(255,255,255,0.2)]'
               }`}
@@ -552,7 +595,43 @@ export default function QuestLog() {
               {opt.label}
             </button>
           ))}
+          <button
+            onClick={() => setShowCustomTimeInput(true)}
+            className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all border ${
+              showCustomTimeInput
+                ? 'bg-[#6FF7A0] text-[#0A0A0A] border-[#6FF7A0]'
+                : 'bg-[rgba(255,255,255,0.02)] text-[#888888] border-[rgba(255,255,255,0.08)] hover:text-[#F0F0F0] hover:border-[rgba(255,255,255,0.2)]'
+            }`}
+          >
+            Custom time
+          </button>
         </div>
+
+        {showCustomTimeInput && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mb-6 flex items-center gap-3 bg-[rgba(255,255,255,0.02)] p-3 rounded-[16px] border border-[rgba(255,255,255,0.06)]"
+          >
+            <input
+              type="text"
+              autoFocus
+              value={customTimeInput}
+              onChange={e => setCustomTimeInput(e.target.value)}
+              placeholder="e.g. 2 hours and 15 mins"
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleCustomTimeSubmit();
+              }}
+              className="flex-1 bg-transparent border-none outline-none text-[#F0F0F0] text-[14px] placeholder-[#555555]"
+            />
+            <button
+              onClick={handleCustomTimeSubmit}
+              className="px-4 py-1.5 bg-[#6FF7A0] text-[#0A0A0A] font-bold text-[13px] rounded-full hover:bg-[#5EE690] transition-colors"
+            >
+              Apply
+            </button>
+          </motion.div>
+        )}
 
         <AnimatePresence mode="wait">
           {aiLoading && (
@@ -575,35 +654,45 @@ export default function QuestLog() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-[rgba(111,247,160,0.05)] border border-[rgba(111,247,160,0.15)] rounded-[16px] p-5"
             >
-              <h4 className="text-[14px] font-bold text-[#6FF7A0] mb-4 flex items-center gap-2">
+              <h4 className="text-[15px] font-bold text-[#6FF7A0] mb-1 flex items-center gap-2">
                 <Check size={16} />
-                Based on your {availableTime} minutes, I recommend focusing on:
+                Focus Plan for Today ({availableTime} minutes available)
               </h4>
+              {aiSummary && (
+                <p className="text-[13px] text-[#A0A0A0] mb-4 italic font-medium leading-relaxed">{aiSummary}</p>
+              )}
 
               {aiSuggestion.length > 0 ? (
                 <div className="space-y-3">
                   {aiSuggestion.map((task, i) => (
-                    <div key={i} className="flex justify-between items-center bg-[#1A1A1A] p-3 rounded-[12px] border border-[rgba(255,255,255,0.04)]">
-                      <p className="text-[14px] font-bold text-[#F0F0F0]">{task.title}</p>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[11px] font-bold text-[#888888] flex items-center gap-1">
-                          <Clock size={12} />
-                          ~{task.estTime} min
-                        </span>
-                        <span className="text-[11px] font-bold bg-[rgba(247,217,111,0.1)] text-[#F7D96F] px-2 py-1 rounded-full">
-                          +{task.xp} XP
-                        </span>
+                    <div key={i} className="bg-[#1A1A1A] p-4 rounded-[12px] border border-[rgba(255,255,255,0.04)] hover:border-[rgba(111,247,160,0.15)] transition-all">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                        <p className="text-[14px] font-bold text-[#F0F0F0]">{task.title}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[11px] font-bold bg-[rgba(111,247,160,0.12)] text-[#6FF7A0] px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                            <Clock size={10} />
+                            Start: {task.startTime || "Now"}
+                          </span>
+                          <span className="text-[11px] font-bold bg-[rgba(255,255,255,0.03)] text-[#888888] px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                            ~{task.estTime} min
+                          </span>
+                        </div>
                       </div>
+                      {task.reason && (
+                        <p className="text-[12px] text-[#888888] leading-relaxed bg-[rgba(255,255,255,0.01)] px-3 py-1.5 rounded-[8px] border border-[rgba(255,255,255,0.02)]">
+                          {task.reason}
+                        </p>
+                      )}
                     </div>
                   ))}
                   
                   {/* Totals */}
                   <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.06)] flex justify-between items-center">
                     <span className="text-[12px] font-bold text-[#888888]">
-                      Total Estimated Time: {aiSuggestion.reduce((acc, curr) => acc + curr.estTime, 0)} min
+                      Total Planned: {aiSuggestion.reduce((acc, curr) => acc + curr.estTime, 0)} min
                     </span>
-                    <span className="text-[12px] font-bold text-[#F7D96F]">
-                      Potential XP: {aiSuggestion.reduce((acc, curr) => acc + curr.xp, 0)}
+                    <span className="text-[12px] font-bold text-[#F7D96F] flex items-center gap-1 bg-[rgba(247,217,111,0.05)] px-2.5 py-1 rounded-full border border-[rgba(247,217,111,0.1)]">
+                      ✨ Total XP Gain: {aiSuggestion.reduce((acc, curr) => acc + (curr.xp || 15), 0)}
                     </span>
                   </div>
                 </div>
@@ -642,16 +731,28 @@ export default function QuestLog() {
               />
            </div>
            
-           <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide flex items-center gap-2"><Calendar size={14}/> Due Date</label>
-              <input 
-                type="date"
-                value={newQuest.due}
-                onChange={e => setNewQuest({...newQuest, due: e.target.value})}
-                min={getTodayStr()}
-                className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px] date-picker-custom"
-                style={{ colorScheme: 'dark' }}
-              />
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide flex items-center gap-2"><Calendar size={14}/> Due Date</label>
+                <input 
+                  type="date"
+                  value={newQuest.due}
+                  onChange={e => setNewQuest({...newQuest, due: e.target.value})}
+                  min={getTodayStr()}
+                  className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px] date-picker-custom"
+                  style={{ colorScheme: 'dark' }}
+                />
+             </div>
+             <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide flex items-center gap-2"><Clock size={14}/> Due Time (Optional)</label>
+                <input 
+                  type="time"
+                  value={newQuest.dueTime}
+                  onChange={e => setNewQuest({...newQuest, dueTime: e.target.value})}
+                  className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px] [color-scheme:dark]"
+                  style={{ colorScheme: 'dark' }}
+                />
+             </div>
            </div>
 
            <div className={`relative rounded-[12px] mt-2 overflow-hidden ${isCalculatingXp ? 'p-[1px]' : 'bg-[rgba(247,217,111,0.05)] border border-[rgba(247,217,111,0.15)]'}`}>
@@ -665,10 +766,12 @@ export default function QuestLog() {
                </div>
              )}
              <div className={`relative rounded-[11px] p-4 flex justify-between items-center z-10 w-full h-full ${isCalculatingXp ? 'bg-[#141414]' : 'bg-transparent'}`}>
-               <span className="text-[14px] font-bold text-[#888888]">Estimated Value</span>
+               <span className="text-[14px] font-bold text-[#888888] flex items-center gap-1.5">
+                 ✨ Value Estimation
+               </span>
                {isCalculatingXp ? (
                  <span className="text-[16px] font-bold text-[#F7A06F] w-[120px] text-right inline-block italic">
-                   Calculating<span className="inline-block text-left w-[16px]">{xpDots}</span>
+                   Estimating<span className="inline-block text-left w-[16px]">{xpDots}</span>
                  </span>
                ) : (
                  <span className="text-[18px] font-bold text-[#F7D96F] px-1 transition-all">+{calculatedXp} XP</span>
@@ -714,16 +817,28 @@ export default function QuestLog() {
                 />
              </div>
              
-             <div className="flex flex-col gap-2">
-                <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide flex items-center gap-2"><Calendar size={14}/> Due Date</label>
-                <input 
-                  type="date"
-                  value={editQuest.dueRaw || ""}
-                  onChange={e => setEditQuest({...editQuest, dueRaw: e.target.value})}
-                  min={getTodayStr()}
-                  className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px] date-picker-custom"
-                  style={{ colorScheme: 'dark' }}
-                />
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide flex items-center gap-2"><Calendar size={14}/> Due Date</label>
+                  <input 
+                    type="date"
+                    value={editQuest.dueRaw || ""}
+                    onChange={e => setEditQuest({...editQuest, dueRaw: e.target.value})}
+                    min={getTodayStr()}
+                    className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px] date-picker-custom"
+                    style={{ colorScheme: 'dark' }}
+                  />
+               </div>
+               <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide flex items-center gap-2"><Clock size={14}/> Due Time (Optional)</label>
+                  <input 
+                    type="time"
+                    value={editQuest.dueTime || ""}
+                    onChange={e => setEditQuest({...editQuest, dueTime: e.target.value})}
+                    className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px] [color-scheme:dark]"
+                    style={{ colorScheme: 'dark' }}
+                  />
+               </div>
              </div>
 
              <div className={`relative rounded-[12px] mt-2 overflow-hidden ${isEditingXpCalculating ? 'p-[1px]' : 'bg-[rgba(247,217,111,0.05)] border border-[rgba(247,217,111,0.15)]'}`}>
@@ -737,10 +852,12 @@ export default function QuestLog() {
                  </div>
                )}
                <div className={`relative rounded-[11px] p-4 flex justify-between items-center z-10 w-full h-full ${isEditingXpCalculating ? 'bg-[#141414]' : 'bg-transparent'}`}>
-                 <span className="text-[14px] font-bold text-[#888888]">Estimated Value</span>
+                 <span className="text-[14px] font-bold text-[#888888] flex items-center gap-1.5">
+                   ✨ Value Estimation
+                 </span>
                  {isEditingXpCalculating ? (
                    <span className="text-[16px] font-bold text-[#F7A06F] w-[120px] text-right inline-block italic">
-                     Calculating<span className="inline-block text-left w-[16px]">{editingXpDots}</span>
+                     Estimating<span className="inline-block text-left w-[16px]">{editingXpDots}</span>
                    </span>
                  ) : (
                    <span className="text-[18px] font-bold text-[#F7D96F] px-1 transition-all">+{editQuest.xp} XP</span>

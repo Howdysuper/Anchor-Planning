@@ -206,8 +206,12 @@ export function ProfileSettings() {
         {/* Avatar Settings */}
         <div className="p-5 flex flex-col sm:flex-row items-center gap-6">
           <div className="relative shrink-0">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border-2 border-[#7C6FF7] flex items-center justify-center font-bold text-3xl shadow-[0_0_16px_rgba(124,111,247,0.3)]">
-              {state.user.avatar}
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border-2 border-[#7C6FF7] flex items-center justify-center font-bold text-3xl shadow-[0_0_16px_rgba(124,111,247,0.3)] overflow-hidden">
+              {state.user.avatar && (state.user.avatar.startsWith('data:') || state.user.avatar.includes('/') || state.user.avatar.includes('.')) ? (
+                <img src={state.user.avatar} className="w-full h-full object-cover rounded-full" alt="avatar" />
+              ) : (
+                state.user.avatar
+              )}
             </div>
           </div>
           <div className="flex-1 text-center sm:text-left min-w-0">
@@ -1280,19 +1284,6 @@ export function GamificationSettings() {
           />
         </SettingsRow>
 
-        {/* Streak Grace Period */}
-        <SettingsRow icon={<Shield size={18} />} title="Grace Period margin" description="Designated clock buffer before streak values break.">
-          <SettingsDropdown
-            options={[
-              { label: 'None', value: 'none' },
-              { label: '1 hour extension', value: '1hour' },
-              { label: '2 hours extension', value: '2hour' },
-              { label: 'Until midnight', value: 'midnight' },
-            ]}
-            value={settings.gamification.streakGracePeriod}
-            onChange={(val) => updateSetting('gamification.streakGracePeriod', val)}
-          />
-        </SettingsRow>
       </SettingsCard>
 
       <SettingsCard title="XP Point History Charts">

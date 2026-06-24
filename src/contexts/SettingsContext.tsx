@@ -217,7 +217,7 @@ const defaultSettings: SettingsType = {
       loadoutComplete: 15
     },
     streakFreeze: true,
-    streakGracePeriod: "1hour",
+    streakGracePeriod: "2hour",
     showXPBar: true,
     showLevelBadge: true,
     levelUpNotification: true,

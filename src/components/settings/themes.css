@@ -73,35 +73,35 @@
 
 /* Light Mode Overrides Container */
 .theme-light {
-  --color-bg: #F5F5F7;                 /* Premium Light iOS off-white background */
-  --color-surface: #FFFFFF;            /* Pure white glossy cards and panels */
-  --color-surface2: #EEEEF2;           /* Light grey elevated surfaces */
-  --color-surface3: #E1E1E6;           /* Greater visible border highlight level or switches */
-  --color-border: rgba(0, 0, 0, 0.10); /* Clean dark contrast border */
-  --color-border-strong: rgba(0, 0, 0, 0.22); /* Bold border for outstanding accessible inputs and boxes */
-  --color-text: #1C1C1E;               /* Black premium default high contrast text */
-  --color-text-muted: #48484A;         /* High readability charcoal grey */
-  --color-text-subtle: #6E6E73;        /* AA standard compliant labels (ratio > 4.5) */
-  --color-primary: #5A4EED;            /* Deeper royal purple for light mode text and icons */
-  --color-primary-tint: rgba(90, 78, 237, 0.08);
-  --color-primary-hover: #483CC7;
-  --color-error: #D32F2F;              /* Higher contrast deep red */
-  --color-success: #1E7E34;            /* Darker visible green */
-  --color-warning: #B7791F;
-  --color-orange: #C25E00;             /* Highly legible orange contrast */
-  --color-blue: #0056B3;               /* Highly legible deep visual blue */
-  --color-gold: #8F6B00;               /* Extremely visible gold/bronze contrast */
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04);
-  --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.06);
-  --shadow-modal: 0 20px 50px rgba(0, 0, 0, 0.12);
+  --color-bg: #FAF9F6;                 /* Warm Alabaster Off-White for OLED luxury */
+  --color-surface: #FFFFFF;            /* Pure high-contrast white for cards and panels */
+  --color-surface2: #F5F4F0;           /* Soft warm grey elevated surfaces */
+  --color-surface3: #EAE8E2;           /* Beautiful warm grey accents and borders */
+  --color-border: rgba(0, 0, 0, 0.06); /* Clean, low-noise dark contrast border */
+  --color-border-strong: rgba(0, 0, 0, 0.14); /* Accessible bold borders for inputs */
+  --color-text: #1C1B19;               /* Deep charcoal rich text (less harsh than pure black) */
+  --color-text-muted: #4E4B45;         /* Elegant warm-toned charcoal body text */
+  --color-text-subtle: #79766F;        /* High compliance labels and secondary text */
+  --color-primary: #5246E2;            /* Luxurious premium royal blue/indigo */
+  --color-primary-tint: rgba(82, 70, 226, 0.06);
+  --color-primary-hover: #3E32C4;
+  --color-error: #D32F2F;              /* Clean deep crimson red */
+  --color-success: #1B7A35;            /* Dark forest green for positive statuses */
+  --color-warning: #B27310;            /* Deep amber yellow */
+  --color-orange: #C05500;             /* High contrast vivid orange */
+  --color-blue: #0056B3;               /* Accessible royal blue */
+  --color-gold: #856100;               /* Solid gold tone with deep legibility */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.02);
+  --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.04);
+  --shadow-modal: 0 20px 50px rgba(0, 0, 0, 0.08);
   --sidebar-bg: #FFFFFF;
-  --sidebar-border: rgba(0, 0, 0, 0.08);
-  --nav-active-bg: rgba(90, 78, 237, 0.08);
-  --nav-hover-bg: rgba(0, 0, 0, 0.04);
+  --sidebar-border: rgba(0, 0, 0, 0.05);
+  --nav-active-bg: rgba(82, 70, 226, 0.06);
+  --nav-hover-bg: rgba(0, 0, 0, 0.03);
   --input-bg: #FFFFFF;                 /* Clear pure white input fields */
-  --input-border: rgba(0, 0, 0, 0.22); /* Perfect high contrast inputs border */
-  --toggle-off-bg: #C7C7CC;
-  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --input-border: rgba(0, 0, 0, 0.14); /* Smooth border for inputs */
+  --toggle-off-bg: #D1D1D6;
+  --scrollbar-thumb: rgba(0, 0, 0, 0.10);
 
   background-color: var(--color-bg) !important;
   color: var(--color-text) !important;
@@ -159,6 +159,7 @@
 .theme-light .text-\[\#F7A06F\] { color: var(--color-orange) !important; }
 .theme-light .text-\[\#E0E0E0\] { color: var(--color-text) !important; }
 
+.theme-light .text-zinc-50 { color: var(--color-text) !important; }
 .theme-light .text-zinc-100 { color: var(--color-text) !important; }
 .theme-light .text-zinc-200 { color: var(--color-text) !important; }
 .theme-light .text-zinc-300 { color: var(--color-text-muted) !important; }
@@ -168,17 +169,37 @@
 .theme-light .text-zinc-600 { color: var(--color-text-subtle) !important; }
 .theme-light .text-white { color: var(--color-text) !important; }
 
+/* Hover text overrides to prevent white text on light bg */
+.theme-light .hover\:text-white:hover { color: var(--color-text) !important; }
+.theme-light .hover\:text-zinc-100:hover { color: var(--color-text) !important; }
+.theme-light .hover\:text-zinc-200:hover { color: var(--color-text) !important; }
+.theme-light .hover\:text-\[\#F0F0F0\]:hover { color: var(--color-text) !important; }
+.theme-light .hover\:text-\[\#E0E0E0\]:hover { color: var(--color-text) !important; }
+
+/* Force white text on primary backgrounds/buttons in both themes */
+.theme-light .bg-primary,
+.theme-light .bg-primary *,
+.theme-light .bg-\[\#7C6FF7\],
+.theme-light .bg-\[\#7C6FF7\] * {
+  color: #FFFFFF !important;
+}
+
 /* Border utility matches */
 .theme-light .border-\[rgba\(255\,255\,255\,0\.2\)\] {
   border: 1.5px solid rgba(0, 0, 0, 0.28) !important;
   background-color: var(--color-surface) !important;
   box-shadow: var(--shadow-card) !important;
 }
-.theme-light .border-\[rgba\(255\,255\,255\,0\.06\)\] { border-color: var(--color-border) !important; }
+.theme-light .border-\[rgba\(255\,255\,255\,0\.03\)\] { border-color: var(--color-border) !important; }
 .theme-light .border-\[rgba\(255\,255\,255\,0\.04\)\] { border-color: var(--color-border) !important; }
+.theme-light .border-\[rgba\(255\,255\,255\,0\.05\)\] { border-color: var(--color-border) !important; }
+.theme-light .border-\[rgba\(255\,255\,255\,0\.06\)\] { border-color: var(--color-border) !important; }
 .theme-light .border-\[rgba\(255\,255\,255\,0\.08\)\] { border-color: var(--color-border) !important; }
 .theme-light .border-\[rgba\(255\,255\,255\,0\.1\)\] { border-color: var(--color-border-strong) !important; }
 .theme-light .border-\[rgba\(255\,255\,255\,0\.12\)\] { border-color: var(--color-border-strong) !important; }
+.theme-light .border-\[rgba\(255\,255\,255\,0\.15\)\] { border-color: var(--color-border-strong) !important; }
+.theme-light .border-zinc-950 { border-color: var(--color-border) !important; }
+.theme-light .border-zinc-900 { border-color: var(--color-border) !important; }
 .theme-light .border-zinc-800 { border-color: var(--color-border) !important; }
 .theme-light .border-zinc-700 { border-color: var(--color-border-strong) !important; }
 .theme-light .border-[rgba(255,255,255,0.06)] { border-color: var(--color-border) !important; }
@@ -413,4 +434,37 @@
 .theme-light .toast-bubble,
 .theme-light .toast-bubble * {
   color: #FFFFFF !important;
+}
+
+/* OLED Quality High-Contrast Focus Outline Corrections & Animations */
+@keyframes pulseSlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.82; transform: scale(0.96); }
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Eliminate default native focus rings and introduce premium aesthetic shadows */
+.theme-light input:focus,
+.theme-light textarea:focus,
+.theme-light select:focus,
+.theme-light button:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(82, 70, 226, 0.18), var(--shadow-card) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Avoid janky outlines on interactive tiles and elements */
+.theme-light *:focus {
+  outline: none !important;
+}
+
+.theme-light .focus-ring-premium {
+  transition: all 200ms ease;
+}
+.theme-light .focus-ring-premium:focus-within {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(82, 70, 226, 0.18) !important;
 }

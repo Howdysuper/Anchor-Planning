@@ -83,21 +83,66 @@ async function startServer() {
 
   app.post("/api/xp", async (req, res) => {
     try {
-      const { title, description } = req.body;
-      let promptTask = description && description.trim() !== "" ? description : title;
+      const { title, description, due, dueTime, currentDate } = req.body;
       
+      const now = currentDate ? new Date(currentDate) : new Date();
+      let durationStr = "N/A";
+      let hours = 0;
+      let days = 0;
+      
+      if (due) {
+        const timeStr = dueTime || "23:59";
+        const dueObj = new Date(`${due}T${timeStr}`);
+        if (!isNaN(dueObj.getTime())) {
+          const diffMs = dueObj.getTime() - now.getTime();
+          hours = diffMs / (1000 * 60 * 60);
+          days = hours / 24;
+          if (hours <= 0) {
+            durationStr = "Immediate / Overdue (less than 1 hour remaining)";
+          } else {
+            durationStr = `${hours.toFixed(1)} hours (${days.toFixed(1)} days)`;
+          }
+        }
+      }
+
       const response = await ai.models.generateContent({
         model: "gemini-3.1-flash-lite",
-        contents: `Evaluate this task/quest for a student: "${promptTask}". Respond with a JSON object containing an "xp" integer between 10 and 45 based on effort and difficulty, or 0 if it is gibberish.`,
+        contents: `Evaluate this student task/quest:
+- Title: "${title}"
+- Description: "${description || "None"}"
+- Timeframe/Duration until deadline: ${durationStr}
+
+Calculate the appropriate XP reward based on difficulty, complexity, and deadline scale. Use the XP scaling rules provided.`,
         config: {
-          systemInstruction: "You are a quest XP calculator. If the task is gibberish, random letters, spam, or makes no sense, return 0 XP. Easy tasks = 10-15 XP. Medium tasks = 20-30 XP. Hard tasks = 35-45 XP. Ensure your output is an integer strictly between 10 and 45, or 0. Output ONLY JSON with the 'xp' key.",
+          systemInstruction: `You are a smart, rewarding quest XP calculator.
+If the task title or description is gibberish, random text, or spam, return 0 XP.
+
+Scale the XP rewards based on both the nature of the task and the duration/deadline (which reflects the scale of work):
+- Short-term (due in less than 24 hours, e.g., 3 hours):
+  * Easy (e.g. daily habits, quick chores): 10-15 XP
+  * Medium (e.g. homework, simple study sessions): 20-35 XP
+  * Hard (e.g. writing an essay, preparing a speech): 40-60 XP
+- Mid-term (due in 1 to 7 days, e.g., a week):
+  * Easy (e.g. weekly review, light reading): 30-50 XP
+  * Medium (e.g. lab report, small coding assignment): 60-100 XP
+  * Hard (e.g. studying for a midterm exam, major project milestone): 110-160 XP
+- Long-term (due in 8 to 30 days, e.g., 2-4 weeks):
+  * Easy (e.g. reading a book, steady progress): 80-120 XP
+  * Medium (e.g. research paper draft, full software module): 150-250 XP
+  * Hard (e.g. major term paper, building a complete app, studying for finals): 280-400 XP
+- Epic-term (due in 31 to 90 days, e.g., 1-3 months):
+  * Easy (e.g. ongoing semester reading log): 180-250 XP
+  * Medium (e.g. mid-term group project, portfolio construction): 300-450 XP
+  * Hard (e.g. bachelor/master thesis, major competitive exam prep, end-of-term capstone): 500-800 XP
+
+Ensure your output is an integer strictly matching these rules. Output ONLY JSON with the 'xp' key.`,
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
             properties: {
               xp: {
                 type: Type.INTEGER,
-                description: "Estimated XP points: 0 if gibberish, or between 10 and 45",
+                description: "Calculated XP points based on effort, difficulty, and timeframe",
               },
             },
             required: ["xp"],
@@ -109,6 +154,85 @@ async function startServer() {
     } catch (e: any) {
       console.error("Error generating XP:", e);
       res.status(500).json({ error: e.message || "Failed to calculate XP" });
+    }
+  });
+
+  app.post("/api/parse-time", async (req, res) => {
+    try {
+      const { timeString } = req.body;
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite",
+        contents: `Convert this time duration into total minutes: "${timeString}"`,
+        config: {
+          systemInstruction: "You are a time parsing assistant. Convert the given time duration string into an integer representing the total minutes. For example, '1 hour and 30 minutes' = 90. If it cannot be parsed or makes no sense, return 0. Output ONLY JSON with the 'minutes' key.",
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              minutes: {
+                type: Type.INTEGER,
+                description: "Total minutes represented by the string",
+              },
+            },
+            required: ["minutes"],
+          },
+        },
+      });
+      const data = JSON.parse(response.text);
+      res.json(data);
+    } catch (e: any) {
+      console.error("Error parsing time:", e);
+      res.status(500).json({ error: e.message || "Failed to parse time" });
+    }
+  });
+
+  app.post("/api/ai-schedule", async (req, res) => {
+    try {
+      const { availableMinutes, quests, currentTime } = req.body;
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite",
+        contents: `I have ${availableMinutes} minutes to focus today.
+My uncompleted quests: ${JSON.stringify(quests)}
+Current date and time context: ${JSON.stringify(currentTime)}
+
+Based on this context, select and order the best quests for me to complete.
+Provide a JSON object containing:
+1. 'suggestions': an array of recommended tasks, where each suggestion has 'id' (from the input quest), 'title', 'estTime' (estimated duration in minutes to complete, which must be a realistic estimate e.g. 15-60 mins), 'startTime' (recommended start time string, e.g. '08:30 AM'), and 'reason' (why you chose it and ordered it this way, mentioning if it's due soon, high value, or optimal for the current time).
+2. 'summary': a short, supportive summary (1-2 sentences) explaining why this focus plan was generated.`,
+        config: {
+          systemInstruction: "You are an expert AI productivity planner. Prioritize tasks that are due today, especially those with specific due times (e.g. at 08:00 AM) that are close or slightly overdue, or those matching the current time of day. Ensure the sum of 'estTime' for all suggestions is less than or equal to the availableMinutes. Output ONLY valid JSON matching the schema.",
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              suggestions: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    id: { type: Type.INTEGER, description: "The original quest ID" },
+                    title: { type: Type.STRING, description: "The quest title" },
+                    estTime: { type: Type.INTEGER, description: "Estimated time in minutes to complete this task" },
+                    startTime: { type: Type.STRING, description: "Suggested start time, e.g., '10:15 AM'" },
+                    reason: { type: Type.STRING, description: "Explanation of priority" },
+                  },
+                  required: ["id", "title", "estTime", "startTime", "reason"],
+                },
+              },
+              summary: {
+                type: Type.STRING,
+                description: "A short, encouraging summary of the plan.",
+              },
+            },
+            required: ["suggestions", "summary"],
+          },
+        },
+      });
+      const data = JSON.parse(response.text || '{}');
+      res.json(data);
+    } catch (e: any) {
+      console.error("Error generating AI schedule:", e);
+      res.status(500).json({ error: e.message || "Failed to generate AI schedule" });
     }
   });
 
@@ -131,10 +255,11 @@ async function startServer() {
 
   app.post("/api/stretch-goals", async (req, res) => {
     try {
-      const { recentHabits } = req.body;
+      const { recentHabits, morningHabits } = req.body;
+      const contents = `Based on my recently completed general habits: ${JSON.stringify(recentHabits || [])} and my completed Morning Routine Check-In habits: ${JSON.stringify(morningHabits || [])}, suggest 3 completely new, personalized 'stretch goals' or micro-habits for the week to improve my personal growth. The goals should explicitly complement or elevate my checked-in morning routine. Output in JSON format with a 'goals' array of strings.`;
       const response = await ai.models.generateContent({
         model: "gemini-3.1-flash-lite",
-        contents: `Based on my recently completed habits and schedule: ${JSON.stringify(recentHabits)}, suggest 3 completely new, personalized 'stretch goals' or micro-habits for the week to improve my personal growth. Output in JSON format with a 'goals' array of strings.`,
+        contents,
         config: {
           systemInstruction: "You are a personal growth advisor. Provide 3 highly specific, creative, and distinct micro-habits. Do not provide generic goals like 'drink more water' if it's already a habit. Output ONLY JSON with a 'goals' array containing 3 strings.",
           responseMimeType: "application/json",
@@ -156,6 +281,108 @@ async function startServer() {
     } catch (e: any) {
       console.error("Error generating Stretch Goals:", e);
       res.status(500).json({ error: e.message || "Failed to generate goals" });
+    }
+  });
+
+  // --- Chatbot API ---
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const { message, history, state } = req.body;
+      const historyText = history ? history.map((m: any) => `${m.role}: ${m.content}`).join('\n') : '';
+      const stateContext = state ? `\nCurrent App State:\n${JSON.stringify(state, null, 2)}` : '';
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite",
+        contents: `Previous conversation:\n${historyText}\n\nUser: ${message}${stateContext}`,
+        config: {
+          systemInstruction: "You are the Anchor AI Assistant inside a productivity and lifestyle app. You can INTERACT WITH THE ENTIRE APP. Use the 'executeActions' array to trigger actions behind the scenes instead of just giving text advice. Actions available: 'checkin_sleep' (when going to bed), 'wakeup' (when waking up), 'navigate' (payload: string page ID like 'dashboard', 'quests', 'stats', 'settings'), 'update_state' (payload: object), 'clear_data' (danger: ALWAYS ask for user confirmation first before doing this! if they confirm, execute 'clear_data'), 'logout' (ask for confirmation first!), 'create_quest' (payload: { title: string, dueRaw: string 'YYYY-MM-DD', dueTime: string 'HH:MM' (24-hour, e.g. '08:00', '22:00') }, ask them for details if not provided, or infer them. Note that quests do not have categories and XP is auto-calculated), 'create_anchor' (schedule blocks/routines, payload: { time: string 'HH:MM AM/PM', title: string, subtitle: string, xp: number, category: string }), 'generate_schedule' (you can create a series of quests or anchors or just output text schedule). ALWAYS confirm what you did in the 'reply'. If they ask to do something, DO IT using executeActions.",
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              reply: { type: Type.STRING, description: "Your conversational response." },
+              executeActions: {
+                type: Type.ARRAY,
+                description: "Array of actions to execute immediately in the app behind the scenes.",
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    type: { type: Type.STRING, description: "Action type: 'checkin_sleep', 'wakeup', 'navigate', 'update_state', 'clear_data', 'logout', 'create_quest', 'create_anchor'" },
+                    payload: { 
+                      type: Type.OBJECT, 
+                      description: "Payload for the action.",
+                      properties: {
+                        pageId: { type: Type.STRING, description: "For 'navigate'" },
+                        state: { type: Type.OBJECT, description: "For 'update_state'" },
+                        quest: { 
+                          type: Type.OBJECT, 
+                          description: "For 'create_quest': { title, dueRaw, dueTime }",
+                          properties: {
+                            title: { type: Type.STRING },
+                            dueRaw: { type: Type.STRING, description: "YYYY-MM-DD format" },
+                            dueTime: { type: Type.STRING, description: "HH:MM format, 24-hour (optional)" }
+                          },
+                          required: ["title"]
+                        },
+                        anchor: { type: Type.OBJECT, description: "For 'create_anchor': { time, title, subtitle, xp, category }" }
+                      }
+                    }
+                  },
+                  required: ["type"]
+                }
+              },
+              suggestedAction: {
+                type: Type.OBJECT,
+                description: "Optional. Set this if you want to show a button for the user to navigate manually.",
+                properties: {
+                  type: { type: Type.STRING, description: "Must be 'navigate'" },
+                  payload: { type: Type.STRING, description: "The page ID (dashboard, quests, stats, leaderboard, loadout, settings)" },
+                  label: { type: Type.STRING, description: "The text for the button, e.g. 'Take me there'" }
+                }
+              },
+              suggestedQuestions: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: "2-3 short suggested next questions or actions the user might want to tap."
+              }
+            },
+            required: ["reply", "suggestedQuestions"]
+          }
+        }
+      });
+      
+      const data = JSON.parse(response.text || '{}');
+      res.json(data);
+    } catch (e: any) {
+      console.error("Error in chat:", e);
+      res.status(500).json({ error: e.message || "Chat error" });
+    }
+  });
+
+  app.post("/api/chat/autocomplete", async (req, res) => {
+    try {
+      const { input } = req.body;
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite",
+        contents: `The user is typing: "${input}". Generate 2-3 short autocomplete suggestions or questions based on what they might be asking in a productivity app context.`,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              suggestions: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
+              }
+            },
+            required: ["suggestions"]
+          }
+        }
+      });
+      const data = JSON.parse(response.text || '{}');
+      res.json(data);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
     }
   });
 

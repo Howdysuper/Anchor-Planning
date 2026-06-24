@@ -58,11 +58,11 @@ export default function Settings() {
   };
 
   return (
-    <div className="flex h-full w-full bg-[#141414] rounded-[24px] overflow-hidden border border-[rgba(255,255,255,0.06)] shadow-2xl min-h-[640px]">
+    <div className="flex h-full w-full bg-surface rounded-[24px] overflow-hidden border border-border-base shadow-2xl min-h-[640px]">
       
       {/* LEFT COLUMN: SETTINGS CATEGORY SIDEBAR */}
-      <aside className="hidden md:flex flex-col w-[240px] xl:w-[260px] bg-[#141414] border-r border-[rgba(255,255,255,0.06)] shrink-0 py-6 px-3">
-        <h3 className="text-[18px] font-bold text-white px-3 mb-6">Settings</h3>
+      <aside className="hidden md:flex flex-col w-[240px] xl:w-[260px] bg-surface border-r border-border-base shrink-0 py-6 px-3">
+        <h3 className="text-[18px] font-bold text-text-primary px-3 mb-6">Settings</h3>
         
         <nav className="flex flex-col gap-1 overflow-y-auto scrollbar-none select-none">
           {CATEGORIES.map((cat) => {
@@ -75,11 +75,11 @@ export default function Settings() {
                 onClick={() => setActiveCategory(cat.id)}
                 className={`flex items-center gap-3 h-[42px] px-3.5 rounded-[12px] border-l-[3.5px] transition-all text-left truncate cursor-pointer ${
                   isActive
-                    ? 'bg-[rgba(124,111,247,0.12)] text-[#7C6FF7] border-[#7C6FF7] font-bold'
-                    : `bg-transparent hover:bg-[#1E1E1E] ${cat.id === 'danger' ? 'text-[#F76F6F]/80 hover:text-[#F76F6F]' : 'text-[#888888] hover:text-[#F0F0F0]'} border-transparent font-semibold`
+                    ? 'bg-primary/10 text-primary border-primary font-bold'
+                    : `bg-transparent hover:bg-surface-2 ${cat.id === 'danger' ? 'text-[#F76F6F]/80 hover:text-[#F76F6F]' : 'text-text-muted hover:text-text-primary'} border-transparent font-semibold`
                 }`}
               >
-                <Icon size={16} className={`${isActive ? 'text-[#7C6FF7]' : ''}`} />
+                <Icon size={16} className={`${isActive ? 'text-primary' : ''}`} />
                 <span className="text-[13.5px] leading-none whitespace-nowrap">{cat.label}</span>
               </button>
             );
@@ -88,7 +88,7 @@ export default function Settings() {
       </aside>
 
       {/* RIGHT PANEL: MAIN SETTINGS LAYOUT CONTAINER */}
-      <main className="flex-1 overflow-y-auto bg-[#0A0A0A] p-6 sm:p-10 md:px-12 select-text h-full">
+      <main className="flex-1 overflow-y-auto bg-bg-base p-6 sm:p-10 md:px-12 select-text h-full">
         {/* Mobile luxury horizontal scrolling category ribbon */}
         <div className="flex md:hidden mb-6 overflow-x-auto scrollbar-none gap-2 pb-2 -mx-1 px-1">
           {CATEGORIES.map((cat) => {
@@ -100,8 +100,8 @@ export default function Settings() {
                 onClick={() => setActiveCategory(cat.id)}
                 className={`flex items-center gap-2 h-10 px-4 rounded-full border transition-all shrink-0 select-none cursor-pointer ${
                   isActive
-                    ? 'bg-[#7C6FF7] text-[#0A0A0A] border-[#7C6FF7] font-bold'
-                    : `bg-[#141414] border-[rgba(255,255,255,0.06)] ${cat.id === 'danger' ? 'text-[#F76F6F]' : 'text-[#888888] hover:text-[#F0F0F0]'} font-semibold`
+                    ? 'bg-primary text-white border-primary font-bold'
+                    : `bg-surface border-border-base ${cat.id === 'danger' ? 'text-[#F76F6F]' : 'text-text-muted hover:text-text-primary'} font-semibold`
                 }`}
               >
                 <Icon size={14} />

@@ -4,33 +4,40 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --color-bg-base: #0A0A0A;
-  --color-surface: #141414;
-  --color-surface-2: #1E1E1E;
-  --color-primary: #7C6FF7;
-  --color-secondary: #F7A06F;
-  --color-accent-blue: #6FBBF7;
-  --color-accent-green: #6FF7A0;
-  --color-accent-gold: #F7D96F;
-  --color-text-primary: #F0F0F0;
-  --color-text-muted: #888888;
-  --color-error: #F76F6F;
-  --color-success: #6FF7A0;
+  --color-bg-base: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-2: var(--color-surface2);
+  --color-surface-3: var(--color-surface3);
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-secondary: var(--color-orange);
+  --color-accent-blue: var(--color-blue);
+  --color-accent-green: var(--color-success);
+  --color-accent-gold: var(--color-gold);
+  --color-text-primary: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-subtle: var(--color-text-subtle);
+  --color-error: var(--color-error);
+  --color-success: var(--color-success);
+  --color-border-base: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
 }
 
 :root {
-  --bg-base: #0A0A0A;
-  --surface: #141414;
-  --surface-2: #1E1E1E;
-  --primary: #7C6FF7;
-  --secondary: #F7A06F;
-  --accent-blue: #6FBBF7;
-  --accent-green: #6FF7A0;
-  --accent-gold: #F7D96F;
-  --text-primary: #F0F0F0;
-  --text-muted: #888888;
-  --error: #F76F6F;
-  --success: #6FF7A0;
+  --bg-base: var(--color-bg);
+  --surface: var(--color-surface);
+  --surface-2: var(--color-surface2);
+  --surface-3: var(--color-surface3);
+  --primary: var(--color-primary);
+  --secondary: var(--color-orange);
+  --accent-blue: var(--color-blue);
+  --accent-green: var(--color-success);
+  --accent-gold: var(--color-gold);
+  --text-primary: var(--color-text);
+  --text-muted: var(--color-text-muted);
+  --text-subtle: var(--color-text-subtle);
+  --error: var(--color-error);
+  --success: var(--color-success);
 }
 
 html,
@@ -56,6 +63,16 @@ body {
   transition-duration: 0ms !important;
   transition-delay: 0ms !important;
   animation-iteration-count: 0 !important;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 /* Density overrides */

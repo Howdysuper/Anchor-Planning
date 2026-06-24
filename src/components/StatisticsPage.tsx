@@ -288,26 +288,26 @@ export default function StatisticsPage() {
     <div className="flex flex-col gap-8 animate-in fade-in duration-300 pb-24">
       
       {/* 1. HEADER SECTION */}
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-[rgba(255,255,255,0.06)] pb-6">
+      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-border-base pb-6">
         <div>
-          <div className="flex items-center gap-2 text-[#7C6FF7] font-semibold text-[14px] uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-primary font-semibold text-[14px] uppercase tracking-wider mb-1">
             <Activity size={16} />
             <span>Circadian Intelligence System</span>
           </div>
-          <h2 className="text-[32px] font-bold tracking-tight text-[#F0F0F0]">Rhythm &amp; Statistics</h2>
-          <p className="text-[#888888] text-[15px] mt-1">
+          <h2 className="text-[32px] font-bold tracking-tight text-text-primary">Rhythm &amp; Statistics</h2>
+          <p className="text-text-muted text-[15px] mt-1">
             Track, configure, and visualize the symbiosis of your sleep hygiene, task execution, and energy routine.
           </p>
         </div>
 
         {/* Tab Switcher for Unified Views */}
-        <div className="flex items-center gap-2 bg-[#141414] border border-[rgba(255,255,255,0.06)] p-1 rounded-[14px]">
+        <div className="flex items-center gap-2 bg-surface border border-border-base p-1 rounded-[14px]">
           <button
             onClick={() => setActiveSubTab('overview')}
             className={`flex items-center gap-2 px-4 py-2 text-[13px] font-bold rounded-[10px] transition-all ${
               activeSubTab === 'overview' 
-                ? 'bg-[#7C6FF7] text-[#0A0A0A] shadow-[0_4px_12px_rgba(124,111,247,0.3)]' 
-                : 'text-[#888888] hover:text-[#F0F0F0]'
+                ? 'bg-[#7C6FF7] text-white shadow-md' 
+                : 'text-text-muted hover:text-text-primary'
             }`}
           >
             <BarChart3 size={14} />
@@ -318,8 +318,8 @@ export default function StatisticsPage() {
             onClick={() => setActiveSubTab('calibration')}
             className={`flex items-center gap-2 px-4 py-2 text-[13px] font-bold rounded-[10px] transition-all ${
               activeSubTab === 'calibration' 
-                ? 'bg-[#7C6FF7] text-[#0A0A0A] shadow-[0_4px_12px_rgba(124,111,247,0.3)]' 
-                : 'text-[#888888] hover:text-[#F0F0F0]'
+                ? 'bg-[#7C6FF7] text-white shadow-md' 
+                : 'text-text-muted hover:text-text-primary'
             }`}
           >
             <Moon size={14} />
@@ -333,16 +333,16 @@ export default function StatisticsPage() {
         <div className="flex flex-col gap-8 animate-in fade-in duration-300">
           
           {/* AI SMART SUMMARY/INSIGHT Banner */}
-          <div className="bg-gradient-to-r from-[#17132B] via-[#101017] to-[#141414] border border-[rgba(124,111,247,0.18)] rounded-[24px] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_12px_36px_rgba(124,111,247,0.05)]">
+          <div className="bg-gradient-to-r from-primary/10 via-surface to-surface border border-primary/20 rounded-[24px] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
             <div className="flex items-center gap-5">
-              <div className="w-12 h-12 rounded-full bg-[#7C6FF7]/20 flex items-center justify-center border border-[rgba(124,111,247,0.3)] text-[#7C6FF7] shrink-0">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30 text-primary shrink-0">
                 <Sparkles size={24} className="animate-pulse" />
               </div>
               <div>
-                <span className="text-xs text-[#7C6FF7] font-semibold bg-[#7C6FF7]/10 border border-[#7C6FF7]/20 px-2.5 py-0.5 rounded-full uppercase tracking-widest">
+                <span className="text-xs text-primary font-semibold bg-primary/10 border border-primary/25 px-2.5 py-0.5 rounded-full uppercase tracking-widest">
                   AI Insight
                 </span>
-                <p className="text-[15px] text-[#E0E0E0] font-medium mt-1.5 leading-relaxed">
+                <p className="text-[15px] text-text-primary font-medium mt-1.5 leading-relaxed">
                   {currentSleepScore === 0
                     ? `CRITICAL EXHAUSTION: Your sleep battery is at 0%. You desperately need sleep! Sleep deprivation compromises your immune system, memory retention, and cognitive performance. Halt all quests, disable non-essential alerts, and prioritize absolute recovery immediately.`
                     : currentSleepScore < 40
@@ -357,81 +357,26 @@ export default function StatisticsPage() {
                 </p>
               </div>
             </div>
-            <div className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 bg-[#0F0F14] border border-[rgba(255,255,255,0.05)] text-xs text-[#888888] font-mono rounded-[12px]">
-              <RefreshCw size={12} className="animate-spin-slow text-[#7C6FF7]" />
-              <span>REAL-TIME ANALYSIS SYNCED</span>
-            </div>
+            <button
+              onClick={() => setActiveSubTab('calibration')}
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-xs text-primary font-bold rounded-[12px] transition-colors cursor-pointer"
+            >
+              <Moon size={14} />
+              <span>View your sleep statistics</span>
+            </button>
           </div>
 
           {/* THREE CENTRAL STATISTICAL BENTO TILES */}
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            {/* STAT 1: Sleep Health Core */}
-            <div className="bg-[#141414] border border-[rgba(255,255,255,0.06)] rounded-[24px] p-6 flex flex-col gap-6 relative overflow-hidden group hover:border-[rgba(124,111,247,0.3)] transition-all">
-              <div className="flex justify-between items-start">
-                <div className="flex flex-col">
-                  <span className="text-[13px] font-bold text-[#888888] uppercase tracking-wider">Sleep Battery Status</span>
-                  <span className="text-[28px] font-extrabold text-[#F0F0F0] mt-1 tracking-tight">{currentSleepScore}%</span>
-                </div>
-                <div className="w-10 h-10 rounded-[12px] bg-[rgba(124,111,247,0.08)] flex items-center justify-center text-[#7C6FF7]">
-                  <Moon size={20} />
-                </div>
-              </div>
-
-              {/* Radial Gauge */}
-              <div className="flex items-center justify-center py-2 h-[130px] relative">
-                <svg className="w-[130px] h-[130px] transform -rotate-90">
-                  <circle
-                    cx="65"
-                    cy="65"
-                    r="58"
-                    stroke="rgba(255, 255, 255, 0.03)"
-                    strokeWidth="10"
-                    fill="transparent"
-                  />
-                  <circle
-                    cx="65"
-                    cy="65"
-                    r="58"
-                    stroke="#7C6FF7"
-                    strokeWidth="10"
-                    fill="transparent"
-                    strokeDasharray={2 * Math.PI * 58}
-                    strokeDashoffset={strokeDashoffset(currentSleepScore)}
-                    strokeLinecap="round"
-                    className="transition-all duration-1000 ease-out"
-                    style={{ filter: "drop-shadow(0 0 6px rgba(124, 111, 247, 0.4))" }}
-                  />
-                </svg>
-                <div className="absolute flex flex-col items-center justify-center text-center">
-                  <span className="text-[26px] font-black font-mono tracking-tighter text-[#7C6FF7]">{currentSleepScore}</span>
-                  <span className="text-[9px] font-extrabold text-[#888888] uppercase tracking-widest leading-none">RHYTHM</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2 mt-auto border-t border-[rgba(255,255,255,0.05)] pt-4">
-                <div className="flex justify-between text-xs font-medium">
-                  <span className="text-[#888888]">Baseline Habit:</span>
-                  <span className="text-[#F0F0F0] font-bold">{state.sleep.bedtime} - {state.sleep.wakeTime}</span>
-                </div>
-                <div className="flex justify-between text-xs font-medium">
-                  <span className="text-[#888888]">Debt Calculation:</span>
-                  <span className={`font-bold flex items-center gap-1 ${currentDebtHours <= 0 ? 'text-[#6FF7A0]' : 'text-[#F76F6F]'}`}>
-                    {currentDebtHours <= 0 ? <Zap size={10} /> : <TrendingDown size={10} />}
-                    {sleepDebtText}
-                  </span>
-                </div>
-              </div>
-            </div>
-
             {/* STAT 2: User XP Level Progression */}
-            <div className="bg-[#141414] border border-[rgba(255,255,255,0.06)] rounded-[24px] p-6 flex flex-col gap-6 relative overflow-hidden group hover:border-[rgba(124,111,247,0.3)] transition-all">
+            <div className="bg-surface border border-border-base rounded-[24px] p-6 flex flex-col gap-6 relative overflow-hidden group hover:border-primary/40 transition-all">
               <div className="flex justify-between items-start">
                 <div className="flex flex-col">
-                  <span className="text-[13px] font-bold text-[#888888] uppercase tracking-wider">XP This Week</span>
-                  <span className="text-[28px] font-extrabold text-[#7C6FF7] mt-1 tracking-tight font-mono">+{xpEarnedThisWeek} XP</span>
+                  <span className="text-[13px] font-bold text-text-muted uppercase tracking-wider">XP This Week</span>
+                  <span className="text-[28px] font-extrabold text-primary mt-1 tracking-tight font-mono">+{xpEarnedThisWeek} XP</span>
                 </div>
-                <div className="w-10 h-10 rounded-[12px] bg-[#7C6FF7]/10 flex items-center justify-center text-[#7C6FF7]">
+                <div className="w-10 h-10 rounded-[12px] bg-primary/10 flex items-center justify-center text-primary">
                   <Award size={20} />
                 </div>
               </div>
@@ -439,74 +384,74 @@ export default function StatisticsPage() {
               {/* Level Progress Visual */}
               <div className="flex flex-col gap-3 py-3">
                 <div className="flex justify-between items-center gap-2">
-                  <span className="text-[11px] font-black uppercase text-[#888888] tracking-wider whitespace-nowrap">Progression</span>
+                  <span className="text-[11px] font-black uppercase text-text-muted tracking-wider whitespace-nowrap">Progression</span>
                   <div className="flex items-center gap-1 shrink-0 whitespace-nowrap">
-                    <span className="text-[13.5px] font-extrabold text-[#7C6FF7]">LV {state.user.level}</span>
-                    <span className="text-[#888888] text-[9px] font-bold">→</span>
-                    <span className="text-[13.5px] font-extrabold text-[#888888]">LV {state.user.level + 1}</span>
+                    <span className="text-[13px] font-extrabold text-primary">LV {state.user.level}</span>
+                    <span className="text-text-muted text-[9px] font-bold">→</span>
+                    <span className="text-[13px] font-extrabold text-text-muted">LV {state.user.level + 1}</span>
                   </div>
                 </div>
 
-                <div className="w-full h-4 bg-[#1A1A1A] rounded-full p-1 border border-[rgba(255,255,255,0.03)] flex items-center shadow-inner">
+                <div className="w-full h-4 bg-surface-2 rounded-full p-1 border border-border-base flex items-center shadow-inner">
                   <div 
-                    className="h-full bg-gradient-to-r from-[#7C6FF7] to-[#B36FF7] rounded-full relative shadow-[0_0_8px_rgba(124,111,247,0.5)] transition-all duration-1000"
+                    className="h-full bg-gradient-to-r from-primary to-primary-hover rounded-full relative shadow-[0_0_8px_var(--color-primary)] transition-all duration-1000"
                     style={{ width: `${Math.max(8, Math.min(100, (state.user.xp / state.user.xpToNextLevel) * 100))}%` }}
                   >
                     <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white animate-ping"></div>
                   </div>
                 </div>
 
-                <p className="text-[10px] text-[#888888] font-mono leading-tight tracking-tight mt-1">
-                  Active Quest Completion multipliers applied. Remaining XP for Next Level: <span className="text-white font-bold">{state.user.xpToNextLevel - state.user.xp}</span>
+                <p className="text-[10px] text-text-muted font-mono leading-tight tracking-tight mt-1">
+                  Active Quest Completion multipliers applied. Remaining XP for Next Level: <span className="text-text-primary font-bold">{state.user.xpToNextLevel - state.user.xp}</span>
                 </p>
               </div>
 
-              <div className="flex flex-col gap-2 mt-auto border-t border-[rgba(255,255,255,0.05)] pt-4">
+              <div className="flex flex-col gap-2 mt-auto border-t border-border-base pt-4">
                 <div className="flex justify-between text-xs font-medium">
-                  <span className="text-[#888888]">Total Streaks:</span>
-                  <span className="text-[#F0F0F0] font-bold flex items-center gap-1.5 text-[#EE9C1B]">
+                  <span className="text-text-muted">Total Streaks:</span>
+                  <span className="text-text-primary font-bold flex items-center gap-1.5 text-[#EE9C1B]">
                     <Flame size={13} fill="#EE9C1B" />
                     {state.user.streakDays} Day Streak
                   </span>
                 </div>
                 <div className="flex justify-between text-xs font-medium">
-                  <span className="text-[#888888]">Circadian multiplier:</span>
-                  <span className="text-[#7C6FF7] font-bold">1.2x Active</span>
+                  <span className="text-text-muted">Circadian multiplier:</span>
+                  <span className="text-primary font-bold">1.2x Active</span>
                 </div>
               </div>
             </div>
 
             {/* STAT 3: Quest Mastery (Tasks Completed) */}
-            <div className="bg-[#141414] border border-[rgba(255,255,255,0.06)] rounded-[24px] p-6 flex flex-col gap-6 relative overflow-hidden group hover:border-[rgba(124,111,247,0.3)] transition-all">
+            <div className="bg-surface border border-border-base rounded-[24px] p-6 flex flex-col gap-6 relative overflow-hidden group hover:border-primary/40 transition-all">
               <div className="flex justify-between items-start">
                 <div className="flex flex-col">
-                  <span className="text-[13px] font-bold text-[#888888] uppercase tracking-wider">Quest Mastery</span>
+                  <span className="text-[13px] font-bold text-text-muted uppercase tracking-wider">Quest Mastery</span>
                   <span className="text-[28px] font-extrabold text-[#6FF7A0] mt-1 tracking-tight">{questsCompleted} / {questsTotal}</span>
                 </div>
-                <div className="w-10 h-10 rounded-[12px] bg-[rgba(111,247,160,0.08)] flex items-center justify-center text-[#6FF7A0]">
+                <div className="w-10 h-10 rounded-[12px] bg-[#6FF7A0]/10 flex items-center justify-center text-[#6FF7A0]">
                   <CheckCircle size={20} />
                 </div>
               </div>
 
               {/* Productivity Stats */}
               <div className="grid grid-cols-2 gap-3 py-1">
-                <div className="bg-[#1A1A1A] p-2.5 rounded-[12px] border border-[rgba(255,255,255,0.03)] flex flex-col items-center text-center">
-                  <span className="text-[10px] font-black uppercase text-[#888888] tracking-widest">Rate</span>
+                <div className="bg-surface-2 p-2.5 rounded-[12px] border border-border-base flex flex-col items-center text-center">
+                  <span className="text-[10px] font-black uppercase text-text-muted tracking-widest">Rate</span>
                   <span className="text-[18px] font-black text-[#6FF7A0] mt-1 font-mono">{questCompletionRate}%</span>
                 </div>
-                <div className="bg-[#1A1A1A] p-2.5 rounded-[12px] border border-[rgba(255,255,255,0.03)] flex flex-col items-center text-center">
-                  <span className="text-[10px] font-black uppercase text-[#888888] tracking-widest">Remaining</span>
+                <div className="bg-surface-2 p-2.5 rounded-[12px] border border-border-base flex flex-col items-center text-center">
+                  <span className="text-[10px] font-black uppercase text-text-muted tracking-widest">Remaining</span>
                   <span className="text-[18px] font-black text-[#EE3E54] mt-1 font-mono">{questsPending}</span>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2 mt-auto border-t border-[rgba(255,255,255,0.05)] pt-4">
+              <div className="flex flex-col gap-2 mt-auto border-t border-border-base pt-4">
                 <div className="flex justify-between text-xs font-medium">
-                  <span className="text-[#888888]">Loadout Gears Equipped:</span>
-                  <span className="text-[#F0F0F0] font-bold">{(state.loadout?.items || []).length} Gears</span>
+                  <span className="text-text-muted">Loadout Gears Equipped:</span>
+                  <span className="text-text-primary font-bold">{(state.loadout?.items || []).length} Gears</span>
                 </div>
                 <div className="flex justify-between text-xs font-medium">
-                  <span className="text-[#888888]">Efficiency Rating:</span>
+                  <span className="text-text-muted">Efficiency Rating:</span>
                   <span className="text-[#6FF7A0] font-bold">
                     {questsTotal > 0 ? (questCompletionRate >= 80 ? 'Grade-A' : questCompletionRate >= 50 ? 'Grade-B' : 'Optimal') : 'Incomplete'}
                   </span>
@@ -516,14 +461,14 @@ export default function StatisticsPage() {
           </section>
 
           {/* 4. WEEKLY TRAJECTORY GRAPH - WITH SECURE INACTIVE FALLBACK */}
-          <section className="bg-[#141414] border border-[rgba(255,255,255,0.06)] rounded-[24px] p-6 flex flex-col gap-6 relative">
+          <section className="bg-surface border border-border-base rounded-[24px] p-6 flex flex-col gap-6 relative">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className="text-[18px] font-bold text-[#F0F0F0] flex items-center gap-2">
-                  <TrendingUp size={18} className="text-[#7C6FF7]" />
+                <h3 className="text-[18px] font-bold text-text-primary flex items-center gap-2">
+                  <TrendingUp size={18} className="text-primary" />
                   <span> Rhythmic Weekly Trajectory</span>
                 </h3>
-                <p className="text-[13px] text-[#888888] mt-1">
+                <p className="text-[13px] text-text-muted mt-1">
                   Correlating daily sleep quality variables (teal) with habit &amp; routine updates (purple).
                 </p>
               </div>
@@ -531,16 +476,16 @@ export default function StatisticsPage() {
               {hasHistoryData && (
                 <div className="flex items-center gap-4 text-xs font-mono">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 bg-[#7C6FF7] rounded-full"></div>
-                    <span className="text-[#888888]">Tasks Done</span>
+                    <div className="w-3 h-3 bg-primary rounded-full"></div>
+                    <span className="text-text-muted">Tasks Done</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="w-3 h-3 bg-[#00F5D4] rounded-full"></div>
-                    <span className="text-[#888888]">Sleep Score</span>
+                    <span className="text-text-muted">Sleep Score</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 bg-[#9F2BFF] rounded-full"></div>
-                    <span className="text-[#888888]">Energy Velocity</span>
+                    <div className="w-3 h-3 bg-primary-hover rounded-full"></div>
+                    <span className="text-text-muted">Energy Velocity</span>
                   </div>
                 </div>
               )}
@@ -548,25 +493,25 @@ export default function StatisticsPage() {
 
             {/* Dynamic visual fallback or interactive chart */}
             {!hasHistoryData ? (
-              <div className="w-full h-[320px] bg-[#101010] rounded-[18px] border border-dashed border-[rgba(255,255,255,0.06)] flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-radial-gradient from-[rgba(124,111,247,0.05)] to-transparent opacity-60" />
-                <div className="w-14 h-14 rounded-full bg-[#1A1A24] flex items-center justify-center mb-4 text-[#7C6FF7] border border-[rgba(124,111,247,0.15)] relative z-10">
+              <div className="w-full h-[320px] bg-surface-2 rounded-[18px] border border-dashed border-border-base flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-radial-gradient from-primary/5 to-transparent opacity-60" />
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4 text-primary border border-primary/20 relative z-10">
                   <Calendar size={24} />
                 </div>
-                <h4 className="text-[18px] font-bold text-[#F0F0F0] mb-1.5 relative z-10">No Circadian Checks Recorded Yet</h4>
-                <p className="text-xs text-[#888888] max-w-[420px] leading-relaxed mb-6 relative z-10">
+                <h4 className="text-[18px] font-bold text-text-primary mb-1.5 relative z-10">No Circadian Checks Recorded Yet</h4>
+                <p className="text-xs text-text-muted max-w-[420px] leading-relaxed mb-6 relative z-10">
                   Daily Sleep &amp; Habit metrics chart automatically as data points are registered! Trigger a daily wake-up check-in via the Immersion dashboard, or adjust your schedules to calibrate your scores.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 relative z-10">
                   <button 
                     onClick={() => setActiveSubTab('calibration')}
-                    className="px-5 py-2.5 bg-[#7C6FF7] text-[#0A0A0A] rounded-[12px] hover:bg-[#6b5ee6] font-bold text-xs shadow-md transition-colors"
+                    className="px-5 py-2.5 bg-primary text-white hover:bg-primary-hover rounded-[12px] font-bold text-xs shadow-md transition-colors"
                   >
                     Calibrate Sleep Schedule
                   </button>
                   <button 
                     onClick={() => addToast("First telemetry marker created!", "info")}
-                    className="px-5 py-2.5 bg-[#1E1E1E] text-[#888888] rounded-[12px] hover:text-[#f0f0f0] border border-[rgba(255,255,255,0.05)] font-bold text-xs transition-colors"
+                    className="px-5 py-2.5 bg-surface-3 text-text-muted hover:text-text-primary border border-border-base font-bold text-xs transition-colors"
                   >
                     Simulate Daily Check-in
                   </button>
@@ -652,8 +597,8 @@ export default function StatisticsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-300">
           
           {/* Sleep Battery Panel */}
-          <div className="bg-[#141414] rounded-[24px] p-8 border border-[rgba(255,255,255,0.06)] flex flex-col items-center justify-center text-center h-full">
-            <h2 className="text-[13px] font-bold text-[#888888] uppercase tracking-widest mb-6">
+          <div className="bg-surface rounded-[24px] p-8 border border-border-base flex flex-col items-center justify-center text-center h-full">
+            <h2 className="text-[13px] font-bold text-text-muted uppercase tracking-widest mb-6">
               Current Sleep Battery Charge
             </h2>
 
@@ -664,7 +609,7 @@ export default function StatisticsPage() {
                   cy="50"
                   r="45"
                   fill="none"
-                  stroke="#1E1E1E"
+                  stroke="var(--color-surface-2)"
                   strokeWidth="4"
                 />
                 <circle
@@ -672,29 +617,29 @@ export default function StatisticsPage() {
                   cy="50"
                   r="45"
                   fill="none"
-                  stroke="#7C6FF7"
+                  stroke="var(--color-primary)"
                   strokeWidth="4"
                   strokeDasharray="282.7"
                   strokeDashoffset={282.7 * (1 - state.sleep.score / 100)}
                   strokeLinecap="round"
-                  className="drop-shadow-[0_0_16px_rgba(124,111,247,0.5)]"
+                  className="drop-shadow-[0_0_16px_var(--color-primary)] opacity-80"
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-[64px] font-bold tabular-nums leading-none mb-1 text-white">
+                <span className="text-[64px] font-bold tabular-nums leading-none mb-1 text-text-primary">
                   {state.sleep.score}
-                  <span className="text-2xl text-[#888888]">%</span>
+                  <span className="text-2xl text-text-muted">%</span>
                 </span>
-                <span className="text-[12px] font-bold text-[#7C6FF7] uppercase tracking-widest bg-[rgba(124,111,247,0.1)] px-3.5 py-1.5 rounded-full">
+                <span className="text-[12px] font-bold text-primary uppercase tracking-widest bg-primary/10 px-3.5 py-1.5 rounded-full">
                   Target Calibrated
                 </span>
               </div>
             </div>
 
             <div
-              className={`p-4 rounded-[16px] w-full flex items-center justify-between border ${state.sleep.debtHours < 0 ? "bg-[#1E1111] border-[rgba(247,111,111,0.2)]" : "bg-[#111e14] border-[rgba(111,247,160,0.2)]"}`}
+              className={`p-4 rounded-[16px] w-full flex items-center justify-between border ${state.sleep.debtHours < 0 ? "bg-red-500/10 border-red-500/20" : "bg-green-500/10 border-green-500/20"}`}
             >
-              <span className="text-[14px] font-medium text-[#888888]">
+              <span className="text-[14px] font-medium text-text-muted">
                 Accumulated Sleep Debt
               </span>
               <span
@@ -705,11 +650,11 @@ export default function StatisticsPage() {
             </div>
 
             {/* Tracking Methodology */}
-            <div className="mt-5 p-4 text-left border border-[rgba(255,255,255,0.04)] bg-[rgba(255,255,255,0.01)] rounded-[16px]">
-              <h4 className="flex items-center gap-2 text-[13px] font-bold text-[#F0F0F0] mb-2">
-                <Info size={14} className="text-[#888888]" /> Telemetry Protocol
+            <div className="mt-5 p-4 text-left border border-border-base bg-surface-2/40 rounded-[16px] w-full">
+              <h4 className="flex items-center gap-2 text-[13px] font-bold text-text-primary mb-2">
+                <Info size={14} className="text-text-muted" /> Telemetry Protocol
               </h4>
-              <p className="text-[12px] text-[#A0A0A0] leading-relaxed">
+              <p className="text-[12px] text-text-muted leading-relaxed">
                 Circadian rhythm offsets are evaluated based on self-reported Wake Up checks and anchor point compliance. To automate intervals completely, connect wearable integrations via Settings (coming in the direct SDK sync release).
               </p>
             </div>
@@ -718,15 +663,15 @@ export default function StatisticsPage() {
           {/* Sleep Calibration Schedule controls */}
           <div className="flex flex-col gap-6">
             
-            <div className="bg-[#141414] rounded-[24px] p-8 border border-[rgba(255,255,255,0.06)] shadow-lg">
+            <div className="bg-surface rounded-[24px] p-8 border border-border-base shadow-lg">
               <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h3 className="text-[16px] font-bold text-[#F0F0F0]">Baseline Sleep Interval</h3>
-                  <p className="text-xs text-[#888888] mt-0.5">Your intended sleep/wake chronotype bounds.</p>
+                  <h3 className="text-[16px] font-bold text-text-primary">Baseline Sleep Interval</h3>
+                  <p className="text-xs text-text-muted mt-0.5">Your intended sleep/wake chronotype bounds.</p>
                 </div>
                 <button
                   onClick={() => setIsEditModalOpen(true)}
-                  className="p-2.5 text-[#888888] hover:text-[#F0F0F0] bg-[#1E1E1E] rounded-xl border border-[rgba(255,255,255,0.04)] flex items-center gap-1.5 text-xs font-bold transition-all"
+                  className="p-2.5 text-text-muted hover:text-text-primary bg-surface-2 rounded-xl border border-border-base flex items-center gap-1.5 text-xs font-bold transition-all"
                 >
                   <Edit2 size={13} />
                   <span>Configure</span>
@@ -734,33 +679,33 @@ export default function StatisticsPage() {
               </div>
 
               <div className="flex justify-between items-center gap-4">
-                <div className="flex-1 bg-[#1A1A1A] rounded-[16px] p-5 border border-[rgba(255,255,255,0.04)] text-center">
-                  <span className="text-[11px] font-bold text-[#888888] uppercase tracking-wider mb-2 block">
+                <div className="flex-1 bg-surface-2 rounded-[16px] p-5 border border-border-base text-center">
+                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-2 block">
                     Bedtime
                   </span>
-                  <span className="text-[24px] font-bold text-[#7C6FF7] tabular-nums">
+                  <span className="text-[24px] font-bold text-primary tabular-nums">
                     {state.sleep.bedtime}
                   </span>
                 </div>
-                <div className="flex-1 bg-[#1A1A1A] rounded-[16px] p-5 border border-[rgba(255,255,255,0.04)] text-center">
-                  <span className="text-[11px] font-bold text-[#888888] uppercase tracking-wider mb-2 block">
+                <div className="flex-1 bg-surface-2 rounded-[16px] p-5 border border-border-base text-center">
+                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-2 block">
                     Wake Time
                   </span>
-                  <span className="text-[24px] font-bold text-[#F0F0F0] tabular-nums">
+                  <span className="text-[24px] font-bold text-text-primary tabular-nums">
                     {state.sleep.wakeTime}
                   </span>
                 </div>
               </div>
 
               {/* Wind-down Alert toggle */}
-              <div className="mt-6 flex items-center justify-between p-4 bg-[rgba(124,111,247,0.05)] border border-[rgba(124,111,247,0.2)] rounded-[16px]">
+              <div className="mt-6 flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-[16px]">
                 <div className="flex items-center gap-3">
-                  <Moon size={20} className="text-[#7C6FF7]" />
+                  <Moon size={20} className="text-primary" />
                   <div>
-                    <p className="text-[14px] font-bold text-[#F0F0F0]">
+                    <p className="text-[14px] font-bold text-text-primary">
                       Wind-down reminder
                     </p>
-                    <p className="text-[12px] text-[#888888] mt-0.5">
+                    <p className="text-[12px] text-text-muted mt-0.5">
                       Notify me 30 mins prior to bedtime
                     </p>
                   </div>
@@ -772,7 +717,7 @@ export default function StatisticsPage() {
                     });
                     addToast("Wind-down notification state updated!");
                   }}
-                  className={`w-[48px] h-[28px] rounded-full flex items-center p-1 transition-colors ${state.sleep.windDownReminder ? "bg-[#7C6FF7]" : "bg-[#1E1E1E] border border-[rgba(255,255,255,0.08)]"}`}
+                  className={`w-[48px] h-[28px] rounded-full flex items-center p-1 transition-colors ${state.sleep.windDownReminder ? "bg-primary" : "bg-surface-2 border border-border-base"}`}
                 >
                   <motion.div
                     initial={false}
@@ -784,12 +729,12 @@ export default function StatisticsPage() {
               </div>
 
               {/* AI Optimal Winddown Recommendation */}
-              <div className="mt-4 p-4 bg-[rgba(111,247,160,0.05)] border border-[rgba(111,247,160,0.2)] rounded-[16px]">
+              <div className="mt-4 p-4 bg-green-500/5 border border-green-500/20 rounded-[16px]">
                 <h4 className="text-[12px] font-black text-[#6FF7A0] uppercase tracking-wider mb-1 flex items-center gap-1.5">
                   <Sparkles size={12} className="animate-pulse" />
                   <span>AI Optimal Wind-Down Prediction</span>
                 </h4>
-                <p className="text-[13px] text-[#A0A0A0] leading-relaxed">
+                <p className="text-[13px] text-text-muted leading-relaxed">
                   {aiRec.text}
                   {aiRec.time && <strong className="text-[#6FF7A0]">{aiRec.time}</strong>}
                   {aiRec.explanation && <span>{aiRec.explanation}</span>}
@@ -798,30 +743,30 @@ export default function StatisticsPage() {
             </div>
 
             {/* 7-Day Completion trace matching original SleepIntel */}
-            <div className="bg-[#141414] rounded-[24px] p-8 border border-[rgba(255,255,255,0.06)] shadow-lg flex-1 flex flex-col justify-between">
+            <div className="bg-surface rounded-[24px] p-8 border border-border-base shadow-lg flex-1 flex flex-col justify-between">
               <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h3 className="text-[16px] font-bold text-[#F0F0F0]">7-Day Sleep &amp; Habit Summary</h3>
-                  <p className="text-xs text-[#888888] mt-0.5">Visualizing nightly recovery relative to routine stability.</p>
+                  <h3 className="text-[16px] font-bold text-text-primary">7-Day Sleep &amp; Habit Summary</h3>
+                  <p className="text-xs text-text-muted mt-0.5">Visualizing nightly recovery relative to routine stability.</p>
                 </div>
                 {hasHistoryData && (
                   <div className="flex items-center gap-3 text-xs font-semibold">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#7C6FF7]" />
-                      <span className="text-[#888888]">Sleep</span>
+                      <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                      <span className="text-text-muted">Sleep</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-2.5 h-2.5 rounded-full bg-[#6FF7A0]" />
-                      <span className="text-[#888888]">Habit Score</span>
+                      <span className="text-text-muted">Habit Score</span>
                     </div>
                   </div>
                 )}
               </div>
 
               {!hasHistoryData ? (
-                <div className="h-[180px] bg-[#101010]/50 rounded-[16px] border border-dashed border-[rgba(255,255,255,0.04)] flex flex-col items-center justify-center p-4 text-center">
-                  <AlertCircle size={20} className="text-[#888888] mb-2" />
-                  <span className="text-xs text-[#888888]">No historic check-ins found. Complete your checks from the dashboard.</span>
+                <div className="h-[180px] bg-surface-2 rounded-[16px] border border-dashed border-border-base flex flex-col items-center justify-center p-4 text-center">
+                  <AlertCircle size={20} className="text-text-muted mb-2" />
+                  <span className="text-xs text-text-muted">No historic check-ins found. Complete your checks from the dashboard.</span>
                 </div>
               ) : (
                 <div className="w-full h-[180px]" style={{ minWidth: 0, minHeight: 0 }}>
@@ -832,8 +777,8 @@ export default function StatisticsPage() {
                     >
                       <defs>
                         <linearGradient id="colorScoreIntel" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#7C6FF7" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#7C6FF7" stopOpacity={0} />
+                          <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
                         </linearGradient>
                         <linearGradient id="colorHabitsIntel" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#6FF7A0" stopOpacity={0.25} />
@@ -842,14 +787,14 @@ export default function StatisticsPage() {
                       </defs>
                       <XAxis
                         dataKey="name"
-                        stroke="#555555"
+                        stroke="var(--color-text-muted)"
                         fontSize={11}
                         tickLine={false}
                         axisLine={false}
                         tickMargin={8}
                       />
                       <YAxis
-                        stroke="#555555"
+                        stroke="var(--color-text-muted)"
                         fontSize={11}
                         tickLine={false}
                         axisLine={false}
@@ -858,10 +803,10 @@ export default function StatisticsPage() {
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#1A1A1A",
-                          borderColor: "rgba(255,255,255,0.08)",
+                          backgroundColor: "var(--color-surface-2)",
+                          borderColor: "var(--color-border-base)",
                           borderRadius: "14px",
-                          color: "#F0F0F0",
+                          color: "var(--color-text-primary)",
                           fontSize: "12px"
                         }}
                       />
@@ -869,7 +814,7 @@ export default function StatisticsPage() {
                         type="monotone"
                         dataKey="Score"
                         name="Sleep Score"
-                        stroke="#7C6FF7"
+                        stroke="var(--color-primary)"
                         strokeWidth={2}
                         fillOpacity={1}
                         fill="url(#colorScoreIntel)"
@@ -900,14 +845,14 @@ export default function StatisticsPage() {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
             onClick={() => setIsEditModalOpen(false)}
           />
-          <div className="relative bg-[#141414] border border-[rgba(255,255,255,0.08)] rounded-[24px] p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-250">
+          <div className="relative bg-surface border border-border-base rounded-[24px] p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-250">
             <header className="flex justify-between items-center mb-6">
-              <h3 className="text-[18px] font-bold text-[#F0F0F0]">Configure Bedtimes</h3>
+              <h3 className="text-[18px] font-bold text-text-primary">Configure Bedtimes</h3>
             </header>
             
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
-                <label className="text-[12px] font-bold text-[#888888] uppercase tracking-wide">
+                <label className="text-[12px] font-bold text-text-muted uppercase tracking-wide">
                   Intended Bedtime
                 </label>
                 <input
@@ -915,12 +860,12 @@ export default function StatisticsPage() {
                   value={editData.bed}
                   onChange={(e) => setEditData({ ...editData, bed: e.target.value })}
                   placeholder="e.g. 10:00 PM"
-                  className="h-[52px] w-full bg-[#1A1A1A] rounded-[14px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#7C6FF7] focus:border-[#7C6FF7] text-[18px] font-bold"
+                  className="h-[52px] w-full bg-surface-2 rounded-[14px] border border-border-base px-4 outline-none text-primary focus:border-primary text-[18px] font-bold"
                 />
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-[12px] font-bold text-[#888888] uppercase tracking-wide">
+                <label className="text-[12px] font-bold text-text-muted uppercase tracking-wide">
                   Wake Up Boundary
                 </label>
                 <input
@@ -928,20 +873,20 @@ export default function StatisticsPage() {
                   value={editData.wake}
                   onChange={(e) => setEditData({ ...editData, wake: e.target.value })}
                   placeholder="e.g. 6:00 AM"
-                  className="h-[52px] w-full bg-[#1A1A1A] rounded-[14px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#7C6FF7] text-[18px] font-bold"
+                  className="h-[52px] w-full bg-surface-2 rounded-[14px] border border-border-base px-4 outline-none text-text-primary focus:border-primary text-[18px] font-bold"
                 />
               </div>
 
               <div className="flex gap-3 mt-4">
                 <button
                   onClick={() => setIsEditModalOpen(false)}
-                  className="flex-1 h-[52px] bg-[#1E1E1E] text-[#888888] hover:text-white rounded-[14px] font-bold text-[14px] border border-[rgba(255,255,255,0.04)] transition-colors"
+                  className="flex-1 h-[52px] bg-surface-3 text-text-muted hover:text-text-primary rounded-[14px] font-bold text-[14px] border border-border-base transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveSchedule}
-                  className="flex-1 h-[52px] bg-[#7C6FF7] hover:bg-[#6b5ee6] text-[#0A0A0A] rounded-[14px] font-bold text-[14px] hover:shadow-[0_4px_16px_rgba(124,111,247,0.3)] transition-all"
+                  className="flex-1 h-[52px] bg-primary hover:bg-primary-hover text-white rounded-[14px] font-bold text-[14px] transition-all"
                 >
                   Save Schedule
                 </button>
