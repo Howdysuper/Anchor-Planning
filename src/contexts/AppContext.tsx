@@ -28,6 +28,7 @@ export type AppState = {
     wakeTime: string;
     history: number[];
     windDownReminder: boolean;
+    sleepStartTime: number | null;
   };
   anchors: any[];
   quests: any[];
@@ -61,6 +62,7 @@ const initialState: AppState = {
     wakeTime: "6:00 AM",
     history: [],
     windDownReminder: true,
+    sleepStartTime: null,
   },
   anchors: [],
   quests: [],

@@ -344,52 +344,61 @@ export default function ImmersiveDashboard() {
                 <p className="text-[13px] text-[#888888] mt-0.5">Control bedtimes and track daily rhythms easily</p>
               </div>
             </div>
+
             <div className="flex items-center gap-3 w-full sm:w-auto lg:w-full xl:w-auto shrink-0">
               <button 
-                id="wake-up-checkin-btn"
-                disabled={!localStorage.getItem('anchor_sleep_start')}
-                onClick={() => {
-                    const sleepStart = localStorage.getItem('anchor_sleep_start');
-                    if (sleepStart) {
-                      const durationMs = Date.now() - parseInt(sleepStart);
-                      const hours = durationMs / (1000 * 60 * 60);
-                      const newScore = Math.min(100, Math.max(0, Math.round((hours / 8) * 100)));
-                      const debt = (8 - hours);
-                      updateSleep({
-                         score: newScore,
-                         debtHours: parseFloat((state.sleep.debtHours + debt).toFixed(1)),
-                         history: [...state.sleep.history.slice(1), newScore]
-                      });
-                      localStorage.removeItem('anchor_sleep_start');
-                      addToast(`Woke up! Sleep duration: ${hours.toFixed(1)}h`, "success");
-                    } else {
-                      addToast("You haven't checked in for sleep yet.", "error");
-                    }
-                }} 
-                className={`flex-1 sm:flex-none sm:px-6 lg:flex-1 xl:flex-none xl:px-6 text-sm font-bold h-[44px] rounded-[12px] transition-colors border flex items-center justify-center gap-2 shadow-sm ${
-                  !localStorage.getItem('anchor_sleep_start') 
-                  ? 'bg-[#1A1A1A] text-[#555555] border-[rgba(255,255,255,0.02)] cursor-not-allowed'
-                  : 'bg-[#252525] hover:bg-[#333] text-[#F0F0F0] border-[rgba(255,255,255,0.04)]'
-                }`}
-              >
-                Waking up
-              </button>
-              <button 
                 id="sleep-checkin-btn"
-                disabled={!!localStorage.getItem('anchor_sleep_start')}
+                disabled={!!state.sleep.sleepStartTime}
                 onClick={() => {
-                   localStorage.setItem('anchor_sleep_start', Date.now().toString());
+                   updateSleep({ sleepStartTime: Date.now() });
                    addToast("Sleep well! Come back to log wake time.", "info");
                  }}
                 className={`flex-1 sm:flex-none sm:px-6 lg:flex-1 xl:flex-none xl:px-6 text-sm font-bold h-[44px] rounded-[12px] transition-colors border flex items-center justify-center gap-2 shadow-sm ${
-                  !!localStorage.getItem('anchor_sleep_start')
+                  !!state.sleep.sleepStartTime
                   ? 'bg-[rgba(124,111,247,0.05)] text-[#7C6FF7]/30 border-[rgba(124,111,247,0.05)] cursor-not-allowed'
                   : 'bg-[rgba(124,111,247,0.15)] hover:bg-[rgba(124,111,247,0.25)] text-[#7C6FF7] border-[rgba(124,111,247,0.2)]'
                 }`}
               >
                 Going to sleep
               </button>
+              <button 
+                id="wake-up-checkin-btn"
+                disabled={!state.sleep.sleepStartTime}
+                onClick={() => {
+                    const sleepStart = state.sleep.sleepStartTime;
+                    if (sleepStart) {
+                      const durationMs = Date.now() - sleepStart;
+                      const hours = durationMs / (1000 * 60 * 60);
+                      const newScore = Math.min(100, Math.max(0, Math.round((hours / 8) * 100)));
+                      const debt = (8 - hours);
+                      updateSleep({
+                         score: newScore,
+                         debtHours: parseFloat((state.sleep.debtHours + debt).toFixed(1)),
+                         history: [...state.sleep.history.slice(1), newScore],
+                         sleepStartTime: null
+                      });
+                      addToast(`Woke up! Sleep duration: ${hours.toFixed(1)}h`, "success");
+                    } else {
+                      addToast("You haven't checked in for sleep yet.", "error");
+                    }
+                }} 
+                className={`flex-1 sm:flex-none sm:px-6 lg:flex-1 xl:flex-none xl:px-6 text-sm font-bold h-[44px] rounded-[12px] transition-colors border flex items-center justify-center gap-2 shadow-sm ${
+                  !state.sleep.sleepStartTime 
+                  ? 'bg-[#1A1A1A] text-[#555555] border-[rgba(255,255,255,0.02)] cursor-not-allowed'
+                  : 'bg-[#252525] hover:bg-[#333] text-[#F0F0F0] border-[rgba(255,255,255,0.04)]'
+                }`}
+              >
+                Waking up
+              </button>
             </div>
+
+            <button 
+              onClick={() => navigate('sleep')}
+              className="w-full h-[40px] rounded-[12px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-sm hover:bg-emerald-500/20 transition-all flex items-center justify-center"
+            >
+              View your sleep statistics
+            </button>
+
           </div>
 
           {/* Loadout reminder banner */}
