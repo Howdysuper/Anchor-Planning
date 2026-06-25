@@ -127,6 +127,7 @@ export interface SettingsType {
     showTimerInTab: boolean;
     endOfSessionAction: string;
   };
+  devMode: boolean;
   data: {
     cloudSync: boolean;
     syncEmail: string;
@@ -279,6 +280,7 @@ const defaultSettings: SettingsType = {
     showTimerInTab: true,
     endOfSessionAction: "show_summary"
   },
+  devMode: false,
   data: {
     cloudSync: false,
     syncEmail: "",

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
+import { useSettings } from '../contexts/SettingsContext';
 import { useToast } from '../contexts/ToastContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Check, MoreHorizontal, Calendar, Zap, AlertTriangle, Edit2, Trash2, Flame, History, Bot, Clock } from 'lucide-react';
@@ -12,6 +13,7 @@ import { formatDueDisplay } from '../lib/questUtils';
 
 export default function QuestLog() {
   const { state, setQuests, updateUser } = useApp();
+  const { settings } = useSettings();
   const { addToast } = useToast();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -262,7 +264,7 @@ export default function QuestLog() {
 
   const completeQuest = (id: number, xpValue: number, createdAt?: number) => {
     // 2-hour anti-spam rule
-    if (createdAt && (Date.now() - createdAt < 2 * 60 * 60 * 1000)) {
+    if (!settings.devMode && createdAt && (Date.now() - createdAt < 2 * 60 * 60 * 1000)) {
        const msLeft = (createdAt + 2 * 60 * 60 * 1000) - Date.now();
        const minsLeft = Math.ceil(msLeft / 60000);
        addToast(`Too soon! Wait ${minsLeft}m to prevent spam logging.`, 'error');

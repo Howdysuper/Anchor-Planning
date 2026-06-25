@@ -2217,10 +2217,12 @@ export function AboutSettings() {
 
 // --- SECTION 12: DANGER ZONE ===
 export function DangerZoneSettings() {
-  const { resetProgress, clearAllData } = useSettings();
+  const { resetProgress, clearAllData, settings, updateSetting } = useSettings();
   const { state } = useApp();
+  const { addToast } = useToast();
   
-  const [activeModal, setActiveModal] = useState<'reset' | 'clear' | 'delete' | null>(null);
+  const [activeModal, setActiveModal] = useState<'reset' | 'clear' | 'delete' | 'devMode' | null>(null);
+  const [devPassword, setDevPassword] = useState('');
 
   const handleResetConfirm = () => {
     resetProgress();
@@ -2236,31 +2238,61 @@ export function DangerZoneSettings() {
     clearAllData();
     setActiveModal(null);
   };
+  
+  const handleDevModePassword = () => {
+    if (devPassword === '12345678') {
+      updateSetting('devMode', !settings.devMode);
+      addToast(`Developer mode ${!settings.devMode ? 'enabled' : 'disabled'}`, 'success');
+      setDevPassword('');
+      setActiveModal(null);
+    } else {
+      addToast('Incorrect password', 'error');
+    }
+  };
 
   return (
     <div>
+      {/* DEV MODE PASSWORD MODAL */}
+      <Modal isOpen={activeModal === 'devMode'} onClose={() => setActiveModal(null)} title="Enter Password">
+        <div className="flex flex-col gap-4 p-4">
+          <input
+            type="password"
+            value={devPassword}
+            onChange={(e) => setDevPassword(e.target.value)}
+            className="bg-[#1E1E1E] border border-[rgba(255,255,255,0.08)] px-4 py-2.5 rounded-[12px] text-[14px] text-white"
+            placeholder="Password"
+          />
+          <button
+            onClick={handleDevModePassword}
+            className="h-[48px] w-full bg-[#7C6FF7] text-[#0A0A0A] rounded-[12px] font-bold text-[14px] transition-all"
+          >
+            Confirm
+          </button>
+        </div>
+      </Modal>
+
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-[#F76F6F]">Danger Zone</h2>
         <p className="text-[14px] text-[#888888] mt-1.5 font-medium">Destructive administrative actions that clear user records, metrics or profile details.</p>
       </div>
 
       <div className="border border-[#F76F6F]/20 rounded-[20px] bg-[#F76F6F]/[0.02] overflow-hidden w-full">
-        {/* Reset Progress */}
+        {/* Developer Mode */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-5 border-b border-[#F76F6F]/10 w-full">
           <div className="flex items-start gap-3.5 flex-1 max-w-xl">
             <div className="text-[#F76F6F] mt-1 shrink-0"><AlertTriangle size={18} /></div>
             <div>
-              <h4 className="text-[15px] font-bold text-white">Reset Levels and Streak Metrics</h4>
+              <h4 className="text-[15px] font-bold text-white">Developer Mode</h4>
               <p className="text-[13px] text-[#888888] mt-1 leading-relaxed">
-                Nuke your accumulated character levels, XP points, and check-in timeline streaks back to initial parameters.
+                Access advanced settings and disable restrictions. Password required.
               </p>
             </div>
           </div>
           <button 
-            onClick={() => setActiveModal('reset')}
-            className="w-full lg:w-auto h-[44px] px-6 shrink-0 bg-[#F76F6F]/10 hover:bg-[#F76F6F]/20 text-[#F76F6F] border border-[#F76F6F]/30 rounded-xl text-[13px] font-bold transition-all flex items-center justify-center cursor-pointer select-none"
+            onClick={() => setActiveModal('devMode')}
+            className={`w-full lg:w-auto h-[44px] px-6 shrink-0 ${settings.devMode ? 'bg-[#F76F6F]' : 'bg-[#F76F6F]/10'} hover:bg-[#F76F6F]/20 text-white border border-[#F76F6F]/30 rounded-xl text-[13px] font-bold transition-all flex items-center justify-center cursor-pointer select-none`}
           >
-            Reset Progress
+            {settings.devMode ? 'Disable Developer Mode' : 'Enable Developer Mode'}
           </button>
         </div>
 
