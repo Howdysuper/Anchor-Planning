@@ -502,73 +502,6 @@ export default function QuestLog() {
         </div>
       )}
 
-      {/* Completed Today */}
-      {completedQuests.length > 0 && (
-        <>
-          <h3 className="text-[18px] font-bold mb-5 mt-10 text-[#888888]">Completed Today</h3>
-          <div className="space-y-3 opacity-60">
-            {completedQuests.map((quest) => (
-              <div key={quest.id} className="bg-[#141414] rounded-[20px] p-4 flex justify-between items-center border border-[rgba(255,255,255,0.02)] min-h-[64px] relative group transition-all duration-300 hover:scale-[1.01] hover:border-[rgba(255,255,255,0.1)] hover:shadow-[0_4px_24px_rgba(255,255,255,0.02)] backdrop-blur-md">
-                 <div className="flex items-center gap-4">
-                    <div className="w-[22px] h-[22px] rounded-[4px] bg-[#6FBBF7] flex items-center justify-center shrink-0">
-                      <Check size={14} color="#0A0A0A" strokeWidth={3} />
-                    </div>
-                    <div>
-                      <h4 className="text-[16px] font-bold text-[#888888] line-through decoration-[#888888] leading-tight">{quest.title}</h4>
-                    </div>
-                 </div>
-                 <div className="flex items-center gap-4 relative">
-                   <span className="bg-[rgba(247,217,111,0.05)] text-[#555555] text-[12px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap">
-                     +{Math.max(0, quest.xp)} XP
-                   </span>
-                   <button 
-                     onClick={(e) => {
-                       e.stopPropagation();
-                       setActiveDropdownId(activeDropdownId === quest.id ? null : quest.id);
-                     }}
-                     className="p-2 text-[#888888] hover:text-[#F0F0F0] opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
-                   >
-                     <MoreHorizontal size={18} />
-                   </button>
-
-                   <AnimatePresence>
-                     {activeDropdownId === quest.id && (
-                       <>
-                         <div 
-                           className="fixed inset-0 z-40 bg-transparent" 
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             setActiveDropdownId(null);
-                           }}
-                         />
-                         <motion.div
-                           initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                           animate={{ opacity: 1, scale: 1, y: 0 }}
-                           exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                           transition={{ duration: 0.15 }}
-                           className="absolute right-0 top-11 bg-[#1E1E1E] border border-[rgba(255,255,255,0.08)] shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-[12px] p-1.5 z-50 min-w-[140px] flex flex-col gap-1"
-                         >
-                           <button
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               handleDeleteQuest(quest.id);
-                             }}
-                             className="flex items-center gap-2.5 px-3 py-2 text-left text-[14px] text-[#F76F6F] hover:bg-[rgba(247,111,111,0.1)] rounded-[8px] transition-colors"
-                           >
-                             <Trash2 size={14} />
-                             Delete
-                           </button>
-                         </motion.div>
-                       </>
-                     )}
-                   </AnimatePresence>
-                 </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
       {/* AI Assistant View */}
       <div className="mt-12 bg-[#141414] rounded-[24px] p-6 border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -678,30 +611,15 @@ export default function QuestLog() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-[11px] font-bold bg-[rgba(111,247,160,0.12)] text-[#6FF7A0] px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                             <Clock size={10} />
-                            Start: {task.startTime || "Now"}
+                            {task.timeEstimate}m
                           </span>
-                          <span className="text-[11px] font-bold bg-[rgba(255,255,255,0.03)] text-[#888888] px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
-                            ~{task.estTime} min
+                          <span className="text-[12px] font-bold text-[#F7D96F] flex items-center gap-1 bg-[rgba(247,217,111,0.05)] px-2.5 py-1 rounded-full border border-[rgba(247,217,111,0.1)]">
+                            ✨ Total XP Gain: {aiSuggestion.reduce((acc, curr) => acc + (curr.xp || 15), 0)}
                           </span>
                         </div>
                       </div>
-                      {task.reason && (
-                        <p className="text-[12px] text-[#888888] leading-relaxed bg-[rgba(255,255,255,0.01)] px-3 py-1.5 rounded-[8px] border border-[rgba(255,255,255,0.02)]">
-                          {task.reason}
-                        </p>
-                      )}
                     </div>
                   ))}
-                  
-                  {/* Totals */}
-                  <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.06)] flex justify-between items-center">
-                    <span className="text-[12px] font-bold text-[#888888]">
-                      Total Planned: {aiSuggestion.reduce((acc, curr) => acc + curr.estTime, 0)} min
-                    </span>
-                    <span className="text-[12px] font-bold text-[#F7D96F] flex items-center gap-1 bg-[rgba(247,217,111,0.05)] px-2.5 py-1 rounded-full border border-[rgba(247,217,111,0.1)]">
-                      ✨ Total XP Gain: {aiSuggestion.reduce((acc, curr) => acc + (curr.xp || 15), 0)}
-                    </span>
-                  </div>
                 </div>
               ) : (
                 <p className="text-[#888888] text-[13px]">
@@ -712,6 +630,75 @@ export default function QuestLog() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Completed Today */}
+      {completedQuests.length > 0 && (
+        <>
+          <h3 className="text-[18px] font-bold mb-5 mt-10 text-[#888888]">Completed Today</h3>
+          <div className="space-y-3 opacity-60">
+            {completedQuests.map((quest) => (
+              <div key={quest.id} className="bg-[#141414] rounded-[20px] p-4 flex justify-between items-center border border-[rgba(255,255,255,0.02)] min-h-[64px] relative group transition-all duration-300 hover:scale-[1.01] hover:border-[rgba(255,255,255,0.1)] hover:shadow-[0_4px_24px_rgba(255,255,255,0.02)] backdrop-blur-md">
+                 <div className="flex items-center gap-4">
+                    <div className="w-[22px] h-[22px] rounded-[4px] bg-[#6FBBF7] flex items-center justify-center shrink-0">
+                      <Check size={14} color="#0A0A0A" strokeWidth={3} />
+                    </div>
+                    <div>
+                      <h4 className="text-[16px] font-bold text-[#888888] line-through decoration-[#888888] leading-tight">{quest.title}</h4>
+                    </div>
+                 </div>
+                 <div className="flex items-center gap-4 relative">
+                   <span className="bg-[rgba(247,217,111,0.05)] text-[#555555] text-[12px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap">
+                     +{Math.max(0, quest.xp)} XP
+                   </span>
+                   <button 
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       setActiveDropdownId(activeDropdownId === quest.id ? null : quest.id);
+                     }}
+                     className="p-2 text-[#888888] hover:text-[#F0F0F0] opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                   >
+                     <MoreHorizontal size={18} />
+                   </button>
+
+                   <AnimatePresence>
+                     {activeDropdownId === quest.id && (
+                       <>
+                         <div 
+                           className="fixed inset-0 z-40 bg-transparent" 
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             setActiveDropdownId(null);
+                           }}
+                         />
+                         <motion.div
+                           initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                           animate={{ opacity: 1, scale: 1, y: 0 }}
+                           exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                           transition={{ duration: 0.15 }}
+                           className="absolute right-0 top-11 bg-[#1E1E1E] border border-[rgba(255,255,255,0.08)] shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-[12px] p-1.5 z-50 min-w-[140px] flex flex-col gap-1"
+                         >
+                           <button
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleDeleteQuest(quest.id);
+                             }}
+                             className="flex items-center gap-2.5 px-3 py-2 text-left text-[14px] text-[#F76F6F] hover:bg-[rgba(247,111,111,0.1)] rounded-[8px] transition-colors"
+                           >
+                             <Trash2 size={14} />
+                             Delete
+                           </button>
+                         </motion.div>
+                       </>
+                     )}
+                   </AnimatePresence>
+                 </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+
 
       {/* Add Quest Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Quest">
