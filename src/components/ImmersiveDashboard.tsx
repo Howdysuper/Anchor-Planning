@@ -393,7 +393,7 @@ export default function ImmersiveDashboard() {
             </div>
 
             <button 
-              onClick={() => navigate('sleep')}
+              onClick={() => navigate('sleep-overview')}
               className="w-full h-[40px] rounded-[12px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-sm hover:bg-emerald-500/20 transition-all flex items-center justify-center"
             >
               View your sleep statistics

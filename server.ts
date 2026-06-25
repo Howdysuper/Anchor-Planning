@@ -256,7 +256,7 @@ Provide a JSON object containing:
   app.post("/api/stretch-goals", async (req, res) => {
     try {
       const { recentHabits, morningHabits } = req.body;
-      const contents = `Based on my recently completed general habits: ${JSON.stringify(recentHabits || [])} and my completed Morning Routine Check-In habits: ${JSON.stringify(morningHabits || [])}, suggest 3 completely new, personalized 'stretch goals' or micro-habits for the week to improve my personal growth. The goals should explicitly complement or elevate my checked-in morning routine. Output in JSON format with a 'goals' array of strings.`;
+      const contents = `Based on my recently completed general habits: ${JSON.stringify(recentHabits || [])} and my completed Morning Routine Check-In habits: ${JSON.stringify(morningHabits || [])}, suggest 3 completely new, personalized 'stretch goals' or micro-habits for the week to improve my personal growth. The goals should explicitly complement or elevate my checked-in morning routine. Crucially, do not suggest habits similar to those I have already completed in my Morning Routine Check-in (such as drinking water). Focus instead on identifying and suggesting missing habits or complementary activities that I am not currently doing (for example, if I drink water, suggest 'Go for a morning walk' or 'Stretch while the water boils'). IMPORTANT: Each goal must be a single, punchy, short sentence (under 10 words). Output in JSON format with a 'goals' array of strings.`;
       const response = await ai.models.generateContent({
         model: "gemini-3.1-flash-lite",
         contents,

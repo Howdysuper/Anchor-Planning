@@ -10,34 +10,19 @@ export default function Loadout() {
   const [activeTab, setActiveTab] = useState('School Day');
   const [newItem, setNewItem] = useState('');
 
-  // Daily XP Pool logic resetting at 4 AM
-  const getDayString = () => new Date(Date.now() - 4 * 3600 * 1000).toDateString();
-  const [xpInfo, setXpInfo] = useState(() => {
-    const maxXP = 50;
-    try {
-      const saved = localStorage.getItem('anchor_loadout_xp');
-      if (saved) {
-        const data = JSON.parse(saved);
-        if (data.day === getDayString()) {
-          return { ...data, maxXP };
-        }
-      }
-    } catch (e) {}
-    return { dailyEarned: 0, day: getDayString(), maxXP: 50 };
-  });
+  // Daily XP Pool logic resetting at 12:00 AM (handled in AppContext)
+  const xpPool = state.user.xpPool;
 
   const [timeUntilReset, setTimeUntilReset] = useState('');
 
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date();
-      const next4AM = new Date(now);
-      if (now.getHours() >= 4) {
-        next4AM.setDate(now.getDate() + 1);
-      }
-      next4AM.setHours(4, 0, 0, 0);
+      const nextMidnight = new Date(now);
+      nextMidnight.setDate(now.getDate() + 1);
+      nextMidnight.setHours(0, 0, 0, 0);
       
-      const diff = next4AM.getTime() - now.getTime();
+      const diff = nextMidnight.getTime() - now.getTime();
       const h = Math.floor(diff / (1000 * 60 * 60));
       const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       
@@ -58,38 +43,31 @@ export default function Loadout() {
 
   const toggleItem = (id: number) => {
     const item = items.find(i => i.id === id);
-    const isChecked = item?.checked;
+    if (!item) return;
+
+    if (item.checked) return; // Prevent unchecking
 
     updateLoadout({
-      items: items.map(item => item.id === id ? { ...item, checked: !item.checked } : item)
+      items: items.map(item => item.id === id ? { ...item, checked: true } : item)
     });
 
-    if (!isChecked) {
-      // Check if we have XP pool left for today
-      // Re-evaluate day locally just in case they left app open
-      const currentDayString = getDayString();
-      let currentEarned = xpInfo.day === currentDayString ? xpInfo.dailyEarned : 0;
+    if (xpPool > 0) {
+      const earned = Math.min(15, xpPool);
+      addToast(`+${earned} XP for loadout prep!`, 'success');
       
-      if (currentEarned < xpInfo.maxXP) {
-        const earned = Math.min(15, xpInfo.maxXP - currentEarned);
-        addToast(`+${earned} XP for loadout prep!`, 'success');
-        
-        const newDaily = currentEarned + earned;
-        const newXpInfo = { dailyEarned: newDaily, day: currentDayString, maxXP: xpInfo.maxXP };
-        setXpInfo(newXpInfo);
-        localStorage.setItem('anchor_loadout_xp', JSON.stringify(newXpInfo));
-        
-        updateUser({ xp: state.user.xp + earned });
+      updateUser({ 
+        xp: state.user.xp + earned,
+        xpPool: xpPool - earned 
+      });
 
-        try {
-          const settings = JSON.parse(localStorage.getItem('anchor_settings_v1') || '{}');
-          if (settings.gamification?.habitCompletionHaptics && navigator.vibrate) {
-            navigator.vibrate(50);
-          }
-        } catch (e) {}
-      } else {
-        addToast('Daily loadout XP pool exhausted.', 'info');
-      }
+      try {
+        const settings = JSON.parse(localStorage.getItem('anchor_settings_v1') || '{}');
+        if (settings.gamification?.habitCompletionHaptics && navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      } catch (e) {}
+    } else {
+      addToast('Daily loadout XP pool exhausted.', 'info');
     }
   };
 
@@ -133,7 +111,7 @@ export default function Loadout() {
                  <Zap size={10} /> XP Pool
                </span>
                <span className="text-[13px] font-bold text-text-primary tabular-nums">
-                 {xpInfo.maxXP - (xpInfo.day === getDayString() ? xpInfo.dailyEarned : 0)} XP left
+                 {xpPool} XP left
                </span>
              </div>
              <div className="w-px h-8 bg-primary/20 mx-1"></div>

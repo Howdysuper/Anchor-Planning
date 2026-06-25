@@ -52,6 +52,7 @@ function AppContent() {
       case 'braindump': return <BrainDump />;
       case 'quests': return <QuestLog />;
       case 'sleep': return <StatisticsPage />;
+      case 'sleep-overview': return <StatisticsPage defaultTab="sleep-overview" />;
       case 'leaderboard': return <Leaderboard />;
       case 'stats': return <StatisticsPage />;
       case 'settings': return <Settings />;

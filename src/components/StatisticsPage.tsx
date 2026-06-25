@@ -32,12 +32,12 @@ import {
   Line
 } from 'recharts';
 
-export default function StatisticsPage() {
+export default function StatisticsPage({ defaultTab = 'overview' }: { defaultTab?: 'overview' | 'sleep-overview' }) {
   const { state, updateSleep } = useApp();
   const { addToast } = useToast();
   
-  // We have 2 sub-tabs: 'overview' (the multi-metric analytics) and 'calibration' (all Sleep Intel inputs, battery and schedule controls)
-  const [activeSubTab, setActiveSubTab] = useState<'overview' | 'calibration'>('overview');
+  // We have 2 sub-tabs: 'overview' (the multi-metric analytics) and 'sleep-overview' (all Sleep Intel inputs, battery and schedule controls)
+  const [activeSubTab, setActiveSubTab] = useState<'overview' | 'sleep-overview'>(defaultTab);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState({
     wake: state.sleep.wakeTime || '6:00 AM',
@@ -315,15 +315,15 @@ export default function StatisticsPage() {
           </button>
           
           <button
-            onClick={() => setActiveSubTab('calibration')}
+            onClick={() => setActiveSubTab('sleep-overview')}
             className={`flex items-center gap-2 px-4 py-2 text-[13px] font-bold rounded-[10px] transition-all ${
-              activeSubTab === 'calibration' 
+              activeSubTab === 'sleep-overview' 
                 ? 'bg-[#7C6FF7] text-white shadow-md' 
                 : 'text-text-muted hover:text-text-primary'
             }`}
           >
             <Moon size={14} />
-            <span>Sleep Calibration</span>
+            <span>Sleep Overview</span>
           </button>
         </div>
       </header>
@@ -332,134 +332,6 @@ export default function StatisticsPage() {
       {activeSubTab === 'overview' && (
         <div className="flex flex-col gap-8 animate-in fade-in duration-300">
           
-          {/* AI SMART SUMMARY/INSIGHT Banner */}
-          <div className="bg-gradient-to-r from-primary/10 via-surface to-surface border border-primary/20 rounded-[24px] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-            <div className="flex items-center gap-5">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30 text-primary shrink-0">
-                <Sparkles size={24} className="animate-pulse" />
-              </div>
-              <div>
-                <span className="text-xs text-primary font-semibold bg-primary/10 border border-primary/25 px-2.5 py-0.5 rounded-full uppercase tracking-widest">
-                  AI Insight
-                </span>
-                <p className="text-[15px] text-text-primary font-medium mt-1.5 leading-relaxed">
-                  {currentSleepScore === 0
-                    ? `CRITICAL EXHAUSTION: Your sleep battery is at 0%. You desperately need sleep! Sleep deprivation compromises your immune system, memory retention, and cognitive performance. Halt all quests, disable non-essential alerts, and prioritize absolute recovery immediately.`
-                    : currentSleepScore < 40
-                    ? `DANGER ZONE: Your sleep battery is critically low (${currentSleepScore}%). You desperately need sleep! Your capacity for focus is severely limited, raising the risk of errors. Skip optional checklists and get to bed as soon as possible.`
-                    : currentSleepScore < 60
-                    ? `LOW BATTERY: Your current rhythm score of ${currentSleepScore}% is insufficient. Shift your evening phone-down anchor earlier to reduce sleep debt and rebuild your neural bandwidth.`
-                    : currentSleepScore < 75
-                    ? `MODERATE DEBT: Your sleep score is lower than average (${currentSleepScore}%). Consider shifting evening anchors earlier by 30 mins to diminish your circadian lag and regain balance.`
-                    : questsCompleted > 0 && currentSleepScore >= 80 
-                    ? `Legendary sync! Your sleep score of ${currentSleepScore}% aligns with your ${questsCompleted} completed quests today. Consistent bedtime anchoring is maintaining peak cognitive productivity.`
-                    : `Elevate productivity by checking off more quests. Your energetic reservoir (Sleep: ${currentSleepScore}%) is fully primed for high-focus deep work.`}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setActiveSubTab('calibration')}
-              className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-xs text-primary font-bold rounded-[12px] transition-colors cursor-pointer"
-            >
-              <Moon size={14} />
-              <span>View your sleep statistics</span>
-            </button>
-          </div>
-
-          {/* THREE CENTRAL STATISTICAL BENTO TILES */}
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* STAT 2: User XP Level Progression */}
-            <div className="bg-surface border border-border-base rounded-[24px] p-6 flex flex-col gap-6 relative overflow-hidden group hover:border-primary/40 transition-all">
-              <div className="flex justify-between items-start">
-                <div className="flex flex-col">
-                  <span className="text-[13px] font-bold text-text-muted uppercase tracking-wider">XP This Week</span>
-                  <span className="text-[28px] font-extrabold text-primary mt-1 tracking-tight font-mono">+{xpEarnedThisWeek} XP</span>
-                </div>
-                <div className="w-10 h-10 rounded-[12px] bg-primary/10 flex items-center justify-center text-primary">
-                  <Award size={20} />
-                </div>
-              </div>
-
-              {/* Level Progress Visual */}
-              <div className="flex flex-col gap-3 py-3">
-                <div className="flex justify-between items-center gap-2">
-                  <span className="text-[11px] font-black uppercase text-text-muted tracking-wider whitespace-nowrap">Progression</span>
-                  <div className="flex items-center gap-1 shrink-0 whitespace-nowrap">
-                    <span className="text-[13px] font-extrabold text-primary">LV {state.user.level}</span>
-                    <span className="text-text-muted text-[9px] font-bold">→</span>
-                    <span className="text-[13px] font-extrabold text-text-muted">LV {state.user.level + 1}</span>
-                  </div>
-                </div>
-
-                <div className="w-full h-4 bg-surface-2 rounded-full p-1 border border-border-base flex items-center shadow-inner">
-                  <div 
-                    className="h-full bg-gradient-to-r from-primary to-primary-hover rounded-full relative shadow-[0_0_8px_var(--color-primary)] transition-all duration-1000"
-                    style={{ width: `${Math.max(8, Math.min(100, (state.user.xp / state.user.xpToNextLevel) * 100))}%` }}
-                  >
-                    <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white animate-ping"></div>
-                  </div>
-                </div>
-
-                <p className="text-[10px] text-text-muted font-mono leading-tight tracking-tight mt-1">
-                  Active Quest Completion multipliers applied. Remaining XP for Next Level: <span className="text-text-primary font-bold">{state.user.xpToNextLevel - state.user.xp}</span>
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2 mt-auto border-t border-border-base pt-4">
-                <div className="flex justify-between text-xs font-medium">
-                  <span className="text-text-muted">Total Streaks:</span>
-                  <span className="text-text-primary font-bold flex items-center gap-1.5 text-[#EE9C1B]">
-                    <Flame size={13} fill="#EE9C1B" />
-                    {state.user.streakDays} Day Streak
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs font-medium">
-                  <span className="text-text-muted">Circadian multiplier:</span>
-                  <span className="text-primary font-bold">1.2x Active</span>
-                </div>
-              </div>
-            </div>
-
-            {/* STAT 3: Quest Mastery (Tasks Completed) */}
-            <div className="bg-surface border border-border-base rounded-[24px] p-6 flex flex-col gap-6 relative overflow-hidden group hover:border-primary/40 transition-all">
-              <div className="flex justify-between items-start">
-                <div className="flex flex-col">
-                  <span className="text-[13px] font-bold text-text-muted uppercase tracking-wider">Quest Mastery</span>
-                  <span className="text-[28px] font-extrabold text-[#6FF7A0] mt-1 tracking-tight">{questsCompleted} / {questsTotal}</span>
-                </div>
-                <div className="w-10 h-10 rounded-[12px] bg-[#6FF7A0]/10 flex items-center justify-center text-[#6FF7A0]">
-                  <CheckCircle size={20} />
-                </div>
-              </div>
-
-              {/* Productivity Stats */}
-              <div className="grid grid-cols-2 gap-3 py-1">
-                <div className="bg-surface-2 p-2.5 rounded-[12px] border border-border-base flex flex-col items-center text-center">
-                  <span className="text-[10px] font-black uppercase text-text-muted tracking-widest">Rate</span>
-                  <span className="text-[18px] font-black text-[#6FF7A0] mt-1 font-mono">{questCompletionRate}%</span>
-                </div>
-                <div className="bg-surface-2 p-2.5 rounded-[12px] border border-border-base flex flex-col items-center text-center">
-                  <span className="text-[10px] font-black uppercase text-text-muted tracking-widest">Remaining</span>
-                  <span className="text-[18px] font-black text-[#EE3E54] mt-1 font-mono">{questsPending}</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2 mt-auto border-t border-border-base pt-4">
-                <div className="flex justify-between text-xs font-medium">
-                  <span className="text-text-muted">Loadout Gears Equipped:</span>
-                  <span className="text-text-primary font-bold">{(state.loadout?.items || []).length} Gears</span>
-                </div>
-                <div className="flex justify-between text-xs font-medium">
-                  <span className="text-text-muted">Efficiency Rating:</span>
-                  <span className="text-[#6FF7A0] font-bold">
-                    {questsTotal > 0 ? (questCompletionRate >= 80 ? 'Grade-A' : questCompletionRate >= 50 ? 'Grade-B' : 'Optimal') : 'Incomplete'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* 4. WEEKLY TRAJECTORY GRAPH - WITH SECURE INACTIVE FALLBACK */}
           <section className="bg-surface border border-border-base rounded-[24px] p-6 flex flex-col gap-6 relative">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -504,7 +376,7 @@ export default function StatisticsPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 relative z-10">
                   <button 
-                    onClick={() => setActiveSubTab('calibration')}
+                    onClick={() => setActiveSubTab('sleep-overview')}
                     className="px-5 py-2.5 bg-primary text-white hover:bg-primary-hover rounded-[12px] font-bold text-xs shadow-md transition-colors"
                   >
                     Calibrate Sleep Schedule
@@ -592,8 +464,42 @@ export default function StatisticsPage() {
         </div>
       )}
 
-      {/* CONDITIONAL RENDER: SUB-TAB 2: SLEEP CALIBRATION & BATTERY */}
-      {activeSubTab === 'calibration' && (
+      {/* CONDITIONAL RENDER: SUB-TAB 2: SLEEP OVERVIEW & BATTERY */}
+      {activeSubTab === 'sleep-overview' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-300">
+          
+          {/* AI SMART SUMMARY/INSIGHT Banner */}
+          <div className="bg-gradient-to-r from-primary/10 via-surface to-surface border border-primary/20 rounded-[24px] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm col-span-1 lg:col-span-2">
+            <div className="flex items-center gap-5">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30 text-primary shrink-0">
+                <Sparkles size={24} className="animate-pulse" />
+              </div>
+              <div>
+                <span className="text-xs text-primary font-semibold bg-primary/10 border border-primary/25 px-2.5 py-0.5 rounded-full uppercase tracking-widest">
+                  AI Insight
+                </span>
+                <p className="text-[15px] text-text-primary font-medium mt-1.5 leading-relaxed">
+                  {currentSleepScore === 0
+                    ? `CRITICAL EXHAUSTION: Your sleep battery is at 0%. You desperately need sleep! Sleep deprivation compromises your immune system, memory retention, and cognitive performance. Halt all quests, disable non-essential alerts, and prioritize absolute recovery immediately.`
+                    : currentSleepScore < 40
+                    ? `DANGER ZONE: Your sleep battery is critically low (${currentSleepScore}%). You desperately need sleep! Your capacity for focus is severely limited, raising the risk of errors. Skip optional checklists and get to bed as soon as possible.`
+                    : currentSleepScore < 60
+                    ? `LOW BATTERY: Your current rhythm score of ${currentSleepScore}% is insufficient. Shift your evening phone-down anchor earlier to reduce sleep debt and rebuild your neural bandwidth.`
+                    : currentSleepScore < 75
+                    ? `MODERATE DEBT: Your sleep score is lower than average (${currentSleepScore}%). Consider shifting evening anchors earlier by 30 mins to diminish your circadian lag and regain balance.`
+                    : questsCompleted > 0 && currentSleepScore >= 80 
+                    ? `Legendary sync! Your sleep score of ${currentSleepScore}% aligns with your ${questsCompleted} completed quests today. Consistent bedtime anchoring is maintaining peak cognitive productivity.`
+                    : `Elevate productivity by checking off more quests. Your energetic reservoir (Sleep: ${currentSleepScore}%) is fully primed for high-focus deep work.`}
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* CONDITIONAL RENDER: SUB-TAB 2: SLEEP OVERVIEW & BATTERY */}
+      {activeSubTab === 'sleep-overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-300">
           
           {/* Sleep Battery Panel */}

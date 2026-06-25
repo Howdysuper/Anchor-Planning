@@ -4,6 +4,7 @@ import { useToast } from '../contexts/ToastContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Check, MoreHorizontal, Calendar, Zap, AlertTriangle, Edit2, Trash2, Flame, History, Bot, Clock } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
+import RepeatModal from './RepeatModal';
 import Modal from './ui/Modal';
 import confetti from 'canvas-confetti';
 import { fetchCalendarEvents, createCalendarEvent, getCalendarToken } from '../lib/googleCalendar';
@@ -15,7 +16,8 @@ export default function QuestLog() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const getTodayStr = () => new Date().toISOString().split('T')[0];
-  const [newQuest, setNewQuest] = useState({ title: '', description: '', due: getTodayStr(), dueTime: '', difficulty: 1, importance: 1 });
+  const [newQuest, setNewQuest] = useState({ title: '', description: '', due: getTodayStr(), dueTime: '', difficulty: 1, importance: 1, repeat: [] as string[] });
+  const [isRepeatModalOpen, setIsRepeatModalOpen] = useState(false);
 
   const [isCalculatingXp, setIsCalculatingXp] = useState(false);
   const [calculatedXp, setCalculatedXp] = useState(15);
@@ -23,7 +25,7 @@ export default function QuestLog() {
 
   const [activeDropdownId, setActiveDropdownId] = useState<number | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editQuest, setEditQuest] = useState<{ id: number, title: string, description?: string, due: string, dueRaw?: string, dueTime?: string, xp: number, done: boolean, createdAt?: number } | null>(null);
+  const [editQuest, setEditQuest] = useState<{ id: number, title: string, description?: string, due: string, dueRaw?: string, dueTime?: string, xp: number, done: boolean, createdAt?: number, repeat?: string[] } | null>(null);
   const [isEditingXpCalculating, setIsEditingXpCalculating] = useState(false);
   const [editingXpDots, setEditingXpDots] = useState("");
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
@@ -314,7 +316,8 @@ export default function QuestLog() {
       dueTime: quest.dueTime || '',
       xp: quest.xp,
       done: quest.done,
-      createdAt: quest.createdAt
+      createdAt: quest.createdAt,
+      repeat: quest.repeat || []
     });
     setIsEditModalOpen(true);
     setActiveDropdownId(null);
@@ -333,7 +336,8 @@ export default function QuestLog() {
       due: dueDateStr,
       dueRaw: targetedDue,
       dueTime: editQuest.dueTime || '',
-      xp: editQuest.xp
+      xp: editQuest.xp,
+      repeat: editQuest.repeat
     } : q));
 
     addToast('Quest updated!', 'success');
@@ -361,12 +365,13 @@ export default function QuestLog() {
       category: 'General',
       done: false,
       createdAt: Date.now(), // Track creation time for anti-spam
-      streak: 1
+      streak: 1,
+      repeat: newQuest.repeat
     }]);
 
     addToast(`Quest added! Worth ${xp} XP`, 'success');
     setIsModalOpen(false);
-    setNewQuest({ title: '', description: '', due: getTodayStr(), dueTime: '', difficulty: 1, importance: 1 });
+    setNewQuest({ title: '', description: '', due: getTodayStr(), dueTime: '', difficulty: 1, importance: 1, repeat: [] });
 
     // Sync to Google Calendar if configured
     if (getCalendarToken()) {
@@ -423,7 +428,7 @@ export default function QuestLog() {
                   <div>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <h4 className="text-[16px] font-bold text-[#F0F0F0] leading-tight">{quest.title}</h4>
-                      {quest.streak && quest.streak > 0 && (
+                      {quest.streak && quest.streak > 1 && (
                         <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[rgba(247,160,111,0.1)] text-[#F7A06F] text-[11px] font-extrabold select-none">
                           <Flame size={12} className="text-[#F7A06F] animate-pulse" />
                           <span>{quest.streak}d streak</span>
@@ -720,6 +725,24 @@ export default function QuestLog() {
                 className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px]"
               />
            </div>
+
+           <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Repeat</label>
+              <button 
+                onClick={() => setIsRepeatModalOpen(true)}
+                className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] text-[16px] text-left flex items-center justify-between"
+              >
+                <span>{newQuest.repeat.length === 7 ? 'Everyday' : (newQuest.repeat.length > 0 ? newQuest.repeat.join(', ') : 'Never')}</span>
+                <Calendar size={16} className="text-[#888888]" />
+              </button>
+           </div>
+           
+           <RepeatModal 
+              isOpen={isRepeatModalOpen} 
+              onClose={() => setIsRepeatModalOpen(false)} 
+              selectedDays={newQuest.repeat}
+              onChange={(days) => setNewQuest(prev => ({ ...prev, repeat: days }))}
+           />
 
            <div className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Details & Notes (Add context, sub-tasks, or links) (Optional)</label>

@@ -20,6 +20,9 @@ export type AppState = {
     savedStreakDays?: number;
     streak_v3_resetted?: boolean;
     onboarded?: boolean;
+    xpPool: number;
+    xpPoolLastResetDate: string;
+    loadoutLastResetDate: string;
   };
   sleep: {
     score: number;
@@ -53,7 +56,10 @@ const initialState: AppState = {
     streakBroken: false,
     savedStreakDays: 1,
     streak_v3_resetted: true,
-    onboarded: false
+    onboarded: false,
+    xpPool: 100,
+    xpPoolLastResetDate: new Date().toISOString().split('T')[0],
+    loadoutLastResetDate: new Date().toISOString().split('T')[0]
   },
   sleep: {
     score: 100,
@@ -271,6 +277,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     let currentStreak = state.user.streakDays;
     let isBroken = state.user.streakBroken || false;
     let savedStreak = state.user.savedStreakDays || currentStreak;
+    let xpPool = state.user.xpPool;
+    let xpPoolLastResetDate = state.user.xpPoolLastResetDate;
+    let loadoutLastResetDate = state.user.loadoutLastResetDate;
     
     if (lastVisit !== today) {
       if (lastVisit) {
@@ -289,12 +298,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
+      // Daily XP Pool reset
+      if (xpPoolLastResetDate !== today) {
+        xpPool = 100;
+        xpPoolLastResetDate = today;
+      }
+
+      // Loadout reset
+      if (loadoutLastResetDate !== today) {
+        updateLoadout({ items: state.loadout.items.map(i => ({ ...i, checked: false })) });
+        loadoutLastResetDate = today;
+      }
+      
       updateUser({
         totalAppVisits: prevVisits + 1,
         lastVisitDate: today,
         streakDays: currentStreak,
         streakBroken: isBroken,
-        savedStreakDays: savedStreak
+        savedStreakDays: savedStreak,
+        xpPool,
+        xpPoolLastResetDate,
+        loadoutLastResetDate
       });
     } else {
       updateUser({ totalAppVisits: prevVisits + 1 });
