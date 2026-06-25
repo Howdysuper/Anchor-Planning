@@ -17,20 +17,22 @@ import {
   BarChart3,
   Inbox,
   MessageSquareText,
-  X
+  X,
+  ShoppingCart
 } from 'lucide-react';
 import { logout } from '../lib/firebase';
 import { ThemeStatusPill } from './settings/ThemeStatusPill';
 import Modal from './ui/Modal';
 import { ChatBotWidget } from './ChatBotModal';
 import { AnimatePresence, motion } from 'motion/react';
+import AvatarWithCosmetic from './ui/AvatarWithCosmetic';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Home', icon: Home },
   { id: 'loadout', label: 'Loadout', icon: Backpack },
   { id: 'quests', label: 'Tasks', icon: Inbox },
+  { id: 'shop', label: 'Vault', icon: ShoppingCart },
   { id: 'stats', label: 'Analytics', icon: BarChart3 },
-  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -130,13 +132,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={() => setProfileOpen(!profileOpen)}
             className="flex items-center justify-center xl:justify-start gap-3 px-1 py-1 cursor-pointer group rounded-[12px] hover:bg-surface-2 transition-colors xl:-mx-2 xl:pl-2"
           >
-            <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border border-border-strong flex items-center justify-center font-bold text-[15px] shadow-[0_0_12px_rgba(124,111,247,0.3)] shrink-0 overflow-hidden">
-              {state.user.avatar && (state.user.avatar.startsWith('data:') || state.user.avatar.includes('/') || state.user.avatar.includes('.')) ? (
-                <img src={state.user.avatar} className="w-full h-full object-cover rounded-full" alt="avatar" />
-              ) : (
-                state.user.avatar
-              )}
-            </div>
+            <AvatarWithCosmetic avatarUrl={state.user.avatar} cosmeticId={state.user.activeCosmetic} size="md" />
             <div className="hidden xl:flex flex-col items-start overflow-hidden w-full group relative">
               <div className="flex items-center justify-between gap-1.5 w-full pr-2">
                 <span className="font-bold text-[15px] truncate max-w-[100px]">{state.user.name}</span>
@@ -170,9 +166,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-border-base h-[84px] px-2 pb-safe grid grid-cols-5 items-center justify-items-center z-40">
         {[
           { id: 'dashboard', label: 'Home', icon: Home },
-          { id: 'quests', label: 'Quest Log', icon: Sword },
+          { id: 'quests', label: 'Tasks', icon: Sword },
+          { id: 'shop', label: 'Vault', icon: ShoppingCart },
           { id: 'stats', label: 'Analytics', icon: BarChart3 },
-          { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
         ].map((item) => {
           const isActive = activeTab === item.id;
           const Icon = item.icon;
@@ -189,19 +185,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
           );
         })}
-        <button
+         <button
            onClick={() => navigate('settings')}
            className={`flex flex-col items-center justify-center gap-1 w-full h-[56px] rounded-[16px] transition-colors ${
              activeTab === 'settings' ? 'text-primary bg-primary/10' : 'text-text-muted'
            }`}
         >
-           <div className="w-[22px] h-[22px] rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border border-border-strong flex items-center justify-center font-bold text-[11px] shadow-sm text-[#F0F0F0] overflow-hidden">
-             {state.user.avatar && (state.user.avatar.startsWith('data:') || state.user.avatar.includes('/') || state.user.avatar.includes('.')) ? (
-               <img src={state.user.avatar} className="w-full h-full object-cover rounded-full" alt="avatar" />
-             ) : (
-               state.user.avatar
-             )}
-           </div>
+           <AvatarWithCosmetic avatarUrl={state.user.avatar} cosmeticId={state.user.activeCosmetic} size="sm" />
            <span className="text-[10px] font-bold truncate px-1">Profile</span>
         </button>
       </nav>

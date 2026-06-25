@@ -23,6 +23,8 @@ export type AppState = {
     xpPool: number;
     xpPoolLastResetDate: string;
     loadoutLastResetDate: string;
+    purchasedItems?: string[];
+    activeCosmetic?: string | null;
   };
   sleep: {
     score: number;
@@ -59,7 +61,9 @@ const initialState: AppState = {
     onboarded: false,
     xpPool: 100,
     xpPoolLastResetDate: new Date().toISOString().split('T')[0],
-    loadoutLastResetDate: new Date().toISOString().split('T')[0]
+    loadoutLastResetDate: new Date().toISOString().split('T')[0],
+    purchasedItems: [],
+    activeCosmetic: null
   },
   sleep: {
     score: 100,

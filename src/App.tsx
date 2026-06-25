@@ -15,9 +15,9 @@ import AppLayout from './components/AppLayout';
 import Loadout from './components/Loadout';
 import BrainDump from './components/BrainDump';
 import QuestLog from './components/QuestLog';
-import Leaderboard from './components/Leaderboard';
 import Settings from './components/Settings';
 import StatisticsPage from './components/StatisticsPage';
+import Shop from './components/Shop';
 import { useApp } from './contexts/AppContext';
 import LoadingScreen from './components/LoadingScreen';
 
@@ -51,9 +51,9 @@ function AppContent() {
       case 'loadout': return <Loadout />;
       case 'braindump': return <BrainDump />;
       case 'quests': return <QuestLog />;
+      case 'shop': return <Shop />;
       case 'sleep': return <StatisticsPage />;
       case 'sleep-overview': return <StatisticsPage defaultTab="sleep-overview" />;
-      case 'leaderboard': return <Leaderboard />;
       case 'stats': return <StatisticsPage />;
       case 'settings': return <Settings />;
       default: return <ImmersiveDashboard />;

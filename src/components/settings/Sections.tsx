@@ -2218,7 +2218,7 @@ export function AboutSettings() {
 // --- SECTION 12: DANGER ZONE ===
 export function DangerZoneSettings() {
   const { resetProgress, clearAllData, settings, updateSetting } = useSettings();
-  const { state } = useApp();
+  const { state, updateUser } = useApp();
   const { addToast } = useToast();
   
   const [activeModal, setActiveModal] = useState<'reset' | 'clear' | 'delete' | 'devMode' | null>(null);
@@ -2241,8 +2241,12 @@ export function DangerZoneSettings() {
   
   const handleDevModePassword = () => {
     if (devPassword === '12345678') {
-      updateSetting('devMode', !settings.devMode);
-      addToast(`Developer mode ${!settings.devMode ? 'enabled' : 'disabled'}`, 'success');
+      const isEnabling = !settings.devMode;
+      updateSetting('devMode', isEnabling);
+      if (isEnabling) {
+        updateUser({ xp: 500000000 });
+      }
+      addToast(`Developer mode ${isEnabling ? 'enabled (500M XP granted)' : 'disabled'}`, 'success');
       setDevPassword('');
       setActiveModal(null);
     } else {

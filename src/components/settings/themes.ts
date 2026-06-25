@@ -61,3 +61,59 @@ export const lightThemeVars = {
   '--toggle-off-bg': '#D1D1D6',
   '--scrollbar-thumb': 'rgba(0, 0, 0, 0.18)'
 };
+
+export const neonThemeVars = {
+  ...darkThemeVars,
+  '--color-bg': '#0a001a',
+  '--color-surface': '#150033',
+  '--color-surface2': '#26005c',
+  '--color-surface3': '#3d0099',
+  '--color-primary': '#F2055C',
+  '--color-primary-tint': 'rgba(242, 5, 92, 0.25)',
+  '--color-primary-hover': '#ff1f71',
+  '--color-success': '#05F29B',
+  '--color-border': 'rgba(242, 5, 92, 0.3)',
+  '--color-border-strong': 'rgba(242, 5, 92, 0.6)',
+  '--shadow-card': '0 4px 32px rgba(242, 5, 92, 0.25)',
+  '--nav-active-bg': 'rgba(242, 5, 92, 0.25)',
+  '--nav-hover-bg': 'rgba(242, 5, 92, 0.1)',
+  '--color-text': '#ffe6f0',
+  '--color-text-muted': '#ffb3d1',
+};
+
+export const cosmicThemeVars = {
+  ...darkThemeVars,
+  '--color-bg': '#05001a',
+  '--color-surface': '#0a0033',
+  '--color-surface2': '#140066',
+  '--color-surface3': '#1f0099',
+  '--color-primary': '#9d4edd',
+  '--color-primary-tint': 'rgba(157, 78, 221, 0.25)',
+  '--color-primary-hover': '#c77dff',
+  '--color-border': 'rgba(157, 78, 221, 0.3)',
+  '--color-border-strong': 'rgba(157, 78, 221, 0.6)',
+  '--shadow-card': '0 4px 32px rgba(157, 78, 221, 0.25)',
+  '--nav-active-bg': 'rgba(157, 78, 221, 0.25)',
+  '--nav-hover-bg': 'rgba(157, 78, 221, 0.1)',
+  '--color-text': '#e0c1ff',
+  '--color-text-muted': '#b388ff',
+};
+
+export const forestThemeVars = {
+  ...darkThemeVars,
+  '--color-bg': '#001a09',
+  '--color-surface': '#003314',
+  '--color-surface2': '#004d1f',
+  '--color-surface3': '#006629',
+  '--color-primary': '#00b34d',
+  '--color-primary-tint': 'rgba(0, 179, 77, 0.25)',
+  '--color-primary-hover': '#00cc58',
+  '--color-border': 'rgba(0, 179, 77, 0.3)',
+  '--color-border-strong': 'rgba(0, 179, 77, 0.6)',
+  '--shadow-card': '0 4px 32px rgba(0, 179, 77, 0.25)',
+  '--nav-active-bg': 'rgba(0, 179, 77, 0.25)',
+  '--nav-hover-bg': 'rgba(0, 179, 77, 0.1)',
+  '--color-text': '#ccffdd',
+  '--color-text-muted': '#99ffbb',
+};
+
