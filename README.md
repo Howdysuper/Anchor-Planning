@@ -1,20 +1,3 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Anchor: Transform your daily workflow into a clear, focused path to progress. Designed for high-achievers who value structure, clarity, and steady, rewarding growth.
 
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/513fb0f5-48cc-4d05-9fa3-4ff525e44e43
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+You can visit [my google slideshow presentation](https://docs.google.com/presentation/d/1vw0BXqSAoTlBVsBTu29Es8r3wdzU9oO3bOK8Sk8jHPw/edit?usp=sharing) for more details on how I built this app through the engineering design process and iterative problem solving method to help my peers and give the cleanest experience for my users.
