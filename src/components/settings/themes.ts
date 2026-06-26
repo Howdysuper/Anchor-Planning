@@ -99,6 +99,24 @@ export const cosmicThemeVars = {
   '--color-text-muted': '#b388ff',
 };
 
+export const hackerThemeVars = {
+  ...darkThemeVars,
+  '--color-bg': '#000000',
+  '--color-surface': '#001100',
+  '--color-surface2': '#002200',
+  '--color-surface3': '#003300',
+  '--color-primary': '#00ff00',
+  '--color-primary-tint': 'rgba(0, 255, 0, 0.25)',
+  '--color-primary-hover': '#33ff33',
+  '--color-border': 'rgba(0, 255, 0, 0.3)',
+  '--color-border-strong': 'rgba(0, 255, 0, 0.6)',
+  '--shadow-card': '0 4px 32px rgba(0, 255, 0, 0.25)',
+  '--nav-active-bg': 'rgba(0, 255, 0, 0.25)',
+  '--nav-hover-bg': 'rgba(0, 255, 0, 0.1)',
+  '--color-text': '#00ff00',
+  '--color-text-muted': '#009900',
+};
+
 export const forestThemeVars = {
   ...darkThemeVars,
   '--color-bg': '#001a09',

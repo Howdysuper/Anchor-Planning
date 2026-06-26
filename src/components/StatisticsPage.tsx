@@ -311,7 +311,7 @@ export default function StatisticsPage({ defaultTab = 'overview' }: { defaultTab
             }`}
           >
             <BarChart3 size={14} />
-            <span>Circadian Overview</span>
+            <span>Daily Rhythm Overview</span>
           </button>
           
           <button
@@ -331,6 +331,84 @@ export default function StatisticsPage({ defaultTab = 'overview' }: { defaultTab
       {/* CONDITIONAL RENDER: SUB-TAB 1: RHYTHMIC OVERVIEW */}
       {activeSubTab === 'overview' && (
         <div className="flex flex-col gap-8 animate-in fade-in duration-300">
+          
+          {/* STATS CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-surface border border-border-base rounded-[24px] p-6 flex flex-col gap-6">
+              <div className="flex items-center justify-between">
+                <span className="text-text-muted font-bold text-xs uppercase tracking-wider">XP This Week</span>
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Award size={20} />
+                </div>
+              </div>
+              <div className="text-[32px] font-bold text-primary flex items-baseline gap-2">
+                +{state.user.xp} <span className="text-lg">XP</span>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center text-[11px] font-bold uppercase tracking-wider text-text-muted">
+                  <span>Progression</span>
+                  <span className="text-primary">LV {state.user.level} &rarr; LV {state.user.level + 1}</span>
+                </div>
+                <div className="h-3 w-full bg-surface-3 rounded-full overflow-hidden relative">
+                  <div 
+                    className="h-full bg-primary rounded-full relative z-10" 
+                    style={{ width: `${Math.min(100, Math.max(0, (((state.user.levelProgressXp !== undefined ? state.user.levelProgressXp : state.user.xp) / (state.user.xpToNextLevel || 100)) * 100)))}%` }}
+                  >
+                    <div className="absolute inset-0 bg-white/20 w-full rounded-full blur-[2px]" />
+                  </div>
+                </div>
+                <p className="text-[11px] text-text-muted mt-2">
+                  Active Quest Completion multipliers applied. Remaining XP for Next Level: <span className="font-bold text-text-primary">{Math.max(0, (state.user.xpToNextLevel || 100) - (state.user.levelProgressXp !== undefined ? state.user.levelProgressXp : state.user.xp))}</span>
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-border-base flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[13px] text-text-muted">Total Streaks:</span>
+                  <span className="text-[13px] font-bold text-text-primary flex items-center gap-1"><Flame size={14} className="text-[#F7A06F]" /> {state.user.streakDays || 0} Day Streak</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[13px] text-text-muted">XP multiplier:</span>
+                  <span className="text-[13px] font-bold text-primary">{(1.0 + (state.user.level - 1) * 0.05).toFixed(2)}x Active</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-surface border border-border-base rounded-[24px] p-6 flex flex-col gap-6">
+              <div className="flex items-center justify-between">
+                <span className="text-text-muted font-bold text-xs uppercase tracking-wider">Quest Mastery</span>
+                <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center text-success">
+                  <CheckCircle size={20} />
+                </div>
+              </div>
+              <div className="text-[42px] font-bold text-success leading-none">
+                {state.quests.filter(q => q.completed).length}/{state.quests.length}
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="flex-1 bg-surface-2 border border-border-base rounded-[12px] p-4 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-2">Rate</span>
+                  <span className="text-[18px] font-bold text-success">{state.quests.length > 0 ? Math.round((state.quests.filter(q => q.completed).length / state.quests.length) * 100) : 0}%</span>
+                </div>
+                <div className="flex-1 bg-surface-2 border border-border-base rounded-[12px] p-4 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-2">Remaining</span>
+                  <span className="text-[18px] font-bold text-error">{state.quests.filter(q => !q.completed).length}</span>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border-base flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[13px] text-text-muted">Loadout Gears Equipped:</span>
+                  <span className="text-[13px] font-bold text-text-primary">{state.user.purchasedItems?.length || 0} Gears</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[13px] text-text-muted">Efficiency Rating:</span>
+                  <span className="text-[13px] font-bold text-success">{state.quests.filter(q => q.completed).length > 0 ? 'Optimal' : 'Incomplete'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
           
           {/* 4. WEEKLY TRAJECTORY GRAPH - WITH SECURE INACTIVE FALLBACK */}
           <section className="bg-surface border border-border-base rounded-[24px] p-6 flex flex-col gap-6 relative">

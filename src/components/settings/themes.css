@@ -470,47 +470,47 @@
 }
 
 /* Custom Theme Mappings */
-:is(.theme-neon, .theme-cosmic, .theme-forest) body {
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) body {
   background-color: var(--color-bg) !important;
 }
 
-:is(.theme-neon, .theme-cosmic, .theme-forest) .bg-\[\#0A0A0A\],
-:is(.theme-neon, .theme-cosmic, .theme-forest) .bg-\[\#0a0a0a\] { background-color: var(--color-bg) !important; }
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .bg-\[\#0A0A0A\],
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .bg-\[\#0a0a0a\] { background-color: var(--color-bg) !important; }
 
-:is(.theme-neon, .theme-cosmic, .theme-forest) .bg-\[\#141414\] { background-color: var(--color-surface) !important; }
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .bg-\[\#141414\] { background-color: var(--color-surface) !important; }
 
-:is(.theme-neon, .theme-cosmic, .theme-forest) .bg-\[\#1E1E1E\],
-:is(.theme-neon, .theme-cosmic, .theme-forest) .bg-\[\#1a1a1a\],
-:is(.theme-neon, .theme-cosmic, .theme-forest) .bg-\[\#1C1C1C\] { background-color: var(--color-surface2) !important; }
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .bg-\[\#1E1E1E\],
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .bg-\[\#1a1a1a\],
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .bg-\[\#1C1C1C\] { background-color: var(--color-surface2) !important; }
 
-:is(.theme-neon, .theme-cosmic, .theme-forest) .border-\[rgba\(255\,255\,255\,0\.02\)\],
-:is(.theme-neon, .theme-cosmic, .theme-forest) .border-\[rgba\(255\,255\,255\,0\.04\)\],
-:is(.theme-neon, .theme-cosmic, .theme-forest) .border-\[rgba\(255\,255\,255\,0\.06\)\],
-:is(.theme-neon, .theme-cosmic, .theme-forest) .border-\[rgba\(255\,255\,255\,0\.08\)\] { border-color: var(--color-border) !important; }
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .border-\[rgba\(255\,255\,255\,0\.02\)\],
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .border-\[rgba\(255\,255\,255\,0\.04\)\],
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .border-\[rgba\(255\,255\,255\,0\.06\)\],
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .border-\[rgba\(255\,255\,255\,0\.08\)\] { border-color: var(--color-border) !important; }
 
-:is(.theme-neon, .theme-cosmic, .theme-forest) .border-\[rgba\(255\,255\,255\,0\.1\)\],
-:is(.theme-neon, .theme-cosmic, .theme-forest) .border-\[rgba\(255\,255\,255\,0\.12\)\],
-:is(.theme-neon, .theme-cosmic, .theme-forest) .border-\[rgba\(255\,255\,255\,0\.15\)\] { border-color: var(--color-border-strong) !important; }
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .border-\[rgba\(255\,255\,255\,0\.1\)\],
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .border-\[rgba\(255\,255\,255\,0\.12\)\],
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .border-\[rgba\(255\,255\,255\,0\.15\)\] { border-color: var(--color-border-strong) !important; }
 
-:is(.theme-neon, .theme-cosmic, .theme-forest) .hover\:bg-\[\#1A1A1A\]:hover,
-:is(.theme-neon, .theme-cosmic, .theme-forest) .hover\:bg-\[\#1E1E1E\]:hover,
-:is(.theme-neon, .theme-cosmic, .theme-forest) .hover\:bg-\[\#2A2A2A\]:hover { background-color: var(--nav-hover-bg) !important; }
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .hover\:bg-\[\#1A1A1A\]:hover,
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .hover\:bg-\[\#1E1E1E\]:hover,
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .hover\:bg-\[\#2A2A2A\]:hover { background-color: var(--nav-hover-bg) !important; }
 
-:is(.theme-neon, .theme-cosmic, .theme-forest) .hover\:border-\[rgba\(255\,255\,255\,0\.1\)\]:hover,
-:is(.theme-neon, .theme-cosmic, .theme-forest) .hover\:border-\[rgba\(255\,255\,255\,0\.2\)\]:hover { border-color: var(--color-border-strong) !important; }
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .hover\:border-\[rgba\(255\,255\,255\,0\.1\)\]:hover,
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .hover\:border-\[rgba\(255\,255\,255\,0\.2\)\]:hover { border-color: var(--color-border-strong) !important; }
 
-:is(.theme-neon, .theme-cosmic, .theme-forest) .bg-\[\#7C6FF7\] { background-color: var(--color-primary) !important; color: var(--color-bg) !important; }
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .bg-\[\#7C6FF7\] { background-color: var(--color-primary) !important; color: var(--color-bg) !important; }
 
-:is(.theme-neon, .theme-cosmic, .theme-forest) .hover\:bg-\[\#6b5ee6\]:hover,
-:is(.theme-neon, .theme-cosmic, .theme-forest) .bg-\[\#7C6FF7\]:hover { 
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .hover\:bg-\[\#6b5ee6\]:hover,
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .bg-\[\#7C6FF7\]:hover { 
   background-color: var(--color-primary-hover) !important; 
 }
 
-:is(.theme-neon, .theme-cosmic, .theme-forest) .text-\[\#F0F0F0\],
-:is(.theme-neon, .theme-cosmic, .theme-forest) .text-zinc-50,
-:is(.theme-neon, .theme-cosmic, .theme-forest) .text-white { color: var(--color-text) !important; }
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .text-\[\#F0F0F0\],
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .text-zinc-50,
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .text-white { color: var(--color-text) !important; }
 
-:is(.theme-neon, .theme-cosmic, .theme-forest) .text-\[\#888888\],
-:is(.theme-neon, .theme-cosmic, .theme-forest) .text-zinc-400 { color: var(--color-text-muted) !important; }
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .text-\[\#888888\],
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .text-zinc-400 { color: var(--color-text-muted) !important; }
 
-:is(.theme-neon, .theme-cosmic, .theme-forest) .text-\[\#7C6FF7\] { color: var(--color-primary) !important; }
+:is(.theme-neon, .theme-cosmic, .theme-forest, .theme-hacker) .text-\[\#7C6FF7\] { color: var(--color-primary) !important; }

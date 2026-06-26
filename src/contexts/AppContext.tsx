@@ -9,6 +9,7 @@ export type AppState = {
     level: number;
     xp: number;
     xpToNextLevel: number;
+    levelProgressXp?: number;
     streakDays: number;
     streakFreezes?: number;
     avatar: string;
@@ -48,6 +49,7 @@ const initialState: AppState = {
     level: 1,
     xp: 0,
     xpToNextLevel: 100,
+    levelProgressXp: 0,
     streakDays: 1,
     streakFreezes: 0,
     avatar: "U",
@@ -95,7 +97,19 @@ interface AppContextType {
   requestNotificationPermission: () => Promise<string>;
   triggerManualReminder: (anchorId: number) => void;
   purchaseProSubscription: () => { success: boolean; message: string };
+  resetStatistics: () => void;
 }
+
+export const getXpRequiredForLevel = (level: number): number => {
+  if (level <= 1) return 100;
+  if (level === 2) return 300;
+  if (level === 3) return 500;
+  if (level === 4) return 1000;
+  if (level === 5) return 1200;
+  if (level === 6) return 1600;
+  if (level === 7) return 2000;
+  return 400; // Level 8+
+};
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -308,9 +322,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         xpPoolLastResetDate = today;
       }
 
-      // Loadout reset
+      // Loadout reset (only for tabs other than School Day)
       if (loadoutLastResetDate !== today) {
-        updateLoadout({ items: state.loadout.items.map(i => ({ ...i, checked: false })) });
+        updateLoadout({ 
+          items: state.loadout.items.map(i => 
+            (i.tab || 'School Day') !== 'School Day' ? { ...i, checked: false } : i
+          ) 
+        });
         loadoutLastResetDate = today;
       }
       
@@ -328,6 +346,56 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       updateUser({ totalAppVisits: prevVisits + 1 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Hook for 1 AM automatic School Day loadout reset
+  useEffect(() => {
+    const check1AMReset = () => {
+      const now = new Date();
+      // Calculate the most recent 1 AM boundary
+      let boundary = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 1, 0, 0, 0);
+      if (now < boundary) {
+        boundary.setDate(boundary.getDate() - 1);
+      }
+      const boundaryTime = boundary.getTime();
+
+      const lastResetStr = localStorage.getItem('anchor_school_day_last_reset_time');
+      const lastResetTime = lastResetStr ? parseInt(lastResetStr, 10) : 0;
+
+      if (lastResetTime < boundaryTime) {
+        // Perform reset for School Day items
+        setState(prev => ({
+          ...prev,
+          loadout: {
+            ...prev.loadout,
+            items: prev.loadout.items.map(i => 
+              (i.tab || 'School Day') === 'School Day' ? { ...i, checked: false } : i
+            )
+          }
+        }));
+        
+        // Save the reset boundary time
+        localStorage.setItem('anchor_school_day_last_reset_time', boundaryTime.toString());
+
+        // Notify user if app is currently open
+        if (lastResetTime > 0) {
+          window.dispatchEvent(new CustomEvent('anchor-in-app-notification', {
+            detail: {
+              title: `Loadout Auto-Reset`,
+              body: `Your "School Day" loadout checklist has been automatically reset for the morning! ☀️`,
+              type: 'info'
+            }
+          }));
+        }
+      }
+    };
+
+    // Run check immediately on mount
+    check1AMReset();
+
+    // Check periodically every 15 seconds
+    const interval = setInterval(check1AMReset, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   // Hook to monitor Pro Subscription expiration
@@ -583,7 +651,83 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [state.anchors, state.user.streakDays, notificationPermission]);
 
   const updateState = (updates: Partial<AppState>) => setState(prev => ({ ...prev, ...updates }));
-  const updateUser = (updates: Partial<AppState['user']>) => setState(prev => ({ ...prev, user: { ...prev.user, ...updates } }));
+  const updateUser = (updates: Partial<AppState['user']>) => {
+    setState(prev => {
+      let newUser = { ...prev.user };
+      
+      if (updates.xp !== undefined) {
+        const oldXp = prev.user.xp;
+        const proposedNewXp = updates.xp;
+        
+        if (proposedNewXp > oldXp) {
+          // Gaining XP! Calculate multiplier and progress
+          const baseIncrement = proposedNewXp - oldXp;
+          const currentLevel = prev.user.level || 1;
+          const multiplier = 1.0 + (currentLevel - 1) * 0.05;
+          const multipliedIncrement = Math.ceil(baseIncrement * multiplier);
+          
+          let currentProgress = prev.user.levelProgressXp !== undefined ? prev.user.levelProgressXp : oldXp;
+          let tempProgress = currentProgress + multipliedIncrement;
+          let level = prev.user.level || 1;
+          let leveledUp = false;
+          let levelUpTo = level;
+          
+          while (level < 50) {
+            const reqXp = getXpRequiredForLevel(level);
+            if (tempProgress >= reqXp) {
+              tempProgress -= reqXp;
+              level += 1;
+              leveledUp = true;
+              levelUpTo = level;
+            } else {
+              break;
+            }
+          }
+          
+          if (level >= 50) {
+            level = 50;
+            tempProgress = 0; // maxed
+          }
+          
+          const nextLevelReq = getXpRequiredForLevel(level);
+          
+          if (leveledUp && dataLoadedRef.current) {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('anchor-level-up', {
+                detail: { level: levelUpTo, multiplier: 1.0 + (levelUpTo - 1) * 0.05 }
+              }));
+            }
+          }
+          
+          newUser = {
+            ...newUser,
+            ...updates,
+            xp: oldXp + multipliedIncrement,
+            levelProgressXp: tempProgress,
+            xpToNextLevel: nextLevelReq,
+            level: level
+          };
+        } else {
+          // Spending XP or setting it lower (e.g. debug, shop purchase)
+          newUser = {
+            ...newUser,
+            ...updates
+          };
+        }
+      } else {
+        // Just standard updates without XP changes
+        newUser = {
+          ...newUser,
+          ...updates
+        };
+      }
+      
+      return {
+        ...prev,
+        user: newUser
+      };
+    });
+  };
   const updateSleep = (updates: Partial<AppState['sleep']>) => setState(prev => ({ ...prev, sleep: { ...prev.sleep, ...updates } }));
   const updateLoadout = (updates: Partial<AppState['loadout']>) => setState(prev => ({ ...prev, loadout: { ...prev.loadout, ...updates } }));
   const setQuests = (quests: any[]) => setState(prev => ({ ...prev, quests }));
@@ -603,6 +747,31 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const resetStatistics = () => {
+    setState(prev => {
+      const newState = {
+        ...prev,
+        user: { 
+          ...prev.user, 
+          xp: 0, 
+          level: 1, 
+          xpToNextLevel: 100, 
+          levelProgressXp: 0 
+        },
+        sleep: { 
+          ...prev.sleep, 
+          score: 100,
+          debtHours: 0,
+          history: []
+        }
+      };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('anchor_data_v1', JSON.stringify(newState));
+      }
+      return newState;
+    });
+  };
+
   return (
     <AppContext.Provider value={{
       state,
@@ -617,7 +786,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       notificationPermission,
       requestNotificationPermission,
       triggerManualReminder,
-      purchaseProSubscription
+      purchaseProSubscription,
+      resetStatistics
     }}>
       {children}
     </AppContext.Provider>

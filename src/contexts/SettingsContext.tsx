@@ -38,6 +38,7 @@ export interface SettingsType {
     weekStart: string;
     timeFormat: string;
     dateFormat: string;
+    timezone: string;
     minBreakMinutes: number;
     autoBufferBlocks: boolean;
     weekendsOverride: boolean;
@@ -155,11 +156,7 @@ const defaultSettings: SettingsType = {
     memberSince: "June 2026",
     plan: "free",
     twoFactorEnabled: false,
-    sessions: [
-      { id: 1, device: "This device", active: true, lastSeen: "Now" },
-      { id: 2, device: "iPhone 14", active: false, lastSeen: "2 days ago" },
-      { id: 3, device: "Chrome on Windows", active: false, lastSeen: "5 days ago" }
-    ]
+    sessions: []
   },
   notifications: {
     masterEnabled: true,
@@ -183,6 +180,7 @@ const defaultSettings: SettingsType = {
     weekStart: "monday",
     timeFormat: "12hr",
     dateFormat: "MM/DD/YYYY",
+    timezone: "UTC",
     minBreakMinutes: 15,
     autoBufferBlocks: true,
     weekendsOverride: false,
@@ -321,6 +319,7 @@ interface SettingsContextProps {
   updateSetting: <T>(path: string, value: T) => void;
   resetProgress: () => void;
   clearAllData: () => void;
+  deleteAccountData: () => Promise<void>;
   exportData: () => string;
   importData: (jsonData: string) => boolean;
   resetSection: (sectionKey: keyof SettingsType) => void;
@@ -364,6 +363,29 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const loadedUserIdRef = useRef<string | null>(null);
 
+  const getBrowserName = () => {
+    const userAgent = navigator.userAgent;
+    if (userAgent.includes("Firefox")) return "Firefox";
+    if (userAgent.includes("SamsungBrowser")) return "Samsung Browser";
+    if (userAgent.includes("Opera") || userAgent.includes("OPR")) return "Opera";
+    if (userAgent.includes("Trident")) return "Internet Explorer";
+    if (userAgent.includes("Edge")) return "Edge";
+    if (userAgent.includes("Chrome")) return "Chrome";
+    if (userAgent.includes("Safari")) return "Safari";
+    return "Unknown Browser";
+  };
+
+  const getOSName = () => {
+    const userAgent = navigator.userAgent;
+    if (userAgent.includes("Win")) return "Windows";
+    if (userAgent.includes("Mac")) return "Mac OS";
+    if (userAgent.includes("X11")) return "UNIX";
+    if (userAgent.includes("Linux")) return "Linux";
+    if (userAgent.includes("Android")) return "Android";
+    if (userAgent.includes("like Mac")) return "iOS";
+    return "Unknown OS";
+  };
+
   // Synchronize settings profile with the actual logged-in user and isolate cache
   useEffect(() => {
     if (user) {
@@ -385,18 +407,75 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
 
+      // Track current real session
+      const currentDeviceName = `${getBrowserName()} on ${getOSName()}`;
+      let updatedSessions = [...userSettings.profile.sessions];
+      
+      // Update existing session for this device if it exists
+      const existingIndex = updatedSessions.findIndex(s => s.device === currentDeviceName);
+      if (existingIndex >= 0) {
+        updatedSessions[existingIndex] = { ...updatedSessions[existingIndex], active: true, lastSeen: "Now" };
+      } else {
+        updatedSessions.push({
+          id: Date.now(),
+          device: currentDeviceName,
+          active: true,
+          lastSeen: "Now"
+        });
+      }
+
+      // Mark others as inactive
+      updatedSessions = updatedSessions.map(s => 
+        s.device === currentDeviceName ? s : { ...s, active: false }
+      );
+
       setSettings({
         ...userSettings,
         profile: {
           ...userSettings.profile,
           email: user.email || userSettings.profile.email,
           displayName: state.user?.name || user.displayName || userSettings.profile.displayName,
-          username: state.user?.name ? state.user.name.toLowerCase().replace(/\s+/g, '_') : (user.displayName ? user.displayName.toLowerCase().replace(/\s+/g, '_') : userSettings.profile.username)
+          username: state.user?.name ? state.user.name.toLowerCase().replace(/\s+/g, '_') : (user.displayName ? user.displayName.toLowerCase().replace(/\s+/g, '_') : userSettings.profile.username),
+          sessions: updatedSessions
         }
       });
       loadedUserIdRef.current = user.uid;
     } else {
-      setSettings(defaultSettings);
+      const currentDeviceName = `${getBrowserName()} on ${getOSName()}`;
+      const localSaved = localStorage.getItem(SETTINGS_KEY);
+      let localSettings = defaultSettings;
+      if (localSaved) {
+        try {
+          localSettings = deepMerge(defaultSettings, JSON.parse(localSaved));
+        } catch (e) {}
+      }
+      
+      let updatedSessions = [...localSettings.profile.sessions];
+      const existingIndex = updatedSessions.findIndex(s => s.device === currentDeviceName);
+      if (existingIndex >= 0) {
+        updatedSessions[existingIndex] = { ...updatedSessions[existingIndex], active: true, lastSeen: "Now" };
+      } else {
+        updatedSessions.push({
+          id: Date.now(),
+          device: currentDeviceName,
+          active: true,
+          lastSeen: "Now"
+        });
+      }
+      updatedSessions = updatedSessions.map(s => 
+        s.device === currentDeviceName ? s : { ...s, active: false }
+      );
+      
+      // Keep only active session if logged out (no multi-device sync)
+      const finalSessions = updatedSessions.filter(s => s.active);
+
+      setSettings({
+        ...localSettings,
+        profile: {
+          ...localSettings.profile,
+          sessions: finalSessions
+        }
+      });
       loadedUserIdRef.current = null;
     }
   }, [user, state.user?.name]);
@@ -497,7 +576,40 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     addToast("XP and Routine Streak reset accomplished! 🎯", "success");
   };
 
-  const clearAllData = async () => {
+  const clearAllData = () => {
+    // Keep user's onboarding status, display name, level, and XP settings intact
+    setAnchors([]);
+    setQuests([]);
+    setBrainDumps([]);
+    updateState({
+      anchors: [],
+      quests: [],
+      brainDumps: [],
+      sleep: {
+        ...state.sleep,
+        score: 100,
+        debtHours: 0,
+        history: []
+      }
+    });
+
+    // Reset general settings but retain profile-specific metadata
+    const updatedSettings = {
+      ...defaultSettings,
+      profile: {
+        ...defaultSettings.profile,
+        name: settings.profile.name,
+        avatar: settings.profile.avatar,
+        customInitials: settings.profile.customInitials,
+        bio: settings.profile.bio,
+      }
+    };
+    setSettings(updatedSettings);
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(updatedSettings));
+    addToast("All routines and sleep history cleared. Profile & Onboarding data preserved!", "success");
+  };
+
+  const deleteAccountData = async () => {
     try {
       const { auth, db } = await import('../lib/firebase');
       const { doc, deleteDoc } = await import('firebase/firestore');
@@ -513,9 +625,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.error("Error during database cleanup:", e);
     } finally {
       localStorage.clear();
-      // Re-init with defaults
+      // Reset onboarding
       localStorage.setItem('anchor_onboarded', 'false');
-      addToast("All data successfully cleared. Setting up character system...", "info");
+      addToast("Account permanently deleted. Going back to onboarding...", "error");
       setTimeout(() => {
         window.location.reload();
       }, 1200);
@@ -622,11 +734,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const logOutAllSessions = () => {
-    updateSetting('profile.sessions', settings.profile.sessions.map((s) => {
-      if (s.id === 1) return s; // keep current active
-      return { ...s, active: false, lastSeen: "Disconnected" };
-    }));
-    addToast("Logged out of 2 secondary sessions ✓", "success");
+    updateSetting('profile.sessions', settings.profile.sessions.filter(s => s.active));
+    addToast("Logged out of all other sessions ✓", "success");
   };
 
   const backupNow = () => {
@@ -726,6 +835,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       updateSetting,
       resetProgress,
       clearAllData,
+      deleteAccountData,
       exportData,
       importData,
       resetSection,

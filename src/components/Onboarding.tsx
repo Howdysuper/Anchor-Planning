@@ -48,6 +48,24 @@ const Toast = ({ message, onClose }: { message: string; onClose: () => void }) =
   );
 };
 
+const OnboardingModal = ({ isOpen, onClose, title, children }: { isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+      <div className="bg-[#121212]/90 border border-[rgba(255,255,255,0.08)] rounded-[24px] max-w-md w-full p-6 shadow-2xl relative">
+        <h3 className="text-lg font-bold text-white mb-3">{title}</h3>
+        {children}
+        <button 
+          onClick={onClose}
+          className="mt-6 w-full h-11 bg-[#7C6FF7] text-black font-bold rounded-xl text-xs hover:opacity-90 transition-all"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const TextInput = ({ 
   type = 'text', label, value, onChange, onBlur, error, valid, placeholder 
 }: { 
@@ -283,7 +301,9 @@ const Splash = ({ onNext, onLoginClick }: { onNext: () => void, onLoginClick: ()
 
 const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => void, setToast: (v: string) => void, initialTab?: 'signup'|'login' }) => {
   const { updateUser } = useApp();
-  const [tab, setTab] = useState<'signup'|'login'|'phone'>(initialTab as any);
+  const [tab, setTab] = useState<'signup'|'login'>(initialTab as any);
+  const [isTOSOpen, setIsTOSOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [phoneStep, setPhoneStep] = useState<'number'|'code'>('number');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
@@ -379,7 +399,7 @@ const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => 
               backgroundColor: TOKENS.surface,
               border: '1px solid rgba(255,255,255,0.1)',
               width: tab === 'signup' ? 96 : 84,
-              transform: tab === 'signup' ? 'translateX(0)' : (tab === 'login' ? 'translateX(96px)' : 'translateX(180px)'),
+              transform: tab === 'signup' ? 'translateX(0)' : 'translateX(96px)',
               boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
             }}
           />
@@ -398,14 +418,6 @@ const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => 
           >
             Log In
             {tab === 'login' && <motion.div layoutId="auth-tab" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 rounded-full bg-[#7C6FF7]" />}
-          </button>
-          <button 
-            onClick={() => { setTab('phone'); setPhoneStep('number'); }}
-            className="w-[84px] h-10 relative z-10 text-sm font-bold transition-colors"
-            style={{ color: tab === 'phone' ? TOKENS.textPrimary : TOKENS.textMuted }}
-          >
-            Phone
-            {tab === 'phone' && <motion.div layoutId="auth-tab" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 rounded-full bg-[#7C6FF7]" />}
           </button>
         </div>
 
@@ -471,27 +483,6 @@ const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => 
                 />
               )}
               
-              {tab === 'phone' && (
-                <div className="w-full">
-                  {phoneStep === 'number' ? (
-                    <TextInput 
-                      label="Phone Number" 
-                      value={phoneNumber} 
-                      onChange={setPhoneNumber} 
-                      placeholder="+1 555 555 5555"
-                    />
-                  ) : (
-                    <TextInput 
-                      label="Verification Code" 
-                      value={verificationCode} 
-                      onChange={setVerificationCode} 
-                      placeholder="123456"
-                    />
-                  )}
-                  <div id="recaptcha-container" className="mt-4 flex justify-center"></div>
-                </div>
-              )}
-              
               {tab === 'login' && (
                 <div className="w-full flex justify-end mt-2">
                   <span className="text-sm font-bold cursor-pointer hover:underline" style={{ color: TOKENS.primary }}>Forgot password?</span>
@@ -506,12 +497,11 @@ const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => 
 
               <div className="w-full flex flex-col gap-3">
                 <SocialBtn provider="Google" onClick={() => handleSocialClick('Google')} />
-                <SocialBtn provider="Phone" onClick={() => { setTab('phone'); setPhoneStep('number'); }} />
               </div>
 
               <div className="w-full mt-8 text-center px-4">
-                <p className="text-xs text-[#888888] leading-relaxed">
-                  By continuing you agree to our <span className="text-[#7C6FF7] cursor-pointer hover:underline font-medium">Terms</span> & <span className="text-[#7C6FF7] cursor-pointer hover:underline font-medium">Privacy Policy</span>
+                <p className="text-xs text-[#888888] leading-relaxed select-none">
+                  By continuing you agree to our <span onClick={() => setIsTOSOpen(true)} className="text-[#7C6FF7] cursor-pointer hover:underline font-medium">Terms</span> & <span onClick={() => setIsPrivacyOpen(true)} className="text-[#7C6FF7] cursor-pointer hover:underline font-medium">Privacy Policy</span>
                 </p>
               </div>
 
@@ -527,10 +517,32 @@ const AuthStage = ({ onNext, setToast, initialTab = 'signup' }: { onNext: () => 
                   {loading ? (
                     <div className="w-5 h-5 rounded-full border-2 border-[#0A0A0A] border-t-transparent animate-spin"/>
                   ) : (
-                    tab === 'signup' ? 'Create my Account' : tab === 'login' ? 'Log In' : (phoneStep === 'number' ? 'Send Code' : 'Verify Code')
+                    tab === 'signup' ? 'Create my Account' : 'Log In'
                   )}
                 </motion.button>
               </div>
+
+              {/* Terms of Service Modal */}
+              <OnboardingModal isOpen={isTOSOpen} onClose={() => setIsTOSOpen(false)} title="Terms of Service Agreement">
+                <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1 text-zinc-300 text-[12px] leading-relaxed">
+                  <p>By using Anchor, you agree to follow and be bound by these Terms of Service.</p>
+                  <p className="font-bold text-white mt-1">1. Use of the Service</p>
+                  <p>Anchor provides daily routine checklists and sleep tracking algorithms for personal productivity and habit building.</p>
+                  <p className="font-bold text-white mt-1">2. Local Storage and Syncing</p>
+                  <p>All data is saved locally on your device or synchronized securely via our database to ensure reliable offline-first functionality.</p>
+                </div>
+              </OnboardingModal>
+
+              {/* Privacy Policy Modal */}
+              <OnboardingModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} title="Data Privacy Policy">
+                <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1 text-zinc-300 text-[12px] leading-relaxed">
+                  <p>Your privacy is extremely important to us. We collect initials, custom display names, habit logs, and sleep entries.</p>
+                  <p className="font-bold text-white mt-1">1. Data Safety</p>
+                  <p>We do not sell, trade, or share your tracking metrics with any advertisers or third-party analytical trackers.</p>
+                  <p className="font-bold text-white mt-1">2. Data Security</p>
+                  <p>All profile configurations synchronized via our database are encrypted and stored in fully isolated cloud vaults.</p>
+                </div>
+              </OnboardingModal>
 
             </motion.div>
           </motion.div>
@@ -1037,12 +1049,12 @@ const PersonalizationStage = ({ onFinish }: { onFinish: () => void }) => {
                         <Type size={16} />
                       </div>
                       <div className="flex-1">
-                        <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider block">Custom Initials (Max 2 Chars)</label>
+                        <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider block">Custom Initials (Max 3 Chars)</label>
                         <input
                           type="text"
-                          maxLength={2}
+                          maxLength={3}
                           value={customInitials}
-                          placeholder="e.g. JD"
+                          placeholder="e.g. JDO"
                           onChange={(e) => {
                             const val = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
                             setCustomInitials(val);

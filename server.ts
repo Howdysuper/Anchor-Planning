@@ -256,12 +256,14 @@ Provide a JSON object containing:
   app.post("/api/stretch-goals", async (req, res) => {
     try {
       const { recentHabits, morningHabits } = req.body;
-      const contents = `Based on my recently completed general habits: ${JSON.stringify(recentHabits || [])} and my completed Morning Routine Check-In habits: ${JSON.stringify(morningHabits || [])}, suggest 3 completely new, personalized 'stretch goals' or micro-habits for the week to improve my personal growth. The goals should explicitly complement or elevate my checked-in morning routine. Crucially, do not suggest habits similar to those I have already completed in my Morning Routine Check-in (such as drinking water). Focus instead on identifying and suggesting missing habits or complementary activities that I am not currently doing (for example, if I drink water, suggest 'Go for a morning walk' or 'Stretch while the water boils'). IMPORTANT: Each goal must be a single, punchy, short sentence (under 10 words). Output in JSON format with a 'goals' array of strings.`;
+      const contents = `Analyze my completed habits: ${JSON.stringify(recentHabits || [])} and morning routine: ${JSON.stringify(morningHabits || [])}.
+Identify MISSING habits and suggest activities that explicitly COMPLEMENT my routine, rather than repeating what I have already completed (e.g., if I drink water, suggest a complementary action like stretching or walking). The three stretch goals must be completely different from each other in meaning and category.
+Punchy Formatting: Output every goal as a single, punchy sentence of under 12-15 words. They must be quick and easy to read, and very VERY meaningful. Output in JSON format with a 'goals' array of strings.`;
       const response = await ai.models.generateContent({
         model: "gemini-3.1-flash-lite",
         contents,
         config: {
-          systemInstruction: "You are a personal growth advisor. Provide 3 highly specific, creative, and distinct micro-habits. Do not provide generic goals like 'drink more water' if it's already a habit. Output ONLY JSON with a 'goals' array containing 3 strings.",
+          systemInstruction: "You are a personal growth advisor. Provide 3 highly specific, creative, and distinct complementary micro-habits. Do not provide generic goals or repeat completed habits. Each goal must be a single, punchy sentence under 15 words. Output ONLY JSON with a 'goals' array containing 3 strings.",
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,

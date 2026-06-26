@@ -3,9 +3,35 @@ import { useApp } from '../contexts/AppContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useToast } from '../contexts/ToastContext';
 import { motion } from 'motion/react';
-import { ShoppingCart, Star, Sparkles, Paintbrush, Zap, Lock, Check, Compass, Flame, Trophy, Award, CheckCircle, Headphones, Cat, Rabbit, Hash } from 'lucide-react';
+import { Vault, Star, Sparkles, Paintbrush, Zap, Lock, Check, Compass, Flame, Trophy, Award, CheckCircle, Headphones, Cat, Rabbit, Hash } from 'lucide-react';
 import Modal from './ui/Modal';
 import AvatarWithCosmetic from './ui/AvatarWithCosmetic';
+
+const VaultIcon = (props: any) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="1" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    {...props}
+  >
+    {/* Outer frame - smaller */}
+    <rect x="5" y="6" width="14" height="12" rx="1.5" />
+    {/* Inner door - smaller */}
+    <rect x="8" y="9" width="8" height="6" rx="0.5" />
+    {/* Combination Dial - smaller */}
+    <circle cx="12" cy="12" r="1.5" />
+    <path d="M12 10.5v0.5" />
+    <path d="M12 13v0.5" />
+    <path d="M10.5 12h0.5" />
+    <path d="M13 12h0.5" />
+    {/* Hinges - smaller */}
+    <path d="M5 9h1" />
+    <path d="M5 15h1" />
+  </svg>
+);
 
 // Badge achievements criteria definition
 const BADGES_CONFIG = [
@@ -110,27 +136,17 @@ const SHOP_ITEMS: ShopItem[] = [
     }
   },
   {
-    id: 'font-mono',
+    id: 'theme-hacker',
     name: 'Hacker Typography',
-    description: 'Switch the entire app to a sleek monospace font.',
+    description: 'A terminal-inspired green and black theme with a sleek monospace font.',
     price: 800,
     icon: Paintbrush,
-    color: '#6FF7A0',
+    color: '#00ff00',
     type: 'theme',
     onPurchase: (updateSetting) => {
+      updateSetting('appearance.colorMode', 'hacker');
       updateSetting('appearance.fontFamily', 'mono');
-    }
-  },
-  {
-    id: 'feature-pro',
-    name: 'Pro Subscription (7 Days)',
-    description: 'Unlock advanced analytics, unlimited AI generations, and more.',
-    price: 7000,
-    icon: Zap,
-    color: '#F7D96F',
-    type: 'subscription',
-    onPurchase: (_, updateUser, state) => {
-      updateUser({ proUntil: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+      updateSetting('appearance.accentColor', '#00ff00');
     }
   },
   {
@@ -224,12 +240,123 @@ const ThemePreview = ({ color }: { color: string }) => (
   </div>
 );
 
+interface ShopItemCardProps {
+  key?: string;
+  item: ShopItem;
+  isPurchased: boolean;
+  isItemActive: (item: ShopItem) => boolean;
+  currentXP: number;
+  handleUnequip: (item: ShopItem) => void;
+  handleEquip: (item: ShopItem) => void;
+  setSelectedItem: React.Dispatch<React.SetStateAction<ShopItem | null>>;
+  avatarUrl: string;
+}
+
+function ShopItemCard({
+  item,
+  isPurchased,
+  isItemActive,
+  currentXP,
+  handleUnequip,
+  handleEquip,
+  setSelectedItem,
+  avatarUrl
+}: ShopItemCardProps) {
+  const [isCardHovered, setIsCardHovered] = useState(false);
+  const Icon = item.icon;
+
+  return (
+    <motion.div 
+      whileHover={{ y: -4 }}
+      onMouseEnter={() => setIsCardHovered(true)}
+      onMouseLeave={() => setIsCardHovered(false)}
+      className="bg-surface border border-border-base rounded-[24px] overflow-hidden flex flex-col shadow-sm relative group"
+    >
+      <div 
+        className="h-36 w-full flex items-center justify-center relative overflow-hidden transition-colors"
+        style={{ backgroundColor: `${item.color}15` }}
+      >
+        <div className="absolute inset-0 opacity-20" style={{ background: `radial-gradient(circle at center, ${item.color} 0%, transparent 70%)` }} />
+        
+        {item.type === 'theme' ? (
+          <ThemePreview color={item.color} />
+        ) : item.type === 'cosmetic' ? (
+          <div className="relative z-10 transition-transform group-hover:scale-110 duration-300">
+            <AvatarWithCosmetic avatarUrl={avatarUrl} cosmeticId={item.id} size="lg" forceAnimate={isCardHovered} />
+          </div>
+        ) : (
+          <Icon size={48} color={item.color} className="relative z-10 transition-transform group-hover:scale-110 duration-300" />
+        )}
+      </div>
+      
+      <div className="p-6 flex flex-col flex-1">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-[18px] font-bold text-text-primary">{item.name}</h3>
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-surface-2 text-text-muted border border-border-base">
+            {item.type}
+          </span>
+        </div>
+        <p className="text-[14px] text-text-muted mb-6 leading-relaxed flex-1">
+          {item.description}
+        </p>
+        
+        <div className="flex items-center justify-between mt-auto">
+          {!isPurchased && (
+            <div className="flex items-center gap-1.5 text-[15px] font-bold text-primary">
+              <Star size={16} className="fill-primary" />
+              {item.price.toLocaleString()} XP
+            </div>
+          )}
+          {isPurchased && (
+            <div className="flex items-center gap-1.5 text-[14px] font-bold text-[#6FF7A0]">
+              <Check size={16} />
+              Owned
+            </div>
+          )}
+          
+          {isPurchased ? (
+            isItemActive(item) ? (
+              <button 
+                onClick={() => handleUnequip(item)}
+                className="px-5 py-2 bg-surface-2 hover:bg-surface-3 border border-border-base text-text-primary rounded-full text-[13px] font-bold transition-all"
+              >
+                Unequip
+              </button>
+            ) : (
+              <button 
+                onClick={() => handleEquip(item)}
+                className="px-5 py-2 bg-primary text-bg-base hover:opacity-90 shadow-md border border-transparent rounded-full text-[13px] font-bold transition-all"
+              >
+                Equip
+              </button>
+            )
+          ) : (
+            <button 
+              onClick={() => setSelectedItem(item)}
+              disabled={currentXP < item.price}
+              className={`px-5 py-2 rounded-full text-[13px] font-bold transition-all flex items-center gap-2 ${
+                currentXP >= item.price
+                  ? 'bg-primary text-bg-base hover:opacity-90 shadow-md'
+                  : 'bg-surface-2 text-text-muted cursor-not-allowed border border-border-base'
+              }`}
+            >
+              {currentXP < item.price && <Lock size={14} />}
+              Buy
+            </button>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function Shop() {
   const { state, updateUser } = useApp();
   const { settings, updateSetting } = useSettings();
   const { addToast } = useToast();
   
   const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
+  const [vaultTab, setVaultTab] = useState<'themes' | 'cosmetics'>('themes');
 
   const purchasedItems = state.user.purchasedItems || [];
   const currentXP = state.user.xp;
@@ -270,8 +397,10 @@ export default function Shop() {
   };
 
   const handleUnequip = (item: ShopItem) => {
-    if (item.id === 'font-mono') {
+    if (item.id === 'theme-hacker') {
       updateSetting('appearance.fontFamily', 'inter');
+      updateSetting('appearance.colorMode', 'dark');
+      updateSetting('appearance.accentColor', '#7C6FF7');
       addToast(`${item.name} unequipped!`, "info");
     } else if (item.type === 'theme') {
       updateSetting('appearance.colorMode', 'dark');
@@ -287,7 +416,7 @@ export default function Shop() {
     if (item.id === 'theme-neon') return settings.appearance.colorMode === 'neon';
     if (item.id === 'theme-cosmic') return settings.appearance.colorMode === 'cosmic';
     if (item.id === 'theme-forest') return settings.appearance.colorMode === 'forest';
-    if (item.id === 'font-mono') return settings.appearance.fontFamily === 'mono';
+    if (item.id === 'theme-hacker') return settings.appearance.colorMode === 'hacker';
     if (item.type === 'cosmetic') return state.user.activeCosmetic === item.id;
     return false;
   };
@@ -296,8 +425,7 @@ export default function Shop() {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto h-full flex flex-col pb-24">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
-            <ShoppingCart className="text-primary" size={28} />
+          <h2 className="text-3xl font-bold text-text-primary tracking-tight">
             The Vault
           </h2>
           <p className="text-[15px] text-text-muted mt-2 max-w-2xl">
@@ -398,93 +526,52 @@ export default function Shop() {
         </div>
       </div>
 
-      <h3 className="text-[20px] font-bold text-text-primary mb-6">Vault Upgrades</h3>
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-[20px] font-bold text-text-primary">Vault Upgrades</h3>
+        <div className="flex bg-surface-2 p-1 rounded-[12px] border border-border-base relative">
+          <motion.div 
+            className="absolute top-1 bottom-1 left-1 bg-surface shadow-sm border border-border-strong rounded-[10px]"
+            initial={false}
+            animate={{
+              width: vaultTab === 'themes' ? 'calc(50% - 4px)' : 'calc(50% - 4px)',
+              x: vaultTab === 'themes' ? 0 : '100%',
+            }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          />
+          <button 
+            onClick={() => setVaultTab('themes')}
+            className={`relative z-10 px-4 py-1.5 text-[13px] font-bold rounded-[10px] transition-colors w-[100px] ${
+              vaultTab === 'themes' ? 'text-primary' : 'text-text-muted hover:text-text-primary'
+            }`}
+          >
+            Themes
+          </button>
+          <button 
+            onClick={() => setVaultTab('cosmetics')}
+            className={`relative z-10 px-4 py-1.5 text-[13px] font-bold rounded-[10px] transition-colors w-[100px] ${
+              vaultTab === 'cosmetics' ? 'text-primary' : 'text-text-muted hover:text-text-primary'
+            }`}
+          >
+            Cosmetics
+          </button>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {SHOP_ITEMS.map((item) => {
+        {SHOP_ITEMS.filter(item => item.type === (vaultTab === 'themes' ? 'theme' : 'cosmetic')).map((item) => {
           const isPurchased = purchasedItems.includes(item.id) && item.type !== 'subscription';
-          const Icon = item.icon;
           
           return (
-            <motion.div 
+            <ShopItemCard
               key={item.id}
-              whileHover={{ y: -4 }}
-              className="bg-surface border border-border-base rounded-[24px] overflow-hidden flex flex-col shadow-sm relative group"
-            >
-              <div 
-                className="h-36 w-full flex items-center justify-center relative overflow-hidden transition-colors"
-                style={{ backgroundColor: `${item.color}15` }}
-              >
-                <div className="absolute inset-0 opacity-20" style={{ background: `radial-gradient(circle at center, ${item.color} 0%, transparent 70%)` }} />
-                
-                {item.type === 'theme' ? (
-                  <ThemePreview color={item.color} />
-                ) : item.type === 'cosmetic' ? (
-                  <div className="relative z-10 transition-transform group-hover:scale-110 duration-300">
-                    <AvatarWithCosmetic avatarUrl={state.user.avatar} cosmeticId={item.id} size="lg" />
-                  </div>
-                ) : (
-                  <Icon size={48} color={item.color} className="relative z-10 transition-transform group-hover:scale-110 duration-300" />
-                )}
-              </div>
-              
-              <div className="p-6 flex flex-col flex-1">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-[18px] font-bold text-text-primary">{item.name}</h3>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-surface-2 text-text-muted border border-border-base">
-                    {item.type}
-                  </span>
-                </div>
-                <p className="text-[14px] text-text-muted mb-6 leading-relaxed flex-1">
-                  {item.description}
-                </p>
-                
-                <div className="flex items-center justify-between mt-auto">
-                  {!isPurchased && (
-                    <div className="flex items-center gap-1.5 text-[15px] font-bold text-primary">
-                      <Star size={16} className="fill-primary" />
-                      {item.price.toLocaleString()} XP
-                    </div>
-                  )}
-                  {isPurchased && (
-                    <div className="flex items-center gap-1.5 text-[14px] font-bold text-[#6FF7A0]">
-                      <Check size={16} />
-                      Owned
-                    </div>
-                  )}
-                  
-                  {isPurchased ? (
-                    isItemActive(item) ? (
-                      <button 
-                        onClick={() => handleUnequip(item)}
-                        className="px-5 py-2 bg-surface-2 hover:bg-surface-3 border border-border-base text-text-primary rounded-full text-[13px] font-bold transition-all"
-                      >
-                        Unequip
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={() => handleEquip(item)}
-                        className="px-5 py-2 bg-primary text-bg-base hover:opacity-90 shadow-md border border-transparent rounded-full text-[13px] font-bold transition-all"
-                      >
-                        Equip
-                      </button>
-                    )
-                  ) : (
-                    <button 
-                      onClick={() => setSelectedItem(item)}
-                      disabled={currentXP < item.price}
-                      className={`px-5 py-2 rounded-full text-[13px] font-bold transition-all flex items-center gap-2 ${
-                        currentXP >= item.price
-                          ? 'bg-primary text-bg-base hover:opacity-90 shadow-md'
-                          : 'bg-surface-2 text-text-muted cursor-not-allowed border border-border-base'
-                      }`}
-                    >
-                      {currentXP < item.price && <Lock size={14} />}
-                      Buy
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
+              item={item}
+              isPurchased={isPurchased}
+              isItemActive={isItemActive}
+              currentXP={currentXP}
+              handleUnequip={handleUnequip}
+              handleEquip={handleEquip}
+              setSelectedItem={setSelectedItem}
+              avatarUrl={state.user.avatar}
+            />
           );
         })}
       </div>

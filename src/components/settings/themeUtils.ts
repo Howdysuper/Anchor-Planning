@@ -1,4 +1,4 @@
-import { darkThemeVars, lightThemeVars, neonThemeVars, cosmicThemeVars, forestThemeVars } from './themes';
+import { darkThemeVars, lightThemeVars, neonThemeVars, cosmicThemeVars, forestThemeVars, hackerThemeVars } from './themes';
 
 export function getSystemTheme(): 'dark' | 'light' {
   if (typeof window === 'undefined') return 'dark';
@@ -22,7 +22,7 @@ export function applyTheme(theme: string): void {
   const root = document.documentElement;
   
   // Remove all theme classes
-  root.classList.remove('theme-dark', 'theme-light', 'theme-auto', 'theme-neon', 'theme-cosmic', 'theme-forest');
+  root.classList.remove('theme-dark', 'theme-light', 'theme-auto', 'theme-neon', 'theme-cosmic', 'theme-forest', 'theme-hacker');
   
   // Save selection
   localStorage.setItem('anchor_theme', theme);
@@ -42,6 +42,7 @@ export function applyTheme(theme: string): void {
   else if (targetTheme === 'neon') vars = neonThemeVars;
   else if (targetTheme === 'cosmic') vars = cosmicThemeVars;
   else if (targetTheme === 'forest') vars = forestThemeVars;
+  else if (targetTheme === 'hacker') vars = hackerThemeVars;
   
   Object.entries(vars).forEach(([key, value]) => {
     root.style.setProperty(key, value as string);

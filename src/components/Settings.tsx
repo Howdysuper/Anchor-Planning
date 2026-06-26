@@ -13,7 +13,6 @@ import {
   SleepSettings,
   GamificationSettings,
   AppearanceSettings,
-  PrivacySettings,
   FocusSettings,
   DataSettings,
   ConnectionsSettings,
@@ -26,9 +25,7 @@ const CATEGORIES = [
   { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-[#888888]' },
   { id: 'schedule', label: 'Anchor & Schedule', icon: Anchor, color: 'text-[#888888]' },
   { id: 'sleep', label: 'Sleep Intel', icon: Moon, color: 'text-[#888888]' },
-  { id: 'gamification', label: 'Gamification & XP', icon: Trophy, color: 'text-[#888888]' },
   { id: 'appearance', label: 'Appearance', icon: Palette, color: 'text-[#888888]' },
-  { id: 'privacy', label: 'Privacy & Leaderboard', icon: Shield, color: 'text-[#888888]' },
   { id: 'focus', label: 'Focus & Blocking', icon: Focus, color: 'text-[#888888]' },
   { id: 'data', label: 'Data & Storage', icon: Database, color: 'text-[#888888]' },
   { id: 'connections', label: 'Connections', icon: Plug, color: 'text-[#888888]' },
@@ -36,8 +33,8 @@ const CATEGORIES = [
   { id: 'danger', label: 'Danger Zone', icon: AlertTriangle, color: 'text-[#F76F6F]' },
 ];
 
-export default function Settings() {
-  const [activeCategory, setActiveCategory] = useState('profile');
+export default function Settings({ defaultCategory }: { defaultCategory?: string }) {
+  const [activeCategory, setActiveCategory] = useState(defaultCategory || 'profile');
 
   const renderActiveSection = () => {
     switch (activeCategory) {
@@ -47,7 +44,6 @@ export default function Settings() {
       case 'sleep': return <SleepSettings />;
       case 'gamification': return <GamificationSettings />;
       case 'appearance': return <AppearanceSettings />;
-      case 'privacy': return <PrivacySettings />;
       case 'focus': return <FocusSettings />;
       case 'data': return <DataSettings />;
       case 'connections': return <ConnectionsSettings />;

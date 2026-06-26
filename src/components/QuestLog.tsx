@@ -262,6 +262,43 @@ export default function QuestLog() {
   const activeQuests = state.quests.filter(q => !q.done);
   const completedQuests = state.quests.filter(q => q.done);
 
+  const getNextRepeatDate = (currentDateStr: string, repeatDays: string[]) => {
+    const daysMap: Record<string, number> = { 'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6 };
+    let date = new Date(currentDateStr);
+    if (isNaN(date.getTime())) date = new Date();
+    
+    // Check next 7 days
+    for (let i = 1; i <= 7; i++) {
+      date.setDate(date.getDate() + 1);
+      const dayName = Object.keys(daysMap).find(key => daysMap[key] === date.getDay());
+      if (dayName && repeatDays.includes(dayName)) {
+        return date.toISOString().split('T')[0];
+      }
+    }
+    return null;
+  };
+
+  const getQuestStatusInfo = (dueRaw?: string, dueTime?: string) => {
+    if (!dueRaw) return null;
+    const now = new Date();
+    const dueDate = new Date(dueRaw);
+    if (dueTime) {
+      const [h, m] = dueTime.split(':').map(Number);
+      dueDate.setHours(h, m, 0, 0);
+    } else {
+      dueDate.setHours(23, 59, 59, 999);
+    }
+    
+    const diffHours = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    if (diffHours < 0) {
+      return { label: 'Passed Deadline', color: 'bg-[rgba(247,111,111,0.1)] text-[#F76F6F] border border-[rgba(247,111,111,0.2)]' };
+    } else if (diffHours <= 16) {
+      return { label: 'Due Soon', color: 'bg-[rgba(247,160,111,0.1)] text-[#F7A06F] border border-[rgba(247,160,111,0.2)]' };
+    }
+    return null;
+  };
+
   const completeQuest = (id: number, xpValue: number, createdAt?: number) => {
     // 2-hour anti-spam rule
     if (!settings.devMode && createdAt && (Date.now() - createdAt < 2 * 60 * 60 * 1000)) {
@@ -279,9 +316,35 @@ export default function QuestLog() {
       navigator.vibrate([40, 30, 40]);
     }
 
-    setQuests(state.quests.map(q => q.id === id ? { ...q, done: true, completedAtDate: new Date().toISOString().split('T')[0], streak: (q.streak || 0) + 1 } : q));
+    setQuests(prevQuests => {
+      const currentQuest = prevQuests.find(q => q.id === id);
+      const updatedQuests = prevQuests.map(q => q.id === id ? { ...q, done: true, completedAtDate: new Date().toISOString().split('T')[0], streak: (q.streak || 0) + 1 } : q);
+      
+      // Handle repeat
+      if (currentQuest && currentQuest.repeat && currentQuest.repeat.length > 0) {
+        const nextDateRaw = getNextRepeatDate(currentQuest.dueRaw || getTodayStr(), currentQuest.repeat);
+        if (nextDateRaw) {
+          const nextDateObj = new Date(nextDateRaw);
+          const formattedNextDate = nextDateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          
+          updatedQuests.push({
+            ...currentQuest,
+            id: Date.now(),
+            due: formattedNextDate,
+            dueRaw: nextDateRaw,
+            done: false,
+            createdAt: Date.now(),
+            streak: (currentQuest.streak || 0) + 1
+          });
+        }
+      }
+      return updatedQuests;
+    });
+
     updateUser({ xp: state.user.xp + finalXp });
-    addToast(`Quest Completed! +${finalXp} XP`, 'success');
+    const multiplier = 1.0 + (state.user.level - 1) * 0.05;
+    const multipliedXp = Math.ceil(finalXp * multiplier);
+    addToast(`Quest Completed! Got ${multipliedXp} XP (${multiplier.toFixed(2)}XP multiplier)`, 'success');
 
     // Confetti on final active task completion
     if (activeQuests.length === 1 && activeQuests[0].id === id) {
@@ -430,6 +493,17 @@ export default function QuestLog() {
                   <div>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <h4 className="text-[16px] font-bold text-[#F0F0F0] leading-tight">{quest.title}</h4>
+                      {(() => {
+                        const status = getQuestStatusInfo(quest.dueRaw, quest.dueTime);
+                        if (status) {
+                          return (
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${status.color}`}>
+                              {status.label}
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
                       {quest.streak && quest.streak > 1 && (
                         <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[rgba(247,160,111,0.1)] text-[#F7A06F] text-[11px] font-extrabold select-none">
                           <Flame size={12} className="text-[#F7A06F] animate-pulse" />

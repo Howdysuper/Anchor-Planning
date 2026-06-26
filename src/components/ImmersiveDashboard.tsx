@@ -114,7 +114,9 @@ export default function ImmersiveDashboard() {
     const wasAlreadyComplete = localStorage.getItem("anchor_morning_checkin_complete_xp_granted") === todayStr;
     if (!wasAlreadyComplete) {
       updateUser({ xp: state.user.xp + 25 });
-      addToast("Morning Routine Check-In Complete! +25 XP Claimed ⚡", "success");
+      const multiplier = 1.0 + (state.user.level - 1) * 0.05;
+      const multipliedXp = Math.ceil(25 * multiplier);
+      addToast(`Morning Routine Check-In Complete! Got ${multipliedXp} XP (${multiplier.toFixed(2)}XP multiplier) Claimed ⚡`, "success");
       localStorage.setItem("anchor_morning_checkin_complete_xp_granted", todayStr);
     } else {
       addToast("Morning routine habits updated successfully!", "success");
@@ -253,7 +255,9 @@ export default function ImmersiveDashboard() {
         ),
       );
       updateUser({ xp: state.user.xp + finalXp });
-      addToast(`Quest Completed! +${finalXp} XP`, "success");
+      const multiplier = 1.0 + (state.user.level - 1) * 0.05;
+      const multipliedXp = Math.ceil(finalXp * multiplier);
+      addToast(`Quest Completed! Got ${multipliedXp} XP (${multiplier.toFixed(2)}XP multiplier)`, "success");
       setJustCompletedIds((prev) => prev.filter((x) => x !== id));
     }, 600);
   };
@@ -282,7 +286,9 @@ export default function ImmersiveDashboard() {
             navigator.vibrate([40, 30, 40]);
           }
           updateUser({ xp: state.user.xp + xpAward });
-          addToast(`Anchor Completed! +${xpAward} XP`, "success");
+          const multiplier = 1.0 + (state.user.level - 1) * 0.05;
+          const multipliedXp = Math.ceil(xpAward * multiplier);
+          addToast(`Anchor Completed! Got ${multipliedXp} XP (${multiplier.toFixed(2)}XP multiplier)`, "success");
         } else {
           if (typeof navigator !== "undefined" && navigator.vibrate) {
             navigator.vibrate(50);

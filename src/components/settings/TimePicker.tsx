@@ -65,9 +65,8 @@ export function TimePicker({ value, onChange, format = '12hr' }: TimePickerProps
     return val < 10 ? `0${val}` : `${val}`;
   });
 
-  const minutesOptions = Array.from({ length: 12 }, (_, i) => {
-    const val = i * 5;
-    return val < 10 ? `0${val}` : `${val}`;
+  const minutesOptions = Array.from({ length: 60 }, (_, i) => {
+    return i < 10 ? `0${i}` : `${i}`;
   });
 
   return (

@@ -22,14 +22,22 @@ import { ThemeStatusPill } from './ThemeStatusPill';
 import Modal from '../ui/Modal';
 
 // --- SECTION 1: PROFILE & ACCOUNT ===
+import AvatarWithCosmetic from '../ui/AvatarWithCosmetic';
+
 export function ProfileSettings() {
   const { settings, updateSetting, logOutAllSessions } = useSettings();
-  const { updateUser, state, purchaseProSubscription } = useApp();
+  const { updateUser, state, resetStatistics } = useApp();
   const { addToast } = useToast();
   
+  const handleResetStatistics = () => {
+    if (confirm("Are you sure you want to permanently erase your statistics? This cannot be undone.")) {
+      resetStatistics();
+      addToast("Statistics successfully erased.", "success");
+    }
+  };
+
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
 
   // Name states
   const [isEditingName, setIsEditingName] = useState(false);
@@ -61,10 +69,6 @@ export function ProfileSettings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
 
-  // 2FA state
-  const [twoFACaps, setTwoFACaps] = useState(['', '', '', '', '', '']);
-  const [twoFAActivated, setTwoFAActivated] = useState(settings.profile.twoFactorEnabled);
-
   // Username validation simulation (debounce)
   useEffect(() => {
     if (!username) {
@@ -77,18 +81,10 @@ export function ProfileSettings() {
     
     setUsernameStatus('checking');
     const timer = setTimeout(() => {
-      // simulate take check
-      if (cleaned === 'shaurya' || cleaned === 'anchor' || cleaned === 'admin') {
-        setUsernameStatus('available');
-      } else if (cleaned.length < 3) {
+      if (cleaned.length < 3) {
         setUsernameStatus('idle');
       } else {
-        // Taken simulation for odd lengths
-        if (cleaned.length % 2 === 0) {
-          setUsernameStatus('available');
-        } else {
-          setUsernameStatus('taken');
-        }
+        setUsernameStatus('available');
       }
     }, 600);
 
@@ -150,30 +146,6 @@ export function ProfileSettings() {
     setConfirmPassword('');
   };
 
-  const handle2FAInput = (val: string, index: number) => {
-    const next = [...twoFACaps];
-    next[index] = val.substring(0, 1);
-    setTwoFACaps(next);
-
-    // Auto focus next
-    if (val && index < 5) {
-      const nextInput = document.getElementById(`2fa-input-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  const handle2FAConfirm = () => {
-    const fullCode = twoFACaps.join('');
-    if (fullCode.length === 6) {
-      setTwoFAActivated(true);
-      updateSetting('profile.twoFactorEnabled', true);
-      addToast("Two-Factor Authentication Setup Complete!", "success");
-      setIs2FAModalOpen(false);
-    } else {
-      addToast("Please fill all 6 authentication digits", "error");
-    }
-  };
-
   const avatarsList = [
     '⚡', '🧬', '👾', '🚀', '🔮', '🍀', '🍕', '🐱'
   ];
@@ -198,110 +170,9 @@ export function ProfileSettings() {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-[#F0F0F0]">Profile & Account</h2>
-        <p className="text-[14px] text-[#888888] mt-1.5">Manage your character credentials, security levels, plan tiers, and logins.</p>
+        <h2 className="text-2xl font-bold text-[#F0F0F0]">Account</h2>
+        <p className="text-[14px] text-[#888888] mt-1.5">Manage your credentials, security levels, plan tiers, and logins.</p>
       </div>
-
-      <SettingsCard title="Identity Visualizer">
-        {/* Avatar Settings */}
-        <div className="p-5 flex flex-col sm:flex-row items-center gap-6">
-          <div className="relative shrink-0">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#7C6FF7] to-[#1E1133] border-2 border-[#7C6FF7] flex items-center justify-center font-bold text-3xl shadow-[0_0_16px_rgba(124,111,247,0.3)] overflow-hidden">
-              {state.user.avatar && (state.user.avatar.startsWith('data:') || state.user.avatar.includes('/') || state.user.avatar.includes('.')) ? (
-                <img src={state.user.avatar} className="w-full h-full object-cover rounded-full" alt="avatar" />
-              ) : (
-                state.user.avatar
-              )}
-            </div>
-          </div>
-          <div className="flex-1 text-center sm:text-left min-w-0">
-            <h4 className="text-[16px] font-bold text-[#F0F0F0]">{settings.profile.displayName}</h4>
-            <p className="text-[13px] text-[#888888] mt-0.5 font-medium">@{settings.profile.username} &bull; {settings.profile.email}</p>
-            <button
-              onClick={() => setIsPhotoModalOpen(true)}
-              className="mt-3.5 h-[34px] px-4 bg-[#1E1E1E] hover:bg-[#252525] text-xs font-bold text-[#7C6FF7] rounded-[8px] transition-all border border-[rgba(255,255,255,0.04)]"
-            >
-              Modify Photo
-            </button>
-          </div>
-        </div>
-
-        {/* Display Name Row */}
-        <SettingsRow icon={<User size={18} />} title="Display Name" description="How you appear to partners and on logs.">
-          {isEditingName ? (
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={tempName}
-                maxLength={30}
-                onChange={(e) => setTempName(e.target.value)}
-                className="bg-[#1E1E1E] border border-[#7C6FF7] px-3 py-1.5 rounded-[8px] text-[14px] font-semibold text-[#F0F0F0] outline-none max-w-[140px]"
-              />
-              <button onClick={handleSaveName} className="p-2 bg-[rgba(111,247,160,0.12)] text-[#6FF7A0] rounded-lg hover:scale-105 active:scale-95 transition-all">
-                <Check size={14} />
-              </button>
-              <button onClick={() => setIsEditingName(false)} className="p-2 bg-[rgba(247,111,111,0.12)] text-[#F76F6F] rounded-lg hover:scale-105 active:scale-95 transition-all">
-                <X size={14} />
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <span className="text-[14px] text-zinc-300 font-semibold">{settings.profile.displayName}</span>
-              <button onClick={() => setIsEditingName(true)} className="text-xs font-bold text-[#7C6FF7] hover:underline">Edit</button>
-            </div>
-          )}
-        </SettingsRow>
-
-        {/* Username Row */}
-        <SettingsRow icon={<User size={18} />} title="Username" description="Your unique @handle across leaderboard brackets.">
-          <div className="flex flex-col items-start lg:items-end gap-1.5 w-full lg:w-auto">
-            <div className="flex items-center gap-2">
-              <span className="text-[#888888] font-semibold text-[14px]">@</span>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                className="bg-[#1E1E1E] border border-[rgba(255,255,255,0.08)] focus:border-[#7C6FF7] px-3 py-1.5 rounded-[8px] text-[14px] font-semibold text-[#F0F0F0] outline-none max-w-[140px]"
-              />
-              <button 
-                onClick={handleSaveUsername} 
-                disabled={usernameStatus !== 'available' || username === settings.profile.username}
-                className="h-[32px] px-3 bg-[#7C6FF7] disabled:bg-zinc-800 disabled:text-zinc-600 font-bold text-xs rounded-lg text-[#0A0A0A] disabled:cursor-not-allowed transition-all"
-              >
-                Apply
-              </button>
-            </div>
-            {usernameStatus === 'checking' && <span className="text-[11px] text-[#888888]">Simulating availability check...</span>}
-            {usernameStatus === 'available' && username !== settings.profile.username && <span className="text-[11px] text-[#6FF7A0] font-semibold">✓ Username Available</span>}
-            {usernameStatus === 'taken' && <span className="text-[11px] text-[#F76F6F] font-semibold">✗ Handle taken — try {username}42</span>}
-          </div>
-        </SettingsRow>
-
-        {/* Email Address */}
-        <SettingsRow icon={<User size={18} />} title="Email Address" description="Primary login verification and streak reports.">
-          {isEditingEmail ? (
-            <div className="flex items-center gap-2">
-              <input
-                type="email"
-                value={tempEmail}
-                onChange={(e) => setTempEmail(e.target.value)}
-                className="bg-[#1E1E1E] border border-[#7C6FF7] px-3 py-1.5 rounded-[8px] text-[14px] font-semibold text-[#F0F0F0] outline-none max-w-[200px]"
-              />
-              <button onClick={handleSaveEmail} className="p-2 bg-[rgba(111,247,160,0.12)] text-[#6FF7A0] rounded-lg">
-                <Check size={14} />
-              </button>
-              <button onClick={() => setIsEditingEmail(false)} className="p-2 bg-[rgba(247,111,111,0.12)] text-[#F76F6F] rounded-lg">
-                <X size={14} />
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <span className="text-[13px] text-zinc-300 font-medium">{settings.profile.email}</span>
-              <button onClick={() => setIsEditingEmail(true)} className="text-xs font-bold text-[#7C6FF7] hover:underline">Change</button>
-            </div>
-          )}
-        </SettingsRow>
-      </SettingsCard>
 
       <SettingsCard title="Password & Authorization Settings">
         {/* Change Password */}
@@ -312,27 +183,6 @@ export function ProfileSettings() {
           >
             Update Passcode
           </button>
-        </SettingsRow>
-
-        {/* Two-Factor Authentication */}
-        <SettingsRow icon={<Lock size={18} />} title="Two-Factor (2FA)" description="Secure your data with temporary authenticator codes.">
-          <div className="flex items-center gap-4">
-            <span className={`text-xs font-bold ${twoFAActivated ? 'text-[#6FF7A0]' : 'text-[#888888]'}`}>
-              {twoFAActivated ? 'ENABLED' : 'DISABLED'}
-            </span>
-            <SettingsToggle 
-              checked={twoFAActivated} 
-              onChange={(checked) => {
-                if (checked) {
-                  setIs2FAModalOpen(true);
-                } else {
-                  setTwoFAActivated(false);
-                  updateSetting('profile.twoFactorEnabled', false);
-                  addToast("2FA disabled", "info");
-                }
-              }} 
-            />
-          </div>
         </SettingsRow>
 
         {/* Sessions list */}
@@ -365,43 +215,6 @@ export function ProfileSettings() {
         />
       </SettingsCard>
 
-      <SettingsCard title="Subscription details">
-        <SettingsRow icon={<Sparkles size={18} />} title="Plan Tier" description="Standard features provided on basic packages.">
-          <div className="flex items-center gap-3">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-[#7C6FF7] bg-[rgba(124,111,247,0.1)] border border-[rgba(124,111,247,0.25)]">
-              {state.user.proUntil && state.user.proUntil > Date.now() ? "PRO" : settings.profile.plan.toUpperCase()}
-            </span>
-            <button 
-              onClick={() => {
-                const res = purchaseProSubscription();
-                if (res.success) {
-                  updateSetting('profile.plan', 'pro');
-                  addToast(res.message, "success");
-                } else {
-                  addToast(res.message, res.message.includes('already') ? "info" : "error");
-                }
-              }}
-              className="h-[36px] px-4 bg-[#7C6FF7] hover:bg-[#6b5ee6] text-[#0A0A0A] font-bold text-xs rounded-[8px] transition-all"
-            >
-              Buy Pro (7000 XP/wk)
-            </button>
-          </div>
-        </SettingsRow>
-
-        <SettingsRow icon={<Info size={18} />} title="Member Since" description="Initial subscription trigger milestone.">
-          <span className="text-[13px] font-mono text-[#F0F0F0] font-semibold">{settings.profile.memberSince}</span>
-        </SettingsRow>
-
-        <SettingsRow icon={<Copy size={18} />} title="User ID" description="Cryptographic alphanumeric system identifier.">
-          <div className="flex items-center gap-2 font-mono">
-            <span className="text-xs text-[#888888]">UID-2026-AN...</span>
-            <button onClick={copyUserId} className="text-[#7C6FF7] hover:text-[#6b5ee6] transition-colors">
-              <Copy size={14} />
-            </button>
-          </div>
-        </SettingsRow>
-      </SettingsCard>
-
       <SettingsCard title="Actions">
         <SettingsRow icon={<AlertTriangle size={18} className="text-[#F76F6F]" />} title="System Departure" description="Log out of your current session on this device.">
           <button 
@@ -419,57 +232,15 @@ export function ProfileSettings() {
             Log Out
           </button>
         </SettingsRow>
-      </SettingsCard>
-
-      {/* PHOTO SELECTION MODAL */}
-      <Modal isOpen={isPhotoModalOpen} onClose={() => setIsPhotoModalOpen(false)} title="Modify Profile Illustration">
-        <div className="flex flex-col gap-5">
-          <div>
-            <label className="text-[11px] font-bold text-[#888888] uppercase tracking-wider block mb-2 px-1">Select an Avatar/Mascot</label>
-            <div className="grid grid-cols-4 gap-3 bg-[#111111] p-3 rounded-[16px] border border-[rgba(255,255,255,0.06)]">
-              {avatarsList.map((av) => (
-                <button
-                  key={av}
-                  type="button"
-                  onClick={() => {
-                    updateSetting('profile.avatarType', 'mascot');
-                    updateSetting('profile.avatarImage', null);
-                    updateUser({ avatar: av });
-                    setIsPhotoModalOpen(false);
-                    addToast(`Mascot changed to ${av}!`, "success");
-                  }}
-                  className={`h-12 w-full rounded-[12px] text-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer ${
-                    state.user.avatar === av ? 'bg-[rgba(124,111,247,0.25)] border-2 border-[#7C6FF7]' : 'bg-[#1E1E1E] border border-[rgba(255,255,255,0.04)] hover:bg-[#252525]'
-                  }`}
-                >
-                  {av}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button onClick={handleRandomAvatar} className="w-full text-left p-4 hover:bg-[rgba(124,111,247,0.1)] text-[#7C6FF7] border border-[rgba(124,111,247,0.15)] rounded-[12px] font-bold text-[14px] flex items-center justify-between cursor-pointer">
-            <span>Roll Random Mascot Avatar</span>
-            <Sparkles size={16} />
-          </button>
-          
-          <div className="h-px bg-[rgba(255,255,255,0.06)]" />
-          
+        <SettingsRow icon={<AlertTriangle size={18} className="text-error" />} title="Erase Statistics" description="Permanently reset your XP to 0 and Sleep Score to 100.">
           <button 
-            type="button"
-            onClick={() => { 
-              const initials = tempName ? tempName[0].toUpperCase() : 'S';
-              updateSetting('profile.avatarType', 'letter');
-              updateUser({ avatar: initials });
-              setIsPhotoModalOpen(false); 
-              addToast("Reverted to initial letter badge ✓", "info"); 
-            }} 
-            className="w-full text-center py-3.5 bg-transparent text-[#F76F6F] hover:bg-[rgba(247,111,111,0.08)] border border-[rgba(247,111,111,0.2)] rounded-[12px] font-bold text-[14px] transition-all cursor-pointer"
+            onClick={handleResetStatistics}
+            className="h-[36px] px-4 bg-error hover:bg-error/90 text-white font-bold text-xs rounded-[8px] transition-all cursor-pointer shadow-md"
           >
-            Remove Mascot illustration
+            Erase Statistics
           </button>
-        </div>
-      </Modal>
+        </SettingsRow>
+      </SettingsCard>
 
       {/* UPDATE PASSWORD MODAL */}
       <Modal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} title="Update Account Password">
@@ -529,54 +300,6 @@ export function ProfileSettings() {
           >
             Update Password Code
           </button>
-        </div>
-      </Modal>
-
-      {/* TWO FACTOR INLINE MODAL */}
-      <Modal isOpen={is2FAModalOpen} onClose={() => setIs2FAModalOpen(false)} title="Setup Two-Factor Authenticator">
-        <div className="flex flex-col gap-5">
-          <div>
-            <span className="text-xs font-bold text-[#7C6FF7] uppercase tracking-wide">Step 1: Get Authenticator</span>
-            <p className="text-[13px] text-[#888888] mt-1">Download standard mobile token tools such as Google Authenticator, Authy or Duo Mobile from the app stores.</p>
-          </div>
-          <div>
-            <span className="text-xs font-bold text-[#7C6FF7] uppercase tracking-wide">Step 2: Scan QR Key</span>
-            <div className="mt-2 w-full h-[140px] bg-[#1E1E1E] rounded-[16px] border border-dashed border-[rgba(255,255,255,0.08)] flex flex-col items-center justify-center gap-2 p-4 text-center">
-              <Lock className="text-zinc-500" size={24} />
-              <span className="text-xs text-zinc-400 font-bold">QR Cryptokey would appear here</span>
-              <span className="text-[10px] text-zinc-600 font-mono">Secret Ref: ANCHOR-2FA-SEED-X47C</span>
-            </div>
-          </div>
-          <div>
-            <span className="text-xs font-bold text-[#7C6FF7] uppercase tracking-wide">Step 3: Verify temporary code</span>
-            <div className="flex justify-between gap-2.5 mt-2.5">
-              {twoFACaps.map((digit, idx) => (
-                <input
-                  key={idx}
-                  id={`2fa-input-${idx}`}
-                  type="text"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handle2FAInput(e.target.value, idx)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Backspace' && !digit && idx > 0) {
-                      document.getElementById(`2fa-input-${idx - 1}`)?.focus();
-                    }
-                  }}
-                  className="w-11 h-12 bg-[#1E1E1E] border border-[rgba(255,255,255,0.08)] rounded-[10px] text-center text-lg font-mono font-bold text-white focus:border-[#7C6FF7] outline-none"
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-3 mt-2 pr-1">
-            <button onClick={() => setIs2FAModalOpen(false)} className="flex-1 h-[44px] bg-[#1E1E1E] hover:bg-[#252525] hover:text-white rounded-[10px] text-xs font-bold transition-all text-zinc-500">
-              Cancel
-            </button>
-            <button onClick={handle2FAConfirm} className="flex-1 h-[44px] bg-[#7C6FF7] hover:bg-[#6b5ee6] text-[#0A0A0A] rounded-[10px] text-xs font-bold transition-all">
-              Confirm Activation
-            </button>
-          </div>
         </div>
       </Modal>
     </div>
@@ -854,6 +577,39 @@ export function ScheduleSettings() {
   const [newCatColor, setNewCatColor] = useState('#7C6FF7');
   const [editingCatId, setEditingCatId] = useState<number | null>(null);
   const [editingCatText, setEditingCatText] = useState('');
+  const [currentTime, setCurrentTime] = useState('');
+
+  useEffect(() => {
+    const updateTime = () => {
+      try {
+        const tz = settings.schedule.timezone || 'UTC';
+        const formatted = new Date().toLocaleTimeString('en-US', {
+          timeZone: tz,
+          hour12: settings.schedule.timeFormat === '12hr',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        setCurrentTime(formatted);
+      } catch (e) {
+        setCurrentTime(new Date().toLocaleTimeString());
+      }
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, [settings.schedule.timezone, settings.schedule.timeFormat]);
+
+  const timezonesList = [
+    { label: 'UTC (Coordinated Universal Time)', value: 'UTC' },
+    { label: 'EST / EDT (New York / Eastern)', value: 'America/New_York' },
+    { label: 'PST / PDT (Los Angeles / Pacific)', value: 'America/Los_Angeles' },
+    { label: 'GMT / BST (London / Greenwich)', value: 'Europe/London' },
+    { label: 'CET / CEST (Paris / Central European)', value: 'Europe/Paris' },
+    { label: 'IST (India Standard Time)', value: 'Asia/Kolkata' },
+    { label: 'JST (Japan Standard Time)', value: 'Asia/Tokyo' },
+    { label: 'AEST / AEDT (Sydney / Australian)', value: 'Australia/Sydney' },
+  ];
 
   const handleAddNewCategory = () => {
     if (!newCatName.trim()) {
@@ -933,6 +689,24 @@ export function ScheduleSettings() {
             onChange={(val) => updateSetting('schedule.dateFormat', val)}
           />
         </SettingsRow>
+
+        {/* Time Zone */}
+        <SettingsRow icon={<Clock size={18} />} title="System Time Zone" description="Configure active timezone used for scheduling & clocks.">
+          <SettingsDropdown
+            options={timezonesList}
+            value={settings.schedule.timezone || 'UTC'}
+            onChange={(val) => updateSetting('schedule.timezone', val)}
+          />
+        </SettingsRow>
+
+        {/* Live Clock Display */}
+        <div className="mx-5 mb-5 p-4 bg-[#141414] rounded-xl border border-[rgba(255,255,255,0.03)] flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#6FF7A0] animate-pulse" />
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Synchronized Network Time</span>
+          </div>
+          <span className="text-sm font-mono font-bold text-[#6FF7A0]">{currentTime || 'Loading...'}</span>
+        </div>
       </SettingsCard>
 
       <SettingsCard title="Buffer Space Calculations">
@@ -1066,14 +840,6 @@ export function ScheduleSettings() {
 export function SleepSettings() {
   const { settings, updateSetting } = useSettings();
 
-  const handleWeightChange = (key: string, val: number) => {
-    updateSetting(`sleep.scoreWeights.${key}`, val);
-  };
-
-  const weights = settings.sleep.scoreWeights;
-  const weightsSum = weights.duration + weights.consistency + weights.timing + weights.wakeEvents;
-  const isWeightValid = weightsSum === 100;
-
   return (
     <div>
       <div className="mb-8">
@@ -1116,66 +882,6 @@ export function SleepSettings() {
             value={settings.sleep.targetWakeTime} 
             onChange={(val) => updateSetting('sleep.targetWakeTime', val)} 
           />
-        </SettingsRow>
-      </SettingsCard>
-
-      <SettingsCard title="Algorithmic Sleep Index calculations">
-        <div className="p-5 flex flex-col gap-4">
-          <div className="flex justify-between items-center bg-[#1C1C1C] p-3 rounded-xl border border-[rgba(255,255,255,0.03)]">
-            <div>
-              <span className="text-xs font-bold text-zinc-400 block uppercase">Weight Sum Check</span>
-              <span className="text-[11.5px] text-zinc-500 mt-1 block">Adjust parameters weighting sum to equal 100% total.</span>
-            </div>
-            <span className={`text-[15px] font-bold font-mono px-3 py-1 rounded-full ${isWeightValid ? 'text-[#6FF7A0] bg-[rgba(111,247,160,0.06)]' : 'text-[#F76F6F] bg-[rgba(247,111,111,0.06)] animate-pulse'}`}>
-              Sum: {weightsSum} / 100%
-            </span>
-          </div>
-
-          <div className="space-y-4 pt-1">
-            <div>
-              <div className="flex justify-between mb-1.5">
-                <span className="text-[13.5px] font-bold text-zinc-300">Duration Allocation</span>
-                <span className="text-xs text-[#7C6FF7] font-bold font-mono">{weights.duration}%</span>
-              </div>
-              <SettingsSlider min={0} max={100} step={5} value={weights.duration} onChange={(v) => handleWeightChange('duration', v)} formatValue={(v) => `${v}%`} />
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-1.5">
-                <span className="text-[13.5px] font-bold text-zinc-300">Consistency Allocation</span>
-                <span className="text-xs text-[#7C6FF7] font-bold font-mono">{weights.consistency}%</span>
-              </div>
-              <SettingsSlider min={0} max={100} step={5} value={weights.consistency} onChange={(v) => handleWeightChange('consistency', v)} formatValue={(v) => `${v}%`} />
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-1.5">
-                <span className="text-[13.5px] font-bold text-zinc-300">Timing Allocation</span>
-                <span className="text-xs text-[#7C6FF7] font-bold font-mono">{weights.timing}%</span>
-              </div>
-              <SettingsSlider min={0} max={100} step={5} value={weights.timing} onChange={(v) => handleWeightChange('timing', v)} formatValue={(v) => `${v}%`} />
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-1.5">
-                <span className="text-[13.5px] font-bold text-zinc-300">Wake Interrupt Events</span>
-                <span className="text-xs text-[#7C6FF7] font-bold font-mono">{weights.wakeEvents}%</span>
-              </div>
-              <SettingsSlider min={0} max={100} step={5} value={weights.wakeEvents} onChange={(v) => handleWeightChange('wakeEvents', v)} formatValue={(v) => `${v}%`} />
-            </div>
-          </div>
-        </div>
-      </SettingsCard>
-
-      <SettingsCard title="Smart Alarms (Mobile Client)">
-        <SettingsRow 
-          icon={<Moon size={18} />} 
-          title="Optimal Phase Sunrise simulation" 
-          description="Alarms will trigger soft light and vibration at your shallowest sleep phase."
-        >
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#F7A06F] bg-[rgba(247,160,111,0.06)] border border-[rgba(247,160,111,0.2)]">
-            Pro Feature Preview
-          </span>
         </SettingsRow>
       </SettingsCard>
     </div>
@@ -1347,68 +1053,7 @@ export function AppearanceSettings() {
         </div>
       </SettingsCard>
 
-      <SettingsCard title="Spacing & Typography scale">
-        {/* Sidebar width */}
-        <SettingsRow icon={<Palette size={18} />} title="Sidebar Width" description="Adjust desktop/wide navigation panels container sizing.">
-          <SettingsSlider
-            min={220}
-            max={320}
-            step={5}
-            value={settings.appearance.sidebarWidth}
-            onChange={(v) => updateSetting('appearance.sidebarWidth', v)}
-            formatValue={(v) => `${v}px`}
-          />
-        </SettingsRow>
 
-        {/* Content density */}
-        <SettingsRow icon={<Palette size={18} />} title="Interface Spacing Density" description="Modify padding spacing parameters across list widgets.">
-          <div className="flex gap-2">
-            {[
-              { id: 'compact', label: 'Compact' },
-              { id: 'default', label: 'Default' },
-              { id: 'comfortable', label: 'Comfortable' }
-            ].map((dn) => (
-              <button
-                key={dn.id}
-                onClick={() => updateSetting('appearance.density', dn.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-                  settings.appearance.density === dn.id
-                    ? 'bg-[rgba(124,111,247,0.12)] text-[#7C6FF7] border-[#7C6FF7]'
-                    : 'bg-[#1E1E1E] text-zinc-500 border-transparent hover:text-white'
-                }`}
-              >
-                {dn.label}
-              </button>
-            ))}
-          </div>
-        </SettingsRow>
-
-        {/* Font size */}
-        <SettingsRow icon={<Palette size={18} />} title="Main Font Size" description="Controls text scale. Body elements scale linearly.">
-          <SettingsSlider
-            min={12}
-            max={20}
-            step={1}
-            value={settings.appearance.fontSize}
-            onChange={(v) => updateSetting('appearance.fontSize', v)}
-            formatValue={(v) => `${v}px`}
-          />
-        </SettingsRow>
-
-        {/* Font Family selection */}
-        <SettingsRow icon={<Palette size={18} />} title="Interface Font Family" description="Configure typography font matching characteristics.">
-          <SettingsDropdown
-            options={[
-              { label: 'Inter Sans-Serif', value: 'inter' },
-              { label: 'System Default Sans', value: 'system' },
-              { label: 'JetBrains Mono Code', value: 'mono' },
-              { label: 'System Rounded Sans', value: 'rounded' },
-            ]}
-            value={settings.appearance.fontFamily}
-            onChange={(val) => updateSetting('appearance.fontFamily', val)}
-          />
-        </SettingsRow>
-      </SettingsCard>
 
       <SettingsCard title="UI animation engines">
         {/* Enable animations */}
@@ -1430,137 +1075,6 @@ export function AppearanceSettings() {
     </div>
   );
 }
-
-
-// --- SECTION 7: PRIVACY & LEADERBOARD ===
-export function PrivacySettings() {
-  const { settings, updateSetting } = useSettings();
-  const [blockedInput, setBlockedInput] = useState('');
-
-  const isLeaderboardDimmable = !settings.privacy.leaderboardParticipation;
-
-  const handleAddBlock = () => {
-    if (!blockedInput.trim()) return;
-    updateSetting('privacy.blockedUsers', [...settings.privacy.blockedUsers, blockedInput.trim()]);
-    setBlockedInput('');
-  };
-
-  const handleRemoveBlock = (name: string) => {
-    updateSetting('privacy.blockedUsers', settings.privacy.blockedUsers.filter(u => u !== name));
-  };
-
-  return (
-    <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-[#F0F0F0]">Privacy & Leaderboard</h2>
-        <p className="text-[14px] text-[#888888] mt-1.5 font-medium">Control leaderboard presence, sharing metadata, and block list filters.</p>
-      </div>
-
-      <div className="relative p-[1px] rounded-[24px] bg-gradient-to-br from-[#7C6FF7]/30 to-[rgba(255,255,255,0.01)] mb-6 shadow-xl">
-        <div className="bg-[#141414] rounded-[23px] p-5 flex items-center justify-between gap-4">
-          <div>
-            <h3 className="text-[16px] font-bold text-[#F0F0F0]">Participate in Leaderboard</h3>
-            <p className="text-[13px] text-[#888888] mt-0.5 leading-relaxed font-semibold">Join public leaderboard brackets to match challenges with friend groups.</p>
-          </div>
-          <SettingsToggle checked={settings.privacy.leaderboardParticipation} onChange={(checked) => updateSetting('privacy.leaderboardParticipation', checked)} />
-        </div>
-      </div>
-
-      <div className={isLeaderboardDimmable ? 'opacity-50 pointer-events-none transition-opacity duration-300' : 'transition-opacity duration-300'}>
-        <SettingsCard title="Leaderboard visibility options">
-          {/* Display Name style */}
-          <SettingsRow icon={<Shield size={18} />} title="Leaderboard Alias" description="Adjust your visible username alias layout.">
-            <div className="flex gap-2">
-              {[
-                { id: 'username', label: 'Username' },
-                { id: 'initials', label: 'Initials' },
-                { id: 'anonymous', label: 'Anonymous' }
-              ].map((al) => (
-                <button
-                  key={al.id}
-                  onClick={() => updateSetting('privacy.leaderboardDisplayName', al.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-                    settings.privacy.leaderboardDisplayName === al.id
-                      ? 'bg-[rgba(124,111,247,0.12)] text-[#7C6FF7] border-[#7C6FF7]'
-                      : 'bg-[#1E1E1E] text-zinc-500 border-transparent hover:text-white'
-                  }`}
-                >
-                  {al.label}
-                </button>
-              ))}
-            </div>
-          </SettingsRow>
-
-          {/* XP Share */}
-          <SettingsRow icon={<Shield size={18} />} title="Share Weekly XP" description="Allows friend groups to track your current levels accumulation rate.">
-            <SettingsToggle checked={settings.privacy.shareXP} onChange={(c) => updateSetting('privacy.shareXP', c)} />
-          </SettingsRow>
-
-          {/* Streak Share */}
-          <SettingsRow icon={<Shield size={18} />} title="Share Streak Days" description="Allows friend cohorts to see your active check-in streak multipliers.">
-            <SettingsToggle checked={settings.privacy.shareStreak} onChange={(c) => updateSetting('privacy.shareStreak', c)} />
-          </SettingsRow>
-
-          {/* Quests Completed Share */}
-          <SettingsRow icon={<Shield size={18} />} title="Share Quests Totals" description="Allows friend circles to see your accumulated task completion progress.">
-            <SettingsToggle checked={settings.privacy.shareQuests} onChange={(c) => updateSetting('privacy.shareQuests', c)} />
-          </SettingsRow>
-        </SettingsCard>
-
-        <SettingsCard title="Leaderboard Block Filters">
-          <div className="p-5 flex flex-col gap-4">
-            <span className="text-xs font-bold text-zinc-400 block uppercase">Blocked Users List</span>
-            <div className="flex gap-3">
-              <input
-                type="text"
-                placeholder="Type member handle (e.g. rocketguy42)..."
-                value={blockedInput}
-                onChange={(e) => setBlockedInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddBlock()}
-                className="flex-1 bg-[#1E1E1E] border border-[rgba(255,255,255,0.08)] px-3 text-xs font-medium rounded-xl outline-none text-white focus:border-[#7C6FF7]"
-              />
-              <button onClick={handleAddBlock} className="px-4 bg-[#7C6FF7] text-[#0A0A0A] font-bold text-xs rounded-xl hover:scale-105 active:scale-95 transition-all">Block</button>
-            </div>
-
-            {settings.privacy.blockedUsers.length > 0 ? (
-              <div className="space-y-2 pt-1 animate-in fade-in duration-200">
-                {settings.privacy.blockedUsers.map((name) => (
-                  <div key={name} className="flex justify-between items-center bg-[#181818] px-3.5 py-2.5 rounded-xl border border-[rgba(255,255,255,0.03)] text-xs font-bold">
-                    <span className="text-zinc-300">@{name}</span>
-                    <button onClick={() => handleRemoveBlock(name)} className="text-[#888888] hover:text-[#F76F6F]" title="Unblock user"><X size={14} /></button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <span className="text-xs font-semibold text-[#888888] italic">No blocked users found.</span>
-            )}
-          </div>
-        </SettingsCard>
-      </div>
-
-      <SettingsCard title="Platform Data privacy options">
-        {/* Usage Analytics */}
-        <SettingsRow icon={<Shield size={18} />} title="Anonymized Usage reports" description="Permit dispatch of logs info reports for performance diagnostics.">
-          <SettingsToggle checked={settings.privacy.analyticsEnabled} onChange={(c) => updateSetting('privacy.analyticsEnabled', c)} />
-        </SettingsRow>
-
-        {/* Profile Visibility */}
-        <SettingsRow icon={<Shield size={18} />} title="Routine Visibility scope" description="Determines who gets to parse your active quest lists.">
-          <SettingsDropdown
-            options={[
-              { label: 'Friends Only', value: 'friends' },
-              { label: 'Publicly Shared', value: 'public' },
-              { label: 'Private (Keep Offline)', value: 'private' },
-            ]}
-            value={settings.privacy.profileVisibility}
-            onChange={(val) => updateSetting('privacy.profileVisibility', val)}
-          />
-        </SettingsRow>
-      </SettingsCard>
-    </div>
-  );
-}
-
 
 // --- SECTION 8: FOCUS & BLOCKING ===
 export function FocusSettings() {
@@ -2002,6 +1516,8 @@ export function AboutSettings() {
   
   const [activeTabHelp, setActiveTabHelp] = useState<string | null>(null);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isTOSOpen, setIsTOSOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState('bug');
   const [feedbackText, setFeedbackText] = useState('');
   const [ratingVal, setRatingVal] = useState(0);
@@ -2210,6 +1726,76 @@ export function AboutSettings() {
           </button>
         </div>
       </Modal>
+
+      <SettingsCard title="Legal & Agreements">
+        <div className="p-4 flex gap-3 flex-wrap">
+          <button 
+            onClick={() => setIsTOSOpen(true)}
+            className="flex-1 min-w-[140px] h-10 bg-[#1E1E1E] hover:bg-[#252525] hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-zinc-400 border border-[rgba(255,255,255,0.04)]"
+          >
+            <Shield size={14} className="text-[#7C6FF7]" /> Terms of Service Agreement
+          </button>
+          
+          <button 
+            onClick={() => setIsPrivacyOpen(true)}
+            className="flex-1 min-w-[140px] h-10 bg-[#1E1E1E] hover:bg-[#252525] hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-zinc-400 border border-[rgba(255,255,255,0.04)]"
+          >
+            <Shield size={14} className="text-[#7C6FF7]" /> Data Privacy Policy
+          </button>
+        </div>
+      </SettingsCard>
+
+      {/* TERMS OF SERVICE MODAL */}
+      <Modal isOpen={isTOSOpen} onClose={() => setIsTOSOpen(false)} title="Terms of Service Agreement">
+        <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto pr-2 leading-relaxed text-zinc-300 text-[13px]">
+          <p className="font-bold text-white text-[14px]">Welcome to Anchor!</p>
+          <p>By using Anchor (the "App"), you agree to follow and be bound by these Terms of Service. Please read them carefully.</p>
+          
+          <h4 className="font-bold text-white uppercase tracking-wider text-[11px] mt-2">1. Use of the Service</h4>
+          <p>Anchor is designed to provide visual circadian rhythm optimization, daily routine checklists, sleep tracking algorithms, and habit-building mechanics. You agree to use this application for personal, non-commercial purposes only.</p>
+          
+          <h4 className="font-bold text-white uppercase tracking-wider text-[11px] mt-2">2. Local Storage and Syncing</h4>
+          <p>The App saves your task lists, sleep schedules, XP totals, and personalized preferences directly on your local device storage, and optionally syncs via our cloud database. Deleting browser storage may result in local data clearance if cloud synchronization is inactive.</p>
+          
+          <h4 className="font-bold text-white uppercase tracking-wider text-[11px] mt-2">3. Accuracy of Data</h4>
+          <p>The habit reminders, sleep optimization indexes, and scheduling buffers provided by Anchor are designed for educational and motivational purposes. We make no guarantees about absolute accuracy or scheduling perfection.</p>
+          
+          <h4 className="font-bold text-white uppercase tracking-wider text-[11px] mt-2">4. Modifications to Terms</h4>
+          <p>We reserve the right to update these terms at any time. Continued usage of the App after updates constitutes complete acceptance of the revised agreements.</p>
+        </div>
+        <button 
+          onClick={() => setIsTOSOpen(false)}
+          className="mt-4 h-[44px] w-full bg-[#1E1E1E] hover:bg-[#252525] text-white rounded-[12px] text-xs font-bold transition-all"
+        >
+          I Accept terms
+        </button>
+      </Modal>
+
+      {/* PRIVACY POLICY MODAL */}
+      <Modal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} title="Data Privacy Policy">
+        <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto pr-2 leading-relaxed text-zinc-300 text-[13px]">
+          <p className="font-bold text-white text-[14px]">Your Privacy is our Priority</p>
+          <p>This Privacy Policy explains how we gather, utilize, protect, and manage user profile configurations inside the Anchor ecosystem.</p>
+          
+          <h4 className="font-bold text-white uppercase tracking-wider text-[11px] mt-2">1. Personal Information Collected</h4>
+          <p>Anchor collects display names, user initials, habit completions, sleeps and waking logs, and device configurations. We do NOT harvest or sell any personal data to advertising agents or third-party trackers.</p>
+          
+          <h4 className="font-bold text-white uppercase tracking-wider text-[11px] mt-2">2. Cloud Data Storage</h4>
+          <p>If cloud syncing is active, your routines and gamification profiles are kept secure in a secure cloud database, encrypted in transit and at rest. These servers only serve user-authorized devices owned by you.</p>
+          
+          <h4 className="font-bold text-white uppercase tracking-wider text-[11px] mt-2">3. Third-Party Integrations</h4>
+          <p>No outside SDKs, tracking pixels, or diagnostic beacons are loaded within Anchor, maintaining total isolation and bulletproof security for your schedules.</p>
+          
+          <h4 className="font-bold text-white uppercase tracking-wider text-[11px] mt-2">4. User Rights</h4>
+          <p>You can erase all database-held metadata and local profiles instantly by accessing the "Danger Zone" segment inside our settings panel.</p>
+        </div>
+        <button 
+          onClick={() => setIsPrivacyOpen(false)}
+          className="mt-4 h-[44px] w-full bg-[#1E1E1E] hover:bg-[#252525] text-white rounded-[12px] text-xs font-bold transition-all"
+        >
+          Dismiss Policy
+        </button>
+      </Modal>
     </div>
   );
 }
@@ -2217,15 +1803,21 @@ export function AboutSettings() {
 
 // --- SECTION 12: DANGER ZONE ===
 export function DangerZoneSettings() {
-  const { resetProgress, clearAllData, settings, updateSetting } = useSettings();
-  const { state, updateUser } = useApp();
+  const { resetProgress, clearAllData, deleteAccountData, settings, updateSetting } = useSettings();
+  const { state, updateUser, resetStatistics } = useApp();
   const { addToast } = useToast();
   
-  const [activeModal, setActiveModal] = useState<'reset' | 'clear' | 'delete' | 'devMode' | null>(null);
+  const [activeModal, setActiveModal] = useState<'reset' | 'clear' | 'delete' | 'resetStats' | 'devMode' | null>(null);
   const [devPassword, setDevPassword] = useState('');
 
   const handleResetConfirm = () => {
     resetProgress();
+    setActiveModal(null);
+  };
+
+  const handleResetStatsConfirm = () => {
+    resetStatistics();
+    addToast("XP reset to zero & sleep statistics erased!", "success");
     setActiveModal(null);
   };
 
@@ -2235,7 +1827,7 @@ export function DangerZoneSettings() {
   };
 
   const handleDeleteConfirm = () => {
-    clearAllData();
+    deleteAccountData();
     setActiveModal(null);
   };
   
@@ -2300,6 +1892,25 @@ export function DangerZoneSettings() {
           </button>
         </div>
 
+        {/* Reset XP and Sleep Statistics */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-5 border-b border-[#F76F6F]/10 w-full">
+          <div className="flex items-start gap-3.5 flex-1 max-w-xl">
+            <div className="text-[#F76F6F] mt-1 shrink-0"><AlertTriangle size={18} /></div>
+            <div>
+              <h4 className="text-[15px] font-bold text-white">Reset XP & Sleep Statistics</h4>
+              <p className="text-[13px] text-[#888888] mt-1 leading-relaxed">
+                Sets your level progress and total XP back to zero, and wipes all sleep logs and historic statistics.
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setActiveModal('resetStats')}
+            className="w-full lg:w-auto h-[44px] px-6 shrink-0 bg-[#F76F6F]/10 hover:bg-[#F76F6F]/20 text-white border border-[#F76F6F]/30 rounded-xl text-[13px] font-bold transition-all flex items-center justify-center cursor-pointer select-none"
+          >
+            Reset XP & Sleep Stats
+          </button>
+        </div>
+
         {/* Clear All Data */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-5 border-b border-[#F76F6F]/10 w-full">
           <div className="flex items-start gap-3.5 flex-1 max-w-xl">
@@ -2307,7 +1918,7 @@ export function DangerZoneSettings() {
             <div>
               <h4 className="text-[15px] font-bold text-white">Clear Everything</h4>
               <p className="text-[13px] text-[#888888] mt-1 leading-relaxed">
-                Clears all custom timeline elements, schedules category tags, brain logs notes, and interface configuration files.
+                Clears all custom timeline elements, schedules category tags, brain logs notes, and interface configuration files. Profile details and onboarding status are fully preserved.
               </p>
             </div>
           </div>
@@ -2351,13 +1962,23 @@ export function DangerZoneSettings() {
       />
 
       <ConfirmationModal
+        isOpen={activeModal === 'resetStats'}
+        onClose={() => setActiveModal(null)}
+        onConfirm={handleResetStatsConfirm}
+        confirmWord="RESET"
+        title="Reset XP & Sleep Statistics"
+        description="Warning: This action will reset your accumulated XP and level progress to zero, and erase your sleep tracking history logs and debt statistics. This is irreversible."
+        actionLabel="Verify Reset Stats"
+      />
+
+      <ConfirmationModal
         isOpen={activeModal === 'clear'}
         onClose={() => setActiveModal(null)}
         onConfirm={handleClearConfirm}
         confirmWord="DELETE"
-        title="Nuke Staging Database Profiles"
-        description="Warning: This operation cleared your schedules category chips, daily lists checks, local parameters variables, and onboarding history completely. This is irreversible."
-        actionLabel="Nuke All Local Data"
+        title="Clear Custom Records"
+        description="Warning: This operation will clear your custom timelines, category tags, checklists, and activity history. Your profile display name, avatar, and onboarding completions are fully preserved."
+        actionLabel="Clear Custom Data"
       />
 
       <ConfirmationModal

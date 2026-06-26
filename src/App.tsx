@@ -56,6 +56,7 @@ function AppContent() {
       case 'sleep-overview': return <StatisticsPage defaultTab="sleep-overview" />;
       case 'stats': return <StatisticsPage />;
       case 'settings': return <Settings />;
+      case 'settings-about': return <Settings defaultCategory="about" />;
       default: return <ImmersiveDashboard />;
     }
   };

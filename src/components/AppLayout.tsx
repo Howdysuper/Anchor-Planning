@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { useToast } from '../contexts/ToastContext';
+import LevelUpCelebration from './LevelUpCelebration';
 import { 
   Home, 
   Anchor, 
@@ -18,7 +19,8 @@ import {
   Inbox,
   MessageSquareText,
   X,
-  ShoppingCart
+  ShoppingCart,
+  Vault
 } from 'lucide-react';
 import { logout } from '../lib/firebase';
 import { ThemeStatusPill } from './settings/ThemeStatusPill';
@@ -26,12 +28,39 @@ import Modal from './ui/Modal';
 import { ChatBotWidget } from './ChatBotModal';
 import { AnimatePresence, motion } from 'motion/react';
 import AvatarWithCosmetic from './ui/AvatarWithCosmetic';
+import { EditProfileModal } from './EditProfileModal';
+
+const VaultIcon = (props: any) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="1" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    {...props}
+  >
+    {/* Outer frame - smaller */}
+    <rect x="5" y="6" width="14" height="12" rx="1.5" />
+    {/* Inner door - smaller */}
+    <rect x="8" y="9" width="8" height="6" rx="0.5" />
+    {/* Combination Dial - smaller */}
+    <circle cx="12" cy="12" r="1.5" />
+    <path d="M12 10.5v0.5" />
+    <path d="M12 13v0.5" />
+    <path d="M10.5 12h0.5" />
+    <path d="M13 12h0.5" />
+    {/* Hinges - smaller */}
+    <path d="M5 9h1" />
+    <path d="M5 15h1" />
+  </svg>
+);
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Home', icon: Home },
   { id: 'loadout', label: 'Loadout', icon: Backpack },
   { id: 'quests', label: 'Tasks', icon: Inbox },
-  { id: 'shop', label: 'Vault', icon: ShoppingCart },
+  { id: 'shop', label: 'Vault', icon: VaultIcon },
   { id: 'stats', label: 'Analytics', icon: BarChart3 },
 ];
 
@@ -40,8 +69,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { addToast } = useToast();
   
   const [profileOpen, setProfileOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [showCaptureModal, setShowCaptureModal] = useState(false);
   const [captureText, setCaptureText] = useState('');
+
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [levelUpInfo, setLevelUpInfo] = useState<{ level: number; multiplier: number } | null>(null);
+
+  React.useEffect(() => {
+    const handleLevelUp = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setLevelUpInfo({
+          level: customEvent.detail.level,
+          multiplier: customEvent.detail.multiplier
+        });
+        setShowLevelUp(true);
+      }
+    };
+    window.addEventListener('anchor-level-up', handleLevelUp);
+    return () => window.removeEventListener('anchor-level-up', handleLevelUp);
+  }, []);
 
   const activeTab = state.currentPage;
 
@@ -122,7 +170,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {profileOpen && (
             <div className="absolute bottom-full mb-4 left-0 w-[170px] xl:w-full bg-surface-2 border border-border-strong rounded-[16px] shadow-lg p-2 z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
                <button onClick={() => { setProfileOpen(false); navigate('settings'); }} className="w-full text-left px-4 py-2.5 hover:bg-surface-3 rounded-[8px] text-[14px] font-bold transition-colors">Settings</button>
-               <button onClick={() => { setProfileOpen(false); addToast('Profile edit coming soon!', 'info'); }} className="w-full text-left px-4 py-2.5 hover:bg-surface-3 rounded-[8px] text-[14px] font-bold transition-colors">Edit Profile</button>
+               <button onClick={() => { setProfileOpen(false); setIsEditProfileOpen(true); }} className="w-full text-left px-4 py-2.5 hover:bg-surface-3 rounded-[8px] text-[14px] font-bold transition-colors">Edit Profile</button>
+               <button onClick={() => { setProfileOpen(false); navigate('settings-about'); }} className="w-full text-left px-4 py-2.5 hover:bg-surface-3 rounded-[8px] text-[14px] font-bold transition-colors">About & Help</button>
                <div className="h-px bg-border-base my-1"></div>
                <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 hover:bg-error/10 text-error rounded-[8px] text-[14px] font-bold transition-colors">Log Out</button>
             </div>
@@ -138,12 +187,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <span className="font-bold text-[15px] truncate max-w-[100px]">{state.user.name}</span>
                 <ThemeStatusPill />
               </div>
-              <div className="flex items-center gap-2 mt-0.5" title={`${state.user.xp} / ${state.user.xpToNextLevel} XP to Level ${state.user.level + 1}`}>
-                 <span className="text-[11px] font-bold bg-surface px-2 py-0.5 rounded-[4px] text-primary uppercase tracking-wider border border-primary/20">LV {state.user.level}</span>
-                 <div className="w-[60px] h-[4px] bg-surface-2 rounded-full overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: `${(state.user.xp / state.user.xpToNextLevel) * 100}%` }}></div>
-                 </div>
-              </div>
+              {(() => {
+                const currentProgressXp = state.user.levelProgressXp !== undefined ? state.user.levelProgressXp : state.user.xp;
+                const multiplier = 1.0 + (state.user.level - 1) * 0.05;
+                return (
+                  <div className="flex items-center gap-2 mt-0.5" title={`${currentProgressXp} / ${state.user.xpToNextLevel} XP to Level ${state.user.level + 1} • ${multiplier.toFixed(2)}x Multiplier`}>
+                     <span className="text-[11px] font-bold bg-surface px-2 py-0.5 rounded-[4px] text-primary uppercase tracking-wider border border-primary/20">LV {state.user.level}</span>
+                     <div className="w-[60px] h-[4px] bg-surface-2 rounded-full overflow-hidden flex-1 max-w-[80px]">
+                        <div className="h-full bg-primary transition-all duration-300" style={{ width: `${Math.min(100, (currentProgressXp / (state.user.xpToNextLevel || 100)) * 100)}%` }}></div>
+                     </div>
+                     <span className="text-[10px] font-bold bg-amber-500/10 px-1.5 py-0.5 rounded text-amber-500 border border-amber-500/20 whitespace-nowrap">{multiplier.toFixed(2)}x</span>
+                  </div>
+                );
+              })()}
             </div>
             <div className="hidden xl:flex shrink-0 p-1 mr-1 text-text-muted group-hover:text-text-primary transition-colors">
               <ChevronDown size={16} className={`transition-transform duration-300 ${profileOpen ? 'rotate-180' : ''}`} />
@@ -162,12 +218,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <ChatBotWidget />
 
+      <EditProfileModal isOpen={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)} />
+
       {/* MOBILE BOTTOM NAVIGATION */}
       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-border-base h-[84px] px-2 pb-safe grid grid-cols-5 items-center justify-items-center z-40">
         {[
           { id: 'dashboard', label: 'Home', icon: Home },
           { id: 'quests', label: 'Tasks', icon: Sword },
-          { id: 'shop', label: 'Vault', icon: ShoppingCart },
+          { id: 'shop', label: 'Vault', icon: VaultIcon },
           { id: 'stats', label: 'Analytics', icon: BarChart3 },
         ].map((item) => {
           const isActive = activeTab === item.id;
@@ -195,6 +253,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
            <span className="text-[10px] font-bold truncate px-1">Profile</span>
         </button>
       </nav>
+
+      <LevelUpCelebration 
+        isOpen={showLevelUp} 
+        onClose={() => setShowLevelUp(false)} 
+        level={levelUpInfo?.level || 1} 
+        multiplier={levelUpInfo?.multiplier || 1.0} 
+      />
     </div>
   );
 }
