@@ -322,9 +322,10 @@ export default function ImmersiveDashboard() {
             Good morning, {state.user.name}
           </h1>
           <p className="text-[16px] text-[#888888] font-medium mt-1">
-            You have{" "}
-            {state.anchors.filter((a) => a.status === "upcoming").length}{" "}
-            anchors lined up for today.
+            {state.anchors.filter((a) => a.status === "upcoming").length > 0
+              ? `You have ${state.anchors.filter((a) => a.status === "upcoming").length} tasks lined up for today.`
+              : "Congratulations, You're all caught up!"
+            }
           </p>
         </div>
         <div 
