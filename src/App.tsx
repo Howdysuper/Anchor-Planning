@@ -50,7 +50,7 @@ function AppContent() {
       case 'dashboard': return <ImmersiveDashboard />;
       case 'loadout': return <Loadout />;
       case 'braindump': return <BrainDump />;
-      case 'quests': return <QuestLog />;
+      case 'tasks': return <QuestLog />;
       case 'shop': return <Shop />;
       case 'sleep': return <StatisticsPage />;
       case 'sleep-overview': return <StatisticsPage defaultTab="sleep-overview" />;

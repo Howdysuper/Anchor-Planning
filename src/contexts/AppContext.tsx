@@ -37,7 +37,7 @@ export type AppState = {
     sleepStartTime: number | null;
   };
   anchors: any[];
-  quests: any[];
+  tasks: any[];
   brainDumps: any[];
   loadout: { items: any[] };
   currentPage: string;
@@ -61,7 +61,7 @@ const initialState: AppState = {
     savedStreakDays: 1,
     streak_v3_resetted: true,
     onboarded: false,
-    xpPool: 100,
+    xpPool: 150,
     xpPoolLastResetDate: new Date().toISOString().split('T')[0],
     loadoutLastResetDate: new Date().toISOString().split('T')[0],
     purchasedItems: [],
@@ -77,7 +77,7 @@ const initialState: AppState = {
     sleepStartTime: null,
   },
   anchors: [],
-  quests: [],
+  tasks: [],
   brainDumps: [],
   loadout: { items: [] },
   currentPage: "dashboard"
@@ -89,7 +89,7 @@ interface AppContextType {
   updateUser: (updates: Partial<AppState['user']>) => void;
   updateSleep: (updates: Partial<AppState['sleep']>) => void;
   updateLoadout: (updates: Partial<AppState['loadout']>) => void;
-  setQuests: (quests: any[]) => void;
+  setTasks: (tasks: any[]) => void;
   setBrainDumps: (dumps: any[]) => void;
   setAnchors: (anchors: any[]) => void;
   navigate: (page: string) => void;
@@ -289,7 +289,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Track visits and update streak
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const today = new Date(now.getTime() - (1 * 60 * 60 * 1000)).toISOString().split('T')[0];
     const prevVisits = state.user.totalAppVisits || 0;
     const lastVisit = state.user.lastVisitDate;
     let currentStreak = state.user.streakDays;
@@ -318,7 +319,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       
       // Daily XP Pool reset
       if (xpPoolLastResetDate !== today) {
-        xpPool = 100;
+        xpPool = 150;
         xpPoolLastResetDate = today;
       }
 
@@ -730,7 +731,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
   const updateSleep = (updates: Partial<AppState['sleep']>) => setState(prev => ({ ...prev, sleep: { ...prev.sleep, ...updates } }));
   const updateLoadout = (updates: Partial<AppState['loadout']>) => setState(prev => ({ ...prev, loadout: { ...prev.loadout, ...updates } }));
-  const setQuests = (quests: any[]) => setState(prev => ({ ...prev, quests }));
+  const setTasks = (tasks: any[]) => setState(prev => ({ ...prev, tasks }));
   const setBrainDumps = (brainDumps: any[]) => setState(prev => ({ ...prev, brainDumps }));
   const setAnchors = (anchors: any[]) => setState(prev => ({ ...prev, anchors }));
   const navigate = (page: string) => setState(prev => ({ ...prev, currentPage: page }));
@@ -779,7 +780,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       updateUser,
       updateSleep,
       updateLoadout,
-      setQuests,
+      setTasks,
       setBrainDumps,
       setAnchors,
       navigate,

@@ -52,7 +52,7 @@ export default function Loadout() {
     });
 
     if (xpPool > 0) {
-      const earned = Math.min(15, xpPool);
+      const earned = Math.min(25, xpPool);
       const multiplier = 1.0 + (state.user.level - 1) * 0.05;
       const multipliedXp = Math.ceil(earned * multiplier);
       addToast(`Got ${multipliedXp} XP (${multiplier.toFixed(2)}XP multiplier) for loadout prep!`, 'success');
@@ -127,15 +127,6 @@ export default function Loadout() {
                </span>
              </div>
           </div>
-          {activeTab !== 'School Day' && (
-            <button 
-              onClick={resetAll}
-              className="h-[50px] md:h-[44px] px-4 bg-surface-2 hover:bg-surface-3 border border-border-base text-text-primary rounded-[12px] font-bold text-sm transition-colors flex items-center gap-2"
-            >
-              <RotateCcw size={16} />
-              <span className="hidden sm:inline">Reset All</span>
-            </button>
-          )}
         </div>
       </header>
 
@@ -162,7 +153,7 @@ export default function Loadout() {
         <div className="mb-8">
           <div className="flex justify-between items-end mb-3">
              <span className="text-[13px] font-bold text-text-muted uppercase tracking-wide">Preparation limits</span>
-             <span className="text-[14px] font-bold text-text-primary tabular-nums">{checkedCount} / {tabItems.length} Ready</span>
+             <span className="text-[14px] font-bold text-text-primary tabular-nums">{checkedCount} / {tabItems.length} Remembered</span>
           </div>
           <div className="h-2 w-full bg-surface-2 rounded-full overflow-hidden">
             <motion.div 

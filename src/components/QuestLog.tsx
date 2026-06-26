@@ -9,16 +9,16 @@ import RepeatModal from './RepeatModal';
 import Modal from './ui/Modal';
 import confetti from 'canvas-confetti';
 import { fetchCalendarEvents, createCalendarEvent, getCalendarToken } from '../lib/googleCalendar';
-import { formatDueDisplay } from '../lib/questUtils';
+import { formatDueDisplay } from '../lib/taskUtils';
 
-export default function QuestLog() {
-  const { state, setQuests, updateUser } = useApp();
+export default function TaskLog() {
+  const { state, setTasks, updateUser } = useApp();
   const { settings } = useSettings();
   const { addToast } = useToast();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const getTodayStr = () => new Date().toISOString().split('T')[0];
-  const [newQuest, setNewQuest] = useState({ title: '', description: '', due: getTodayStr(), dueTime: '', difficulty: 1, importance: 1, repeat: [] as string[] });
+  const [newTask, setNewTask] = useState({ title: '', description: '', due: getTodayStr(), dueTime: '', difficulty: 1, importance: 1, repeat: [] as string[] });
   const [isRepeatModalOpen, setIsRepeatModalOpen] = useState(false);
 
   const [isCalculatingXp, setIsCalculatingXp] = useState(false);
@@ -27,7 +27,7 @@ export default function QuestLog() {
 
   const [activeDropdownId, setActiveDropdownId] = useState<number | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editQuest, setEditQuest] = useState<{ id: number, title: string, description?: string, due: string, dueRaw?: string, dueTime?: string, xp: number, done: boolean, createdAt?: number, repeat?: string[] } | null>(null);
+  const [editTask, setEditTask] = useState<{ id: number, title: string, description?: string, due: string, dueRaw?: string, dueTime?: string, xp: number, done: boolean, createdAt?: number, repeat?: string[] } | null>(null);
   const [isEditingXpCalculating, setIsEditingXpCalculating] = useState(false);
   const [editingXpDots, setEditingXpDots] = useState("");
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
@@ -125,7 +125,7 @@ export default function QuestLog() {
 
   // Auto-detect due dates from title
   React.useEffect(() => {
-    const t = newQuest.title.toLowerCase();
+    const t = newTask.title.toLowerCase();
     const today = new Date();
     let daysToAdd = 0;
 
@@ -144,11 +144,11 @@ export default function QuestLog() {
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
       const newDue = `${yyyy}-${mm}-${dd}`;
-      if (newQuest.due !== newDue) {
-        setNewQuest(prev => ({ ...prev, due: newDue }));
+      if (newTask.due !== newDue) {
+        setNewTask(prev => ({ ...prev, due: newDue }));
       }
     }
-  }, [newQuest.title]);
+  }, [newTask.title]);
 
   // Dot animation for calculating
   React.useEffect(() => {
@@ -182,8 +182,8 @@ export default function QuestLog() {
 
   // Debounce API call for XP
   React.useEffect(() => {
-    const title = newQuest.title.trim();
-    const description = newQuest.description?.trim() || "";
+    const title = newTask.title.trim();
+    const description = newTask.description?.trim() || "";
     if (!title) {
       setCalculatedXp(15);
       setIsCalculatingXp(false);
@@ -199,8 +199,8 @@ export default function QuestLog() {
           body: JSON.stringify({ 
             title, 
             description,
-            due: newQuest.due,
-            dueTime: newQuest.dueTime,
+            due: newTask.due,
+            dueTime: newTask.dueTime,
             currentDate: new Date().toISOString()
           }),
         });
@@ -218,13 +218,13 @@ export default function QuestLog() {
     }, 800);
 
     return () => clearTimeout(timeout);
-  }, [newQuest.title, newQuest.description, newQuest.due, newQuest.dueTime]);
+  }, [newTask.title, newTask.description, newTask.due, newTask.dueTime]);
 
   // Debounce API call for Edited XP
   React.useEffect(() => {
-    if (!editQuest) return;
-    const title = editQuest.title.trim();
-    const description = editQuest.description?.trim() || "";
+    if (!editTask) return;
+    const title = editTask.title.trim();
+    const description = editTask.description?.trim() || "";
     if (!title) {
       return;
     }
@@ -238,15 +238,15 @@ export default function QuestLog() {
           body: JSON.stringify({ 
             title, 
             description,
-            due: editQuest.dueRaw,
-            dueTime: editQuest.dueTime,
+            due: editTask.dueRaw,
+            dueTime: editTask.dueTime,
             currentDate: new Date().toISOString()
           }),
         });
         if (res.ok) {
           const data = await res.json();
           if (data.xp !== undefined) {
-            setEditQuest(prev => prev ? { ...prev, xp: data.xp } : null);
+            setEditTask(prev => prev ? { ...prev, xp: data.xp } : null);
           }
         }
       } catch (e) {
@@ -257,10 +257,10 @@ export default function QuestLog() {
     }, 800);
 
     return () => clearTimeout(timeout);
-  }, [editQuest?.title, editQuest?.description, editQuest?.dueRaw, editQuest?.dueTime]);
+  }, [editTask?.title, editTask?.description, editTask?.dueRaw, editTask?.dueTime]);
 
-  const activeQuests = state.quests.filter(q => !q.done);
-  const completedQuests = state.quests.filter(q => q.done);
+  const activeTasks = state.tasks.filter(q => !q.done);
+  const completedTasks = state.tasks.filter(q => q.done);
 
   const getNextRepeatDate = (currentDateStr: string, repeatDays: string[]) => {
     const daysMap: Record<string, number> = { 'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6 };
@@ -316,7 +316,7 @@ export default function QuestLog() {
       navigator.vibrate([40, 30, 40]);
     }
 
-    setQuests(prevQuests => {
+    setTasks(prevTasks => {
       const currentQuest = prevQuests.find(q => q.id === id);
       const updatedQuests = prevQuests.map(q => q.id === id ? { ...q, done: true, completedAtDate: new Date().toISOString().split('T')[0], streak: (q.streak || 0) + 1 } : q);
       
@@ -366,7 +366,7 @@ export default function QuestLog() {
   };
 
   const handleDeleteQuest = (id: number) => {
-    setQuests(state.quests.filter(q => q.id !== id));
+    setTasks(state.tasks.filter(q => q.id !== id));
     addToast('Quest deleted', 'success');
     setActiveDropdownId(null);
   };
@@ -389,59 +389,59 @@ export default function QuestLog() {
   };
 
   const handleSaveEdit = () => {
-    if (!editQuest || !editQuest.title.trim()) return;
+    if (!editTask || !editTask.title.trim()) return;
 
-    const targetedDue = editQuest.dueRaw || getTodayStr();
-    const dueDateStr = formatDueDisplay(targetedDue, editQuest.dueTime);
+    const targetedDue = editTask.dueRaw || getTodayStr();
+    const dueDateStr = formatDueDisplay(targetedDue, editTask.dueTime);
 
-    setQuests(state.quests.map(q => q.id === editQuest.id ? {
+    setTasks(state.tasks.map(q => q.id === editTask.id ? {
       ...q,
-      title: editQuest.title.trim(),
-      description: editQuest.description || '',
+      title: editTask.title.trim(),
+      description: editTask.description || '',
       due: dueDateStr,
       dueRaw: targetedDue,
-      dueTime: editQuest.dueTime || '',
-      xp: editQuest.xp,
-      repeat: editQuest.repeat
+      dueTime: editTask.dueTime || '',
+      xp: editTask.xp,
+      repeat: editTask.repeat
     } : q));
 
-    addToast('Quest updated!', 'success');
+    addToast('Task updated!', 'success');
     setIsEditModalOpen(false);
-    setEditQuest(null);
+    setEditTask(null);
   };
 
   const handleAdd = async () => {
-    if (!newQuest.title.trim()) return;
+    if (!newTask.title.trim()) return;
     
     const xp = calculatedXp;
-    const targetedDue = newQuest.due || getTodayStr();
-    const dueDateStr = formatDueDisplay(targetedDue, newQuest.dueTime);
+    const targetedDue = newTask.due || getTodayStr();
+    const dueDateStr = formatDueDisplay(targetedDue, newTask.dueTime);
     
     let targetDateObj = new Date(targetedDue + 'T00:00:00');
 
-    setQuests([...state.quests, { 
+    setTasks([...state.tasks, { 
       id: Date.now(),
-      title: newQuest.title.trim(),
-      description: newQuest.description || '',
+      title: newTask.title.trim(),
+      description: newTask.description || '',
       due: dueDateStr,
       dueRaw: targetedDue,
-      dueTime: newQuest.dueTime || '',
+      dueTime: newTask.dueTime || '',
       xp,
       category: 'General',
       done: false,
       createdAt: Date.now(), // Track creation time for anti-spam
       streak: 1,
-      repeat: newQuest.repeat
+      repeat: newTask.repeat
     }]);
 
-    addToast(`Quest added! Worth ${xp} XP`, 'success');
+    addToast(`Task added! Worth ${xp} XP`, 'success');
     setIsModalOpen(false);
-    setNewQuest({ title: '', description: '', due: getTodayStr(), dueTime: '', difficulty: 1, importance: 1, repeat: [] });
+    setNewTask({ title: '', description: '', due: getTodayStr(), dueTime: '', difficulty: 1, importance: 1, repeat: [] });
 
     // Sync to Google Calendar if configured
     if (getCalendarToken()) {
       addToast('Syncing to Google Calendar...', 'info');
-      const newEvt = await createCalendarEvent(newQuest.title.trim(), targetDateObj);
+      const newEvt = await createCalendarEvent(newTask.title.trim(), targetDateObj);
       if (newEvt && newEvt.id) {
         setCalendarEvents(prev => [...prev, newEvt]);
         addToast('Synced to Google Calendar ✓', 'success');
@@ -454,47 +454,47 @@ export default function QuestLog() {
       <header className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-[32px] font-bold text-[#F0F0F0] tracking-tight leading-tight mb-2">Tasks</h1>
-          <p className="text-[16px] text-[#888888] font-medium">Capture ideas and manage your quests.</p>
+          <p className="text-[16px] text-[#888888] font-medium">Capture ideas and manage your tasks.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
           className="h-[44px] px-5 bg-[#6FBBF7] hover:bg-[#5aaae6] text-[#0A0A0A] rounded-[12px] font-bold text-sm transition-colors flex items-center gap-2"
         >
           <Plus size={18} />
-          Add Quest
+          Add Task
         </button>
       </header>
 
-      {/* Active Quests */}
-      <h3 className="text-[18px] font-bold mb-5 mt-8">Active Quests</h3>
-      {activeQuests.length === 0 ? (
+      {/* Active Tasks */}
+      <h3 className="text-[18px] font-bold mb-5 mt-8">Active Tasks</h3>
+      {activeTasks.length === 0 ? (
          <div className="bg-[#141414] rounded-[24px] p-8 border border-[rgba(255,255,255,0.06)] flex flex-col items-center justify-center min-h-[160px] border-dashed">
             <span className="text-[24px] mb-2">🎮</span>
-            <p className="text-[#888888] font-medium">No quests? Add one!</p>
+            <p className="text-[#888888] font-medium">No tasks? Add one!</p>
          </div>
       ) : (
         <div className="space-y-3">
           <AnimatePresence>
-            {activeQuests.map((quest) => (
+            {activeTasks.map((task) => (
               <motion.div
                 layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                key={quest.id}
+                key={task.id}
                 className="bg-[#141414] hover:bg-[#1A1A1A] rounded-[20px] p-4 flex justify-between items-center border border-[rgba(255,255,255,0.06)] group transition-all duration-300 hover:scale-[1.01] hover:border-[rgba(124,111,247,0.3)] hover:shadow-[0_4px_24px_rgba(124,111,247,0.08)] backdrop-blur-md min-h-[64px] relative"
               >
                 <div className="flex items-center gap-4">
                   <button 
-                    onClick={() => completeQuest(quest.id, quest.xp, quest.createdAt)}
+                    onClick={() => completeQuest(task.id, task.xp, task.createdAt)}
                     className="w-[22px] h-[22px] rounded-[4px] border-2 border-[rgba(255,255,255,0.2)] hover:border-[#6FBBF7] flex items-center justify-center transition-colors shrink-0 bg-[#0A0A0A]"
                   >
                   </button>
                   <div>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h4 className="text-[16px] font-bold text-[#F0F0F0] leading-tight">{quest.title}</h4>
+                      <h4 className="text-[16px] font-bold text-[#F0F0F0] leading-tight">{task.title}</h4>
                       {(() => {
-                        const status = getQuestStatusInfo(quest.dueRaw, quest.dueTime);
+                        const status = getQuestStatusInfo(task.dueRaw, task.dueTime);
                         if (status) {
                           return (
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${status.color}`}>
@@ -504,24 +504,24 @@ export default function QuestLog() {
                         }
                         return null;
                       })()}
-                      {quest.streak && quest.streak > 1 && (
+                      {task.streak && task.streak > 1 && (
                         <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[rgba(247,160,111,0.1)] text-[#F7A06F] text-[11px] font-extrabold select-none">
                           <Flame size={12} className="text-[#F7A06F] animate-pulse" />
-                          <span>{quest.streak}d streak</span>
+                          <span>{task.streak}d streak</span>
                         </div>
                       )}
                     </div>
-                    <span className="text-[12px] font-medium text-[#888888]">{quest.due}</span>
+                    <span className="text-[12px] font-medium text-[#888888]">{task.due}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 relative">
                   <span className="bg-[rgba(247,217,111,0.1)] text-[#F7D96F] text-[12px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap">
-                    +{Math.max(0, quest.xp)} XP
+                    +{Math.max(0, task.xp)} XP
                   </span>
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      setActiveDropdownId(activeDropdownId === quest.id ? null : quest.id);
+                      setActiveDropdownId(activeDropdownId === task.id ? null : task.id);
                     }}
                     className="p-2 text-[#888888] hover:text-[#F0F0F0] opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                   >
@@ -529,7 +529,7 @@ export default function QuestLog() {
                   </button>
 
                   <AnimatePresence>
-                    {activeDropdownId === quest.id && (
+                    {activeDropdownId === task.id && (
                       <>
                         <div 
                           className="fixed inset-0 z-40 bg-transparent" 
@@ -548,17 +548,17 @@ export default function QuestLog() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleOpenEdit(quest);
+                              handleOpenEdit(task);
                             }}
                             className="flex items-center gap-2.5 px-3 py-2 text-left text-[14px] text-[#F0F0F0] hover:bg-[rgba(255,255,255,0.05)] rounded-[8px] transition-colors"
                           >
                             <Edit2 size={14} className="text-[#888888]" />
-                            Edit Quest
+                            Edit Task
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteQuest(quest.id);
+                              handleDeleteQuest(task.id);
                             }}
                             className="flex items-center gap-2.5 px-3 py-2 text-left text-[14px] text-[#F76F6F] hover:bg-[rgba(247,111,111,0.1)] rounded-[8px] transition-colors"
                           >
@@ -584,7 +584,11 @@ export default function QuestLog() {
               <Bot size={18} className="text-[#6FF7A0]" />
               AI Assistant
             </h3>
-            <p className="text-[13px] text-[#888888] mt-1">How much time do you have to focus today?</p>
+            <p className="text-[13px] text-[#888888] mt-1">
+              {activeTasks.length > 0
+                ? `How much time do you have to focus today to work on your ${activeTasks.length === 1 ? 'task' : 'tasks'}?`
+                : "Looks like there are no tasks, add one to continue!"}
+            </p>
           </div>
         </div>
 
@@ -706,28 +710,28 @@ export default function QuestLog() {
       </div>
 
       {/* Completed Today */}
-      {completedQuests.length > 0 && (
+      {completedTasks.length > 0 && (
         <>
           <h3 className="text-[18px] font-bold mb-5 mt-10 text-[#888888]">Completed Today</h3>
           <div className="space-y-3 opacity-60">
-            {completedQuests.map((quest) => (
-              <div key={quest.id} className="bg-[#141414] rounded-[20px] p-4 flex justify-between items-center border border-[rgba(255,255,255,0.02)] min-h-[64px] relative group transition-all duration-300 hover:scale-[1.01] hover:border-[rgba(255,255,255,0.1)] hover:shadow-[0_4px_24px_rgba(255,255,255,0.02)] backdrop-blur-md">
+            {completedTasks.map((task) => (
+              <div key={task.id} className="bg-[#141414] rounded-[20px] p-4 flex justify-between items-center border border-[rgba(255,255,255,0.02)] min-h-[64px] relative group transition-all duration-300 hover:scale-[1.01] hover:border-[rgba(255,255,255,0.1)] hover:shadow-[0_4px_24px_rgba(255,255,255,0.02)] backdrop-blur-md">
                  <div className="flex items-center gap-4">
                     <div className="w-[22px] h-[22px] rounded-[4px] bg-[#6FBBF7] flex items-center justify-center shrink-0">
                       <Check size={14} color="#0A0A0A" strokeWidth={3} />
                     </div>
                     <div>
-                      <h4 className="text-[16px] font-bold text-[#888888] line-through decoration-[#888888] leading-tight">{quest.title}</h4>
+                      <h4 className="text-[16px] font-bold text-[#888888] line-through decoration-[#888888] leading-tight">{task.title}</h4>
                     </div>
                  </div>
                  <div className="flex items-center gap-4 relative">
                    <span className="bg-[rgba(247,217,111,0.05)] text-[#555555] text-[12px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap">
-                     +{Math.max(0, quest.xp)} XP
+                     +{Math.max(0, task.xp)} XP
                    </span>
                    <button 
                      onClick={(e) => {
                        e.stopPropagation();
-                       setActiveDropdownId(activeDropdownId === quest.id ? null : quest.id);
+                       setActiveDropdownId(activeDropdownId === task.id ? null : task.id);
                      }}
                      className="p-2 text-[#888888] hover:text-[#F0F0F0] opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                    >
@@ -735,7 +739,7 @@ export default function QuestLog() {
                    </button>
 
                    <AnimatePresence>
-                     {activeDropdownId === quest.id && (
+                     {activeDropdownId === task.id && (
                        <>
                          <div 
                            className="fixed inset-0 z-40 bg-transparent" 
@@ -754,7 +758,7 @@ export default function QuestLog() {
                            <button
                              onClick={(e) => {
                                e.stopPropagation();
-                               handleDeleteQuest(quest.id);
+                               handleDeleteQuest(task.id);
                              }}
                              className="flex items-center gap-2.5 px-3 py-2 text-left text-[14px] text-[#F76F6F] hover:bg-[rgba(247,111,111,0.1)] rounded-[8px] transition-colors"
                            >
@@ -774,16 +778,16 @@ export default function QuestLog() {
 
 
 
-      {/* Add Quest Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Quest">
+      {/* Add Task Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Task">
         <div className="flex flex-col gap-5">
            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Quest Name</label>
+              <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Task Name</label>
               <input 
                 type="text" 
                 autoFocus
-                value={newQuest.title}
-                onChange={e => setNewQuest({...newQuest, title: e.target.value})}
+                value={newTask.title}
+                onChange={e => setNewTask({...newTask, title: e.target.value})}
                 placeholder="Finish math homework"
                 className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px]"
               />
@@ -795,7 +799,7 @@ export default function QuestLog() {
                 onClick={() => setIsRepeatModalOpen(true)}
                 className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] text-[16px] text-left flex items-center justify-between"
               >
-                <span>{newQuest.repeat.length === 7 ? 'Everyday' : (newQuest.repeat.length > 0 ? newQuest.repeat.join(', ') : 'Never')}</span>
+                <span>{newTask.repeat.length === 7 ? 'Everyday' : (newTask.repeat.length > 0 ? newTask.repeat.join(', ') : 'Never')}</span>
                 <Calendar size={16} className="text-[#888888]" />
               </button>
            </div>
@@ -803,15 +807,15 @@ export default function QuestLog() {
            <RepeatModal 
               isOpen={isRepeatModalOpen} 
               onClose={() => setIsRepeatModalOpen(false)} 
-              selectedDays={newQuest.repeat}
-              onChange={(days) => setNewQuest(prev => ({ ...prev, repeat: days }))}
+              selectedDays={newTask.repeat}
+              onChange={(days) => setNewTask(prev => ({ ...prev, repeat: days }))}
            />
 
            <div className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Details & Notes (Add context, sub-tasks, or links) (Optional)</label>
               <textarea 
-                value={newQuest.description}
-                onChange={e => setNewQuest({...newQuest, description: e.target.value})}
+                value={newTask.description}
+                onChange={e => setNewTask({...newTask, description: e.target.value})}
                 placeholder="Add details, links, or sub-tasks here..."
                 className="h-[80px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 py-3 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[15px] resize-none"
               />
@@ -822,8 +826,8 @@ export default function QuestLog() {
                 <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide flex items-center gap-2"><Calendar size={14}/> Due Date</label>
                 <input 
                   type="date"
-                  value={newQuest.due}
-                  onChange={e => setNewQuest({...newQuest, due: e.target.value})}
+                  value={newTask.due}
+                  onChange={e => setNewTask({...newTask, due: e.target.value})}
                   min={getTodayStr()}
                   className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px] date-picker-custom"
                   style={{ colorScheme: 'dark' }}
@@ -833,8 +837,8 @@ export default function QuestLog() {
                 <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide flex items-center gap-2"><Clock size={14}/> Due Time (Optional)</label>
                 <input 
                   type="time"
-                  value={newQuest.dueTime}
-                  onChange={e => setNewQuest({...newQuest, dueTime: e.target.value})}
+                  value={newTask.dueTime}
+                  onChange={e => setNewTask({...newTask, dueTime: e.target.value})}
                   className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px] [color-scheme:dark]"
                   style={{ colorScheme: 'dark' }}
                 />
@@ -870,36 +874,36 @@ export default function QuestLog() {
              onClick={handleAdd}
              className={`h-[52px] w-full rounded-[12px] font-bold text-[16px] transition-colors mt-2 ${isCalculatingXp ? 'bg-[#333] text-[#888888] cursor-not-allowed' : 'bg-[#6FBBF7] hover:bg-[#5aaae6] text-[#0A0A0A] shadow-[0_0_16px_rgba(111,187,247,0.2)]'}`}
            >
-             Save Quest
+             Save Task
            </button>
         </div>
       </Modal>
 
       {/* Edit Quest Modal */}
-      <Modal isOpen={isEditModalOpen} onClose={() => { setIsEditModalOpen(false); setEditQuest(null); }} title={editQuest?.id === -1 ? "Event Details" : "Edit Quest"}>
-        {editQuest && (
+      <Modal isOpen={isEditModalOpen} onClose={() => { setIsEditModalOpen(false); setEditTask(null); }} title={editTask?.id === -1 ? "Event Details" : "Edit Task"}>
+        {editTask && (
           <div className="flex flex-col gap-5">
              <div className="flex flex-col gap-2">
-                <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Quest Name</label>
+                <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Task Name</label>
                 <input 
                   type="text" 
                   autoFocus
-                  value={editQuest.title}
-                  onChange={e => setEditQuest({...editQuest, title: e.target.value})}
+                  value={editTask.title}
+                  onChange={e => setEditTask({...editTask, title: e.target.value})}
                   placeholder="Finish math homework"
                   className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px]"
-                  readOnly={editQuest.id === -1}
+                  readOnly={editTask.id === -1}
                 />
              </div>
 
              <div className="flex flex-col gap-2">
                 <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide">Details & Notes (Add context, sub-tasks, or links) (Optional)</label>
                 <textarea 
-                  value={editQuest.description || ''}
-                  onChange={e => setEditQuest({...editQuest, description: e.target.value})}
+                  value={editTask.description || ''}
+                  onChange={e => setEditTask({...editTask, description: e.target.value})}
                   placeholder="Add details, links, or sub-tasks here..."
                   className="h-[80px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 py-3 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[15px] resize-none"
-                  readOnly={editQuest.id === -1}
+                  readOnly={editTask.id === -1}
                 />
              </div>
              
@@ -908,8 +912,8 @@ export default function QuestLog() {
                   <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide flex items-center gap-2"><Calendar size={14}/> Due Date</label>
                   <input 
                     type="date"
-                    value={editQuest.dueRaw || ""}
-                    onChange={e => setEditQuest({...editQuest, dueRaw: e.target.value})}
+                    value={editTask.dueRaw || ""}
+                    onChange={e => setEditTask({...editTask, dueRaw: e.target.value})}
                     min={getTodayStr()}
                     className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px] date-picker-custom"
                     style={{ colorScheme: 'dark' }}
@@ -919,8 +923,8 @@ export default function QuestLog() {
                   <label className="text-[13px] font-bold text-[#888888] uppercase tracking-wide flex items-center gap-2"><Clock size={14}/> Due Time (Optional)</label>
                   <input 
                     type="time"
-                    value={editQuest.dueTime || ""}
-                    onChange={e => setEditQuest({...editQuest, dueTime: e.target.value})}
+                    value={editTask.dueTime || ""}
+                    onChange={e => setEditTask({...editTask, dueTime: e.target.value})}
                     className="h-[52px] w-full bg-[#1A1A1A] rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 outline-none text-[#F0F0F0] focus:border-[#6FBBF7] text-[16px] [color-scheme:dark]"
                     style={{ colorScheme: 'dark' }}
                   />
@@ -946,12 +950,12 @@ export default function QuestLog() {
                      Estimating<span className="inline-block text-left w-[16px]">{editingXpDots}</span>
                    </span>
                  ) : (
-                   <span className="text-[18px] font-bold text-[#F7D96F] px-1 transition-all">+{editQuest.xp} XP</span>
+                   <span className="text-[18px] font-bold text-[#F7D96F] px-1 transition-all">+{editTask.xp} XP</span>
                  )}
                </div>
              </div>
 
-             {editQuest.id !== -1 && (
+             {editTask.id !== -1 && (
                <button
                  disabled={isEditingXpCalculating}
                  onClick={handleSaveEdit}

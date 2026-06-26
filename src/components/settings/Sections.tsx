@@ -1240,20 +1240,20 @@ export function FocusSettings() {
 // --- SECTION 9: DATA & STORAGE ===
 export function DataSettings() {
   const { settings, updateSetting, clearAllData, exportData, importData, backupNow } = useSettings();
-  const { state, setQuests, setBrainDumps } = useApp();
+  const { state, setTasks, setBrainDumps } = useApp();
   const { addToast } = useToast();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const stats = [
-    { label: 'Routine Tasks Logs', count: `${state.quests.length} items`, key: 'quests', defaultVal: [] },
+    { label: 'Routine Tasks Logs', count: `${state.tasks.length} items`, key: 'tasks', defaultVal: [] },
     { label: 'Brain Dump Notes', count: `${state.brainDumps.length} items`, key: 'dumps', defaultVal: [] },
   ];
 
   const handleClearSpec = (key: string) => {
-    if (key === 'quests') {
-      setQuests([]);
-      addToast("Routine quests cleared", "info");
+    if (key === 'tasks') {
+      setTasks([]);
+      addToast("Routine tasks cleared", "info");
     } else if (key === 'dumps') {
       setBrainDumps([]);
       addToast("Brain dump entries cleared", "info");
@@ -1444,7 +1444,7 @@ export function ConnectionsSettings() {
 
   const integrations = [
     { id: 'googleCalendar', name: 'Google Calendar', desc: 'Sync timelines to automatically match check-in hours.', color: 'bg-blue-600/10 text-blue-400 border-blue-500/25' },
-    { id: 'spotify', name: 'Spotify Music', desc: 'Sync relaxing ambient beats during deep focus quests. Requires SPOTIFY_CLIENT_ID & SECRET.', color: 'bg-green-600/10 text-green-400 border-green-500/25' },
+    { id: 'spotify', name: 'Spotify Music', desc: 'Sync relaxing ambient beats during deep focus tasks. Requires SPOTIFY_CLIENT_ID & SECRET.', color: 'bg-green-600/10 text-green-400 border-green-500/25' },
     { id: 'discord', name: 'Discord party challenges', desc: 'Sync streak metrics automatically to guild chats. Requires DISCORD_CLIENT_ID & SECRET.', color: 'bg-indigo-600/10 text-indigo-400 border-indigo-500/25' },
   ];
 

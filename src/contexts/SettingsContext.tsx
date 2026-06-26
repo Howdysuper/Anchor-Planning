@@ -345,7 +345,7 @@ export const useSettings = () => {
 };
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { state, updateState, updateUser, setAnchors, setQuests, setBrainDumps } = useApp();
+  const { state, updateState, updateUser, setAnchors, setTasks, setBrainDumps } = useApp();
   const { addToast } = useToast();
   const { user } = useAuth();
 
@@ -579,7 +579,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const clearAllData = () => {
     // Keep user's onboarding status, display name, level, and XP settings intact
     setAnchors([]);
-    setQuests([]);
+    setTasks([]);
     setBrainDumps([]);
     updateState({
       anchors: [],
@@ -638,7 +638,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const backupObj = {
       settings,
       anchors: state.anchors,
-      quests: state.quests,
+      tasks: state.tasks,
       brainDumps: state.brainDumps,
       user: state.user,
       timestamp: new Date().toISOString()
@@ -656,8 +656,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (parsed.anchors) {
         setAnchors(parsed.anchors);
       }
-      if (parsed.quests) {
-        setQuests(parsed.quests);
+      if (parsed.tasks) {
+        setTasks(parsed.tasks);
       }
       if (parsed.brainDumps) {
         setBrainDumps(parsed.brainDumps);

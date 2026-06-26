@@ -4,7 +4,7 @@ import { X, Send, Bot, Sparkles, User, ArrowRight, MessageSquareText } from 'luc
 import { useApp } from '../contexts/AppContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { logout } from '../lib/firebase';
-import { formatDueDisplay } from '../lib/questUtils';
+import { formatDueDisplay } from '../lib/taskUtils';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -17,7 +17,7 @@ interface ChatMessage {
 }
 
 export function ChatBotWidget() {
-  const { navigate, state, updateSleep, updateState, setQuests, setAnchors } = useApp();
+  const { navigate, state, updateSleep, updateState, setAnchors } = useApp();
   const { clearAllData } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
@@ -128,7 +128,7 @@ export function ChatBotWidget() {
         
         // Execute actions automatically
         if (data.executeActions && Array.isArray(data.executeActions)) {
-          let newQuests = [...state.quests];
+          let newTasks = [...state.tasks];
           let newAnchors = [...state.anchors];
           let updatedState = false;
 
@@ -157,19 +157,19 @@ export function ChatBotWidget() {
               clearAllData();
             } else if (action.type === 'logout') {
               logout();
-            } else if (action.type === 'create_quest') {
-              const newQuest = action.payload?.quest || {};
-              const dueRawVal = newQuest.dueRaw || new Date().toISOString().split('T')[0];
-              const dueTimeVal = newQuest.dueTime || '';
+            } else if (action.type === 'create_task') {
+              const newTask = action.payload?.task || {};
+              const dueRawVal = newTask.dueRaw || new Date().toISOString().split('T')[0];
+              const dueTimeVal = newTask.dueTime || '';
               const formattedDue = formatDueDisplay(dueRawVal, dueTimeVal);
-              newQuests.push({
+              newTasks.push({
                 id: Date.now() + Math.random(),
-                title: newQuest.title || 'New Quest',
-                description: newQuest.description || '',
+                title: newTask.title || 'New Task',
+                description: newTask.description || '',
                 due: formattedDue,
                 dueRaw: dueRawVal,
                 dueTime: dueTimeVal,
-                xp: newQuest.xp || 15,
+                xp: newTask.xp || 15,
                 category: 'General',
                 done: false,
                 createdAt: Date.now(),
@@ -194,7 +194,7 @@ export function ChatBotWidget() {
           }
 
           if (updatedState) {
-            updateState({ quests: newQuests, anchors: newAnchors });
+            updateState({ tasks: newTasks, anchors: newAnchors });
           }
         }
 

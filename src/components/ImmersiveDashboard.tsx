@@ -66,7 +66,7 @@ export default function ImmersiveDashboard() {
     updateUser,
     updateSleep,
     navigate,
-    setQuests,
+    setTasks,
     setBrainDumps,
     setAnchors,
   } = useApp();
@@ -226,16 +226,16 @@ export default function ImmersiveDashboard() {
     addToast(pinnedWidgets.includes(widgetId) ? 'Widget unpinned' : 'Widget pinned to top', 'info');
   };
 
-  const activeQuests = state.quests.filter((q) => !q.done);
-  const primaryQuest = activeQuests.find((q) => q.active) || activeQuests[0];
-  const regularQuests = activeQuests
-    .filter((q) => q.id !== primaryQuest?.id)
+  const activeTasks = state.tasks.filter((q) => !q.done);
+  const primaryTask = activeTasks.find((q) => q.active) || activeTasks[0];
+  const regularTasks = activeTasks
+    .filter((q) => q.id !== primaryTask?.id)
     .slice(0, 3);
-  const completedTodayCount = state.quests.filter((q) => q.done).length;
+  const completedTodayCount = state.tasks.filter((q) => q.done).length;
 
   const [justCompletedIds, setJustCompletedIds] = useState<number[]>([]);
 
-  const completeQuest = (id: number, xpValue: number, createdAt?: number) => {
+  const completeTask = (id: number, xpValue: number, createdAt?: number) => {
     if (createdAt && Date.now() - createdAt < 2 * 60 * 60 * 1000) {
       const msLeft = createdAt + 2 * 60 * 60 * 1000 - Date.now();
       const minsLeft = Math.ceil(msLeft / 60000);
@@ -249,15 +249,15 @@ export default function ImmersiveDashboard() {
     const finalXp = Math.max(0, xpValue);
 
     setTimeout(() => {
-      setQuests(
-        state.quests.map((q) =>
+      setTasks(
+        state.tasks.map((q) =>
           q.id === id ? { ...q, done: true, active: false } : q,
         ),
       );
       updateUser({ xp: state.user.xp + finalXp });
       const multiplier = 1.0 + (state.user.level - 1) * 0.05;
       const multipliedXp = Math.ceil(finalXp * multiplier);
-      addToast(`Quest Completed! Got ${multipliedXp} XP (${multiplier.toFixed(2)}XP multiplier)`, "success");
+      addToast(`Task Completed! Got ${multipliedXp} XP (${multiplier.toFixed(2)}XP multiplier)`, "success");
       setJustCompletedIds((prev) => prev.filter((x) => x !== id));
     }, 600);
   };
@@ -321,9 +321,9 @@ export default function ImmersiveDashboard() {
           <h1 className="text-[32px] font-bold text-[#F0F0F0] tracking-tight leading-tight">
             Good morning, {state.user.name}
           </h1>
-          <p className="text-[16px] text-[#888888] font-medium mt-1">
-            {state.anchors.filter((a) => a.status === "upcoming").length > 0
-              ? `You have ${state.anchors.filter((a) => a.status === "upcoming").length} tasks lined up for today.`
+          <p className="text-[16px] text-zinc-400 font-medium mt-1 italic">
+            {state.tasks.filter((a) => !a.done).length > 0
+              ? `How much time do you have to focus on your ${state.tasks.filter((a) => !a.done).length === 1 ? "task" : "tasks"} today?`
               : "Congratulations, You're all caught up!"
             }
           </p>
@@ -581,48 +581,48 @@ export default function ImmersiveDashboard() {
             </Modal>
 
             <div className="space-y-4">
-              {/* PRIMARY QUEST */}
-              {primaryQuest && (
-                <div id={`active-quest-item-${primaryQuest.id}`} className="bg-[#1A1A1A] p-4.5 rounded-[18px] border border-[rgba(124,111,247,0.25)] relative overflow-hidden group hover:border-[rgba(124,111,247,0.4)] transition-all">
+              {/* PRIMARY TASK */}
+              {primaryTask && (
+                <div id={`active-task-item-${primaryTask.id}`} className="bg-[#1A1A1A] p-4.5 rounded-[18px] border border-[rgba(124,111,247,0.25)] relative overflow-hidden group hover:border-[rgba(124,111,247,0.4)] transition-all">
                   <div className="absolute -top-12 -right-12 w-24 h-24 bg-[rgba(124,111,247,0.12)] rounded-full blur-[20px] pointer-events-none"></div>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
                       <button
-                        onClick={() => completeQuest(primaryQuest.id, primaryQuest.xp, primaryQuest.createdAt)}
-                        className={`w-[22px] h-[22px] shrink-0 mt-0.5 rounded-[4px] border-2 flex items-center justify-center transition-colors ${justCompletedIds.includes(primaryQuest.id) ? "border-[#6FF7A0] bg-[#6FF7A0]" : "border-[#7C6FF7] hover:border-[#6FF7A0] bg-[#0A0A0A]"}`}
+                        onClick={() => completeTask(primaryTask.id, primaryTask.xp, primaryTask.createdAt)}
+                        className={`w-[22px] h-[22px] shrink-0 mt-0.5 rounded-[4px] border-2 flex items-center justify-center transition-colors ${justCompletedIds.includes(primaryTask.id) ? "border-[#6FF7A0] bg-[#6FF7A0]" : "border-[#7C6FF7] hover:border-[#6FF7A0] bg-[#0A0A0A]"}`}
                       >
-                        {justCompletedIds.includes(primaryQuest.id) && (
+                        {justCompletedIds.includes(primaryTask.id) && (
                           <Check size={14} color="#0A0A0A" strokeWidth={3} />
                         )}
                       </button>
                       <div>
                         <div className="flex items-center gap-1.5 mb-1 bg-[rgba(124,111,247,0.12)] px-2 py-0.5 rounded-[4px] w-fit">
-                          <span className="text-[9px] font-bold text-[#7C6FF7] uppercase tracking-wider">Active Quest</span>
+                          <span className="text-[9px] font-bold text-[#7C6FF7] uppercase tracking-wider">Active Task</span>
                         </div>
                         <p className="text-[15px] font-bold text-[#F0F0F0] leading-tight line-clamp-2">
-                          {primaryQuest.title}
+                          {primaryTask.title}
                         </p>
-                        {primaryQuest.due && (
+                        {primaryTask.due && (
                           <p className="text-[12px] text-[#888888] font-medium mt-1">
-                            {primaryQuest.due}
+                            {primaryTask.due}
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="text-[12px] font-bold px-2.5 py-1 rounded-full bg-[rgba(247,217,111,0.1)] text-[#F7D96F] shrink-0">
-                      +{primaryQuest.xp} XP
+                      +{primaryTask.xp} XP
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* REGULAR QUESTS */}
+              {/* REGULAR TASKS */}
               <div className="space-y-3">
                 <h3 className="text-[11px] font-bold text-[#888888] uppercase tracking-wider mb-2 px-1">Upcoming Tasks</h3>
                 <AnimatePresence>
-                  {regularQuests.length > 0 ? (
-                    regularQuests.map((quest) => {
-                      const isJustCompleted = justCompletedIds.includes(quest.id);
+                  {regularTasks.length > 0 ? (
+                    regularTasks.map((task) => {
+                      const isJustCompleted = justCompletedIds.includes(task.id);
                       return (
                         <motion.div
                           layout
@@ -633,13 +633,13 @@ export default function ImmersiveDashboard() {
                             x: -20,
                             transition: { duration: 0.2 },
                           }}
-                          key={quest.id}
+                          key={task.id}
                           className="flex items-center justify-between p-3 bg-[#1A1A1A] rounded-[14px] border border-[rgba(255,255,255,0.04)] group hover:bg-[#1E1E1E] transition-colors min-h-[56px]"
                         >
                           <div className="flex items-center gap-3">
                             <button
                               onClick={() =>
-                                completeQuest(quest.id, quest.xp, quest.createdAt)
+                                completeTask(task.id, task.xp, task.createdAt)
                               }
                               className={`w-[18px] h-[18px] shrink-0 rounded-[4px] border-2 flex items-center justify-center transition-colors ${isJustCompleted ? "border-[#6FF7A0] bg-[#6FF7A0]" : "border-[rgba(255,255,255,0.2)] hover:border-[#6FF7A0] bg-[#0A0A0A]"}`}
                             >
@@ -651,23 +651,23 @@ export default function ImmersiveDashboard() {
                               <p
                                 className={`text-[13px] font-bold leading-tight mb-0.5 line-clamp-1 transition-all ${isJustCompleted ? "text-[#888888] line-through" : "text-[#F0F0F0]"}`}
                               >
-                                {quest.title}
+                                {task.title}
                               </p>
                               <p className="text-[11px] text-[#888888] font-medium leading-none">
-                                {quest.due}
+                                {task.due}
                               </p>
                             </div>
                           </div>
                           <div
                             className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 tabular-nums transition-colors ${isJustCompleted ? "bg-[#F7D96F] text-[#0A0A0A]" : "bg-[rgba(247,217,111,0.1)] text-[#F7D96F]"}`}
                           >
-                            +{quest.xp} XP
+                            +{task.xp} XP
                           </div>
                         </motion.div>
                       );
                     })
                   ) : (
-                    !primaryQuest && (
+                    !primaryTask && (
                       <div className="text-center py-4 px-3 bg-[#1A1A1A] rounded-[14px] border border-dashed border-[rgba(255,255,255,0.1)]">
                         <p className="text-[#888888] text-[12px] leading-relaxed">
                           No upcoming tasks.

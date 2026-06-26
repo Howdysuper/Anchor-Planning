@@ -59,7 +59,7 @@ const VaultIcon = (props: any) => (
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Home', icon: Home },
   { id: 'loadout', label: 'Loadout', icon: Backpack },
-  { id: 'quests', label: 'Tasks', icon: Inbox },
+  { id: 'tasks', label: 'Tasks', icon: Inbox },
   { id: 'shop', label: 'Vault', icon: VaultIcon },
   { id: 'stats', label: 'Analytics', icon: BarChart3 },
 ];
@@ -224,7 +224,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-border-base h-[84px] px-2 pb-safe grid grid-cols-5 items-center justify-items-center z-40">
         {[
           { id: 'dashboard', label: 'Home', icon: Home },
-          { id: 'quests', label: 'Tasks', icon: Sword },
+          { id: 'tasks', label: 'Tasks', icon: Sword },
           { id: 'shop', label: 'Vault', icon: VaultIcon },
           { id: 'stats', label: 'Analytics', icon: BarChart3 },
         ].map((item) => {

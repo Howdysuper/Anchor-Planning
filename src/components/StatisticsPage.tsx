@@ -377,23 +377,23 @@ export default function StatisticsPage({ defaultTab = 'overview' }: { defaultTab
 
             <div className="bg-surface border border-border-base rounded-[24px] p-6 flex flex-col gap-6">
               <div className="flex items-center justify-between">
-                <span className="text-text-muted font-bold text-xs uppercase tracking-wider">Quest Mastery</span>
+                <span className="text-text-muted font-bold text-xs uppercase tracking-wider">Task Mastery</span>
                 <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center text-success">
                   <CheckCircle size={20} />
                 </div>
               </div>
               <div className="text-[42px] font-bold text-success leading-none">
-                {state.quests.filter(q => q.completed).length}/{state.quests.length}
+                {state.tasks.filter(q => q.completed).length}/{state.tasks.length}
               </div>
               
               <div className="flex items-center gap-4">
                 <div className="flex-1 bg-surface-2 border border-border-base rounded-[12px] p-4 flex flex-col items-center justify-center">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-2">Rate</span>
-                  <span className="text-[18px] font-bold text-success">{state.quests.length > 0 ? Math.round((state.quests.filter(q => q.completed).length / state.quests.length) * 100) : 0}%</span>
+                  <span className="text-[18px] font-bold text-success">{state.tasks.length > 0 ? Math.round((state.tasks.filter(q => q.completed).length / state.tasks.length) * 100) : 0}%</span>
                 </div>
                 <div className="flex-1 bg-surface-2 border border-border-base rounded-[12px] p-4 flex flex-col items-center justify-center">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-2">Remaining</span>
-                  <span className="text-[18px] font-bold text-error">{state.quests.filter(q => !q.completed).length}</span>
+                  <span className="text-[18px] font-bold text-error">{state.tasks.filter(q => !q.completed).length}</span>
                 </div>
               </div>
 
