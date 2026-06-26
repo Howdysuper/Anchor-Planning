@@ -78,7 +78,7 @@ export default function TaskLog() {
       const today = new Date();
       const payload = {
         availableMinutes: mins,
-        quests: state.quests.filter(q => !q.done),
+        quests: state.tasks.filter(q => !q.done),
         currentTime: {
           year: today.getFullYear(),
           month: today.getMonth() + 1,
@@ -278,7 +278,7 @@ export default function TaskLog() {
     return null;
   };
 
-  const getQuestStatusInfo = (dueRaw?: string, dueTime?: string) => {
+  const getTaskStatusInfo = (dueRaw?: string, dueTime?: string) => {
     if (!dueRaw) return null;
     const now = new Date();
     const dueDate = new Date(dueRaw);
@@ -299,7 +299,7 @@ export default function TaskLog() {
     return null;
   };
 
-  const completeQuest = (id: number, xpValue: number, createdAt?: number) => {
+  const completeTask = (id: number, xpValue: number, createdAt?: number) => {
     // 2-hour anti-spam rule
     if (!settings.devMode && createdAt && (Date.now() - createdAt < 2 * 60 * 60 * 1000)) {
        const msLeft = (createdAt + 2 * 60 * 60 * 1000) - Date.now();
@@ -317,37 +317,37 @@ export default function TaskLog() {
     }
 
     setTasks(prevTasks => {
-      const currentQuest = prevQuests.find(q => q.id === id);
-      const updatedQuests = prevQuests.map(q => q.id === id ? { ...q, done: true, completedAtDate: new Date().toISOString().split('T')[0], streak: (q.streak || 0) + 1 } : q);
+      const currentTask = prevTasks.find(q => q.id === id);
+      const updatedTasks = prevTasks.map(q => q.id === id ? { ...q, done: true, completedAtDate: new Date().toISOString().split('T')[0], streak: (q.streak || 0) + 1 } : q);
       
       // Handle repeat
-      if (currentQuest && currentQuest.repeat && currentQuest.repeat.length > 0) {
-        const nextDateRaw = getNextRepeatDate(currentQuest.dueRaw || getTodayStr(), currentQuest.repeat);
+      if (currentTask && currentTask.repeat && currentTask.repeat.length > 0) {
+        const nextDateRaw = getNextRepeatDate(currentTask.dueRaw || getTodayStr(), currentTask.repeat);
         if (nextDateRaw) {
           const nextDateObj = new Date(nextDateRaw);
           const formattedNextDate = nextDateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
           
-          updatedQuests.push({
-            ...currentQuest,
+          updatedTasks.push({
+            ...currentTask,
             id: Date.now(),
             due: formattedNextDate,
             dueRaw: nextDateRaw,
             done: false,
             createdAt: Date.now(),
-            streak: (currentQuest.streak || 0) + 1
+            streak: (currentTask.streak || 0) + 1
           });
         }
       }
-      return updatedQuests;
+      return updatedTasks;
     });
 
     updateUser({ xp: state.user.xp + finalXp });
     const multiplier = 1.0 + (state.user.level - 1) * 0.05;
     const multipliedXp = Math.ceil(finalXp * multiplier);
-    addToast(`Quest Completed! Got ${multipliedXp} XP (${multiplier.toFixed(2)}XP multiplier)`, 'success');
+    addToast(`Task Completed! Got ${multipliedXp} XP (${multiplier.toFixed(2)}XP multiplier)`, 'success');
 
     // Confetti on final active task completion
-    if (activeQuests.length === 1 && activeQuests[0].id === id) {
+    if (activeTasks.length === 1 && activeTasks[0].id === id) {
       const count = 200;
       const defaults = { origin: { y: 0.7 }, zIndex: 9999 };
 
@@ -365,24 +365,24 @@ export default function TaskLog() {
     }
   };
 
-  const handleDeleteQuest = (id: number) => {
+  const handleDeleteTask = (id: number) => {
     setTasks(state.tasks.filter(q => q.id !== id));
-    addToast('Quest deleted', 'success');
+    addToast('Task deleted', 'success');
     setActiveDropdownId(null);
   };
 
-  const handleOpenEdit = (quest: any) => {
-    setEditQuest({
-      id: quest.id,
-      title: quest.title,
-      description: quest.description || '',
-      due: quest.due,
-      dueRaw: quest.dueRaw || getTodayStr(),
-      dueTime: quest.dueTime || '',
-      xp: quest.xp,
-      done: quest.done,
-      createdAt: quest.createdAt,
-      repeat: quest.repeat || []
+  const handleOpenEdit = (task: any) => {
+    setEditTask({
+      id: task.id,
+      title: task.title,
+      description: task.description || '',
+      due: task.due,
+      dueRaw: task.dueRaw || getTodayStr(),
+      dueTime: task.dueTime || '',
+      xp: task.xp,
+      done: task.done,
+      createdAt: task.createdAt,
+      repeat: task.repeat || []
     });
     setIsEditModalOpen(true);
     setActiveDropdownId(null);
@@ -486,7 +486,7 @@ export default function TaskLog() {
               >
                 <div className="flex items-center gap-4">
                   <button 
-                    onClick={() => completeQuest(task.id, task.xp, task.createdAt)}
+                    onClick={() => completeTask(task.id, task.xp, task.createdAt)}
                     className="w-[22px] h-[22px] rounded-[4px] border-2 border-[rgba(255,255,255,0.2)] hover:border-[#6FBBF7] flex items-center justify-center transition-colors shrink-0 bg-[#0A0A0A]"
                   >
                   </button>
@@ -494,7 +494,7 @@ export default function TaskLog() {
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <h4 className="text-[16px] font-bold text-[#F0F0F0] leading-tight">{task.title}</h4>
                       {(() => {
-                        const status = getQuestStatusInfo(task.dueRaw, task.dueTime);
+                        const status = getTaskStatusInfo(task.dueRaw, task.dueTime);
                         if (status) {
                           return (
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${status.color}`}>
@@ -558,7 +558,7 @@ export default function TaskLog() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteQuest(task.id);
+                              handleDeleteTask(task.id);
                             }}
                             className="flex items-center gap-2.5 px-3 py-2 text-left text-[14px] text-[#F76F6F] hover:bg-[rgba(247,111,111,0.1)] rounded-[8px] transition-colors"
                           >
@@ -758,7 +758,7 @@ export default function TaskLog() {
                            <button
                              onClick={(e) => {
                                e.stopPropagation();
-                               handleDeleteQuest(task.id);
+                               handleDeleteTask(task.id);
                              }}
                              className="flex items-center gap-2.5 px-3 py-2 text-left text-[14px] text-[#F76F6F] hover:bg-[rgba(247,111,111,0.1)] rounded-[8px] transition-colors"
                            >
@@ -879,7 +879,7 @@ export default function TaskLog() {
         </div>
       </Modal>
 
-      {/* Edit Quest Modal */}
+      {/* Edit Task Modal */}
       <Modal isOpen={isEditModalOpen} onClose={() => { setIsEditModalOpen(false); setEditTask(null); }} title={editTask?.id === -1 ? "Event Details" : "Edit Task"}>
         {editTask && (
           <div className="flex flex-col gap-5">

@@ -20,6 +20,8 @@ import StatisticsPage from './components/StatisticsPage';
 import Shop from './components/Shop';
 import { useApp } from './contexts/AppContext';
 import LoadingScreen from './components/LoadingScreen';
+import WelcomeBonusModal from './components/WelcomeBonusModal';
+import { AnimatePresence } from 'motion/react';
 
 function AppContent() {
   const { state } = useApp();
@@ -64,6 +66,9 @@ function AppContent() {
   return (
     <AppLayout>
       {renderPage()}
+      <AnimatePresence>
+        <WelcomeBonusModal key="welcome-bonus" />
+      </AnimatePresence>
     </AppLayout>
   );
 }

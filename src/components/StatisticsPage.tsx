@@ -47,17 +47,17 @@ export default function StatisticsPage({ defaultTab = 'overview' }: { defaultTab
   // --- PARSE & PREPARE DYNAMIC METRICS ---
   
   // 1. Quests / Tasks Done Metrics
-  const questsTotal = state.quests.length;
-  const questsCompleted = state.quests.filter(q => q.done).length;
+  const questsTotal = state.tasks.length;
+  const questsCompleted = state.tasks.filter(q => q.done).length;
   const questsPending = questsTotal - questsCompleted;
   const questCompletionRate = questsTotal > 0 ? Math.round((questsCompleted / questsTotal) * 100) : 0;
   
   // Calculate XP gained from quests completed this week
   const xpEarnedThisWeek = useMemo(() => {
-    return state.quests
+    return state.tasks
       .filter(q => q.done)
       .reduce((acc, curr) => acc + (curr.xp || 15), 0);
-  }, [state.quests]);
+  }, [state.tasks]);
 
   // 2. Sleep Analytics
   const currentSleepScore = state.sleep.score !== undefined ? state.sleep.score : 85;
@@ -191,17 +191,17 @@ export default function StatisticsPage({ defaultTab = 'overview' }: { defaultTab
   // 5. Weekly Trajectory Data (Sleep score, Quests Completed, Anchors Completed)
   const hasHistoryData = useMemo(() => {
     const hasHistory = state.sleep.history && state.sleep.history.length > 0;
-    const hasQuests = state.quests.some(q => q.done);
+    const hasQuests = state.tasks.some(q => q.done);
     const hasAnchors = state.anchors.some(a => a.status === 'done');
     return hasHistory || hasQuests || hasAnchors;
-  }, [state.sleep.history, state.quests, state.anchors]);
+  }, [state.sleep.history, state.tasks, state.anchors]);
 
   const trajectoryChartData = useMemo(() => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const today = new Date();
     const data = [];
     
-    const questsByDate = state.quests.reduce((acc, q) => {
+    const questsByDate = state.tasks.reduce((acc, q) => {
       if (q.done && q.completedAtDate) {
         acc[q.completedAtDate] = (acc[q.completedAtDate] || 0) + 1;
       }
@@ -228,7 +228,7 @@ export default function StatisticsPage({ defaultTab = 'overview' }: { defaultTab
       // Tasks done - Strictly actual history
       let questsDone = questsByDate[dateStr] || 0;
       if (i === 0) {
-        const realDoneToday = state.quests.filter(q => q.done && (!q.completedAtDate || q.completedAtDate === dateStr)).length;
+        const realDoneToday = state.tasks.filter(q => q.done && (!q.completedAtDate || q.completedAtDate === dateStr)).length;
         questsDone = Math.max(realDoneToday, questsDone);
       }
 
@@ -254,7 +254,7 @@ export default function StatisticsPage({ defaultTab = 'overview' }: { defaultTab
     }
 
     return data;
-  }, [state.sleep.history, state.sleep.score, state.quests, state.anchors]);
+  }, [state.sleep.history, state.sleep.score, state.tasks, state.anchors]);
 
   // Combined dataset for Sleep intel 7-day habits graph matching original SleepIntel
   const sleepIntelChartData = useMemo(() => {
@@ -404,7 +404,7 @@ export default function StatisticsPage({ defaultTab = 'overview' }: { defaultTab
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[13px] text-text-muted">Efficiency Rating:</span>
-                  <span className="text-[13px] font-bold text-success">{state.quests.filter(q => q.completed).length > 0 ? 'Optimal' : 'Incomplete'}</span>
+                  <span className="text-[13px] font-bold text-success">{state.tasks.filter(q => q.completed).length > 0 ? 'Optimal' : 'Incomplete'}</span>
                 </div>
               </div>
             </div>

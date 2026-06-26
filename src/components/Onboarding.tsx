@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BrainCircuit, Anchor, Backpack, Flame, Moon, Eye, EyeOff, Check, AlertCircle, Sparkles, Sun, Laptop, User, Camera, Upload, Type, Trophy, BarChart3, Gift, MessageSquare } from 'lucide-react';
+import { BrainCircuit, Anchor, Backpack, Flame, Moon, Eye, EyeOff, Check, AlertCircle, Sparkles, Sun, Laptop, User, Camera, Upload, Type, BarChart3, Gift, MessageSquare } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useSettings } from '../contexts/SettingsContext';
@@ -615,12 +615,6 @@ const SocialBtn = ({ provider, onClick }: { provider: string, onClick: () => voi
       color: TOKENS.gold, 
       title: "Level Rewards", 
       sub: "Redeem your hard-earned XP to unlock premium aesthetic level rewards and custom badges." 
-    },
-    { 
-      icon: <Trophy size={40} color={TOKENS.secondary} />, 
-      color: TOKENS.secondary, 
-      title: "Global Leaderboards", 
-      sub: "Climb the weekly divisions and stay mutually accountable with your friends." 
     },
     { 
       icon: <MessageSquare size={40} color={TOKENS.primary} />, 

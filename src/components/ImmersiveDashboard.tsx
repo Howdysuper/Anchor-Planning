@@ -943,18 +943,6 @@ export default function ImmersiveDashboard() {
             </div>
           </div>
 
-          {/* View Leaderboard CTA */}
-          <button
-            onClick={() => {
-              setIsStreakDetailsOpen(false);
-              navigate("leaderboard");
-              addToast("Compete on specific habit streaks with friends!", "info");
-            }}
-            className="h-[50px] w-full bg-gradient-to-r from-[#FACC15] to-[#EAB308] hover:from-[#EAB308] hover:to-[#FACC15] text-white rounded-[14px] font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(250,204,21,0.2)] mt-1"
-          >
-            <Sparkles size={16} />
-            <span>Compete on Global Leaderboard</span>
-          </button>
         </div>
       </Modal>
     </div>

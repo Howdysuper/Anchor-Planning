@@ -27,7 +27,6 @@ export interface SettingsType {
     dailySummary: { enabled: boolean; time: string };
     anchorStartingSoon: { enabled: boolean; minutesBefore: number };
     anchorMissed: { enabled: boolean };
-    leaderboardUpdates: { enabled: boolean };
     friendChallenges: { enabled: boolean };
     weeklySummary: { enabled: boolean; day: string; time: string };
     sound: { enabled: boolean; type: string };
@@ -101,8 +100,6 @@ export interface SettingsType {
     fontFamily: string;
   };
   privacy: {
-    leaderboardParticipation: boolean;
-    leaderboardDisplayName: string;
     shareXP: boolean;
     shareStreak: boolean;
     shareQuests: boolean;
@@ -169,7 +166,6 @@ const defaultSettings: SettingsType = {
     dailySummary: { enabled: true, time: "21:00" },
     anchorStartingSoon: { enabled: true, minutesBefore: 10 },
     anchorMissed: { enabled: true },
-    leaderboardUpdates: { enabled: true },
     friendChallenges: { enabled: true },
     weeklySummary: { enabled: true, day: "sunday", time: "20:00" },
     sound: { enabled: true, type: "default" },
@@ -248,8 +244,6 @@ const defaultSettings: SettingsType = {
     fontFamily: "inter"
   },
   privacy: {
-    leaderboardParticipation: true,
-    leaderboardDisplayName: "username",
     shareXP: true,
     shareStreak: true,
     shareQuests: true,
@@ -583,7 +577,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setBrainDumps([]);
     updateState({
       anchors: [],
-      quests: [],
+      tasks: [],
       brainDumps: [],
       sleep: {
         ...state.sleep,

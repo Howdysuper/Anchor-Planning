@@ -26,6 +26,7 @@ export type AppState = {
     loadoutLastResetDate: string;
     purchasedItems?: string[];
     activeCosmetic?: string | null;
+    hasClaimedStarterXP?: boolean;
   };
   sleep: {
     score: number;
@@ -65,7 +66,8 @@ const initialState: AppState = {
     xpPoolLastResetDate: new Date().toISOString().split('T')[0],
     loadoutLastResetDate: new Date().toISOString().split('T')[0],
     purchasedItems: [],
-    activeCosmetic: null
+    activeCosmetic: null,
+    hasClaimedStarterXP: false
   },
   sleep: {
     score: 100,
@@ -481,7 +483,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const isMasterEnabled = settings ? settings.notifications?.masterEnabled !== false : true;
       
       // Smart-delay feature: pause notifications if user completed a significant amount of tasks early in the day
-      const completedTasks = state.quests.filter(q => q.done).length + state.anchors.filter(a => a.status === 'done').length;
+      const completedTasks = state.tasks.filter(q => q.done).length + state.anchors.filter(a => a.status === 'done').length;
       const isEarlyInDay = currentHours < 14; // Before 2 PM
       const isSmartDelayActive = isMasterEnabled && isEarlyInDay && completedTasks >= 3;
 

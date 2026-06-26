@@ -35,24 +35,21 @@ const VaultIcon = (props: any) => (
     viewBox="0 0 24 24" 
     fill="none" 
     stroke="currentColor" 
-    strokeWidth="1" 
+    strokeWidth="0.9" 
     strokeLinecap="round" 
     strokeLinejoin="round" 
     {...props}
   >
-    {/* Outer frame - smaller */}
-    <rect x="5" y="6" width="14" height="12" rx="1.5" />
-    {/* Inner door - smaller */}
-    <rect x="8" y="9" width="8" height="6" rx="0.5" />
-    {/* Combination Dial - smaller */}
-    <circle cx="12" cy="12" r="1.5" />
-    <path d="M12 10.5v0.5" />
-    <path d="M12 13v0.5" />
-    <path d="M10.5 12h0.5" />
-    <path d="M13 12h0.5" />
-    {/* Hinges - smaller */}
-    <path d="M5 9h1" />
-    <path d="M5 15h1" />
+    {/* Safe body - Compact square frame shifted up slightly to give more room for text below */}
+    <rect x="5.5" y="4.5" width="13" height="13" rx="2" />
+    {/* Combination dial - Thinner details */}
+    <circle cx="12" cy="11" r="2.5" strokeWidth="0.7" />
+    <path d="M12 10v-0.5" strokeWidth="0.7" />
+    <path d="M12 12v0.5" strokeWidth="0.7" />
+    <path d="M11 11h-0.5" strokeWidth="0.7" />
+    <path d="M13 11h0.5" strokeWidth="0.7" />
+    {/* Handle on the right */}
+    <path d="M16 9.5v3" />
   </svg>
 );
 
@@ -150,14 +147,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <button
                 key={item.id}
                 onClick={() => navigate(item.id)}
-                className={`flex flex-col xl:flex-row items-center justify-center xl:justify-start min-h-[56px] xl:min-h-[48px] w-full px-0 xl:px-3.5 rounded-[12px] transition-all border-l-[3px] md:border-l-0 xl:border-l-[3px] group gap-1 xl:gap-0 ${
+                className={`flex flex-col xl:flex-row items-center justify-center xl:justify-start ${item.id === 'shop' ? 'pt-0 pb-1.5' : 'py-2'} xl:py-2 min-h-[50px] xl:min-h-[44px] w-full px-0 xl:px-3.5 rounded-[12px] transition-all border-l-[3px] md:border-l-0 xl:border-l-[3px] group ${item.id === 'shop' ? 'gap-0' : 'gap-0.5'} xl:gap-0 ${
                   isActive 
                     ? 'bg-primary-tint/15 text-primary border-primary font-semibold' 
                     : 'bg-transparent text-text-muted hover:bg-surface-2 hover:text-text-primary border-transparent font-medium'
                 }`}
               >
-                <Icon size={20} className={`shrink-0 transition-transform ${isActive ? 'scale-105' : 'group-hover:scale-105'}`} />
-                <span className="xl:ml-[14px] text-[9px] xl:text-[15px] whitespace-nowrap select-none">{item.label}</span>
+                <Icon size={20} className={`shrink-0 transition-transform ${isActive ? 'scale-105' : 'group-hover:scale-105'} ${item.id === 'shop' ? 'translate-y-0.5' : ''}`} />
+                <span className={`xl:ml-[14px] text-[9px] xl:text-[15px] whitespace-nowrap select-none ${item.id === 'shop' ? '-translate-y-2.5 xl:translate-y-0' : ''}`}>{item.label}</span>
               </button>
             );
           })}
