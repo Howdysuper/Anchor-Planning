@@ -231,12 +231,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <button
               key={item.id}
               onClick={() => navigate(item.id)}
-              className={`flex flex-col items-center justify-center gap-1 w-full h-[56px] rounded-[16px] transition-colors ${
+              className={`flex flex-col items-center justify-center ${item.id === 'shop' ? 'gap-0' : 'gap-1'} w-full h-[56px] rounded-[16px] transition-colors ${
                 isActive ? 'text-primary bg-primary/10' : 'text-text-muted'
               }`}
             >
-              <Icon size={20} className={isActive ? 'opacity-100 scale-110 transition-transform' : 'opacity-60'} />
-              <span className="text-[10px] font-bold truncate max-w-full px-1">{item.label}</span>
+              <Icon size={20} className={`${isActive ? 'opacity-100 scale-110 transition-transform' : 'opacity-60'} ${item.id === 'shop' ? 'translate-y-1' : ''}`} />
+              <span className={`text-[10px] font-bold truncate max-w-full px-1 ${item.id === 'shop' ? '-translate-y-0.5' : ''}`}>{item.label}</span>
             </button>
           );
         })}
